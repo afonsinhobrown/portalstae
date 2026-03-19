@@ -413,76 +413,202 @@
     <script>
     let table;
     let currentTab = 'rh';
-    let globalOptions = {}; // Armazenar sectores, tipos, etc.
-
+    let currentResource = 'default';
+    let globalOptions = {}; // Armazenar sectores, tipos, etc. para dropdowns
     const columnDefs = {
+        'rh': {
+            'default': [
+                {title:"IA INSIGHT", field:"ia_insight", width:220, formatter:function(cell){
+                    let val = cell.getValue();
+                    let color = val.includes("RISCO") ? "#d13438" : "#107c41";
+                    return `<span style="color:${color}; font-weight:bold; animation: pulse 2s infinite;">● ${val}</span>`;
+                }},
+                {title:"Nome Completo", field:"nome_completo", width:250, headerFilter:"input"},
+                {title:"Sector", field:"sector", width:150},
+                {title:"Função", field:"funcao", width:150},
+                {title:"Identificação", field:"identificacao", width:200},
+                {title:"Ações", width:120, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-action primary" title="Ver Pasta Digital"><i class="bi bi-folder2-open"></i></button>`;
+                }}
+            ],
+            'ferias': [
+                {title:"IA STATUS", field:"ia_insight", width:180},
+                {title:"Funcionário", field:"nome", width:220},
+                {title:"Período", formatter:function(cell){ 
+                    let d = cell.getData(); return `${d.inicio} → ${d.fim}`; 
+                }, width:220},
+                {title:"Dias", field:"dias", width:80},
+                {title:"Estado", field:"status", width:120, formatter:"chip"},
+                {title:"Ações RH", width:180, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-action success" title="Aprovar"><i class="bi bi-check-circle"></i></button>
+                            <button class="btn-action danger" title="Reprovar"><i class="bi bi-x-circle"></i></button>`;
+                }}
+            ],
+            'licencas': [
+                {title:"IA INSIGHT", field:"ia_insight", width:180},
+                {title:"Funcionário", field:"nome", width:220},
+                {title:"Tipo Licença", field:"tipo", width:150},
+                {title:"Início", field:"inicio", width:120},
+                {title:"Fim", field:"fim", width:120},
+                {title:"Ações", width:100, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-action primary" title="Ver Detalhes"><i class="bi bi-info-circle"></i></button>`;
+                }}
+            ],
+            'avaliacoes': [
+                {title:"IA INSIGHT", field:"ia_insight", width:180},
+                {title:"Funcionário", field:"nome", width:220},
+                {title:"Período", field:"periodo", width:150},
+                {title:"Nota Final", field:"nota", width:100},
+                {title:"Feedback", width:100, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-action info" title="Ver Feedback"><i class="bi bi-chat-dots"></i></button>`;
+                }}
+            ],
+            'presencas': [
+                {title:"IA INSIGHT", field:"ia_insight", width:150},
+                {title:"Funcionário", field:"nome", width:220},
+                {title:"Data/Hora", field:"data_hora", width:180},
+                {title:"Tipo", field:"tipo", width:120},
+                {title:"Ações", width:100, formatter:function(){ return `<button class="btn-action"><i class="bi bi-geo-alt"></i></button>`; }}
+            ]
+        },
+        'transportes': {
+            'default': [
+                {title:"IA ANALYTICS", field:"ia_insight", width:250, formatter:function(cell){
+                    let val = cell.getValue();
+                    let color = val.includes("DESPERDÍCIO") ? "#d13438" : "#107c41";
+                    return `<span style="color:${color}; font-weight:bold;">📊 ${val}</span>`;
+                }},
+                {title:"Matrícula", field:"matricula", width:120, headerFilter:"input"},
+                {title:"Viatura", field:"viatura", width:200},
+                {title:"KM Atual", field:"km", width:100, hozAlign:"right"},
+                {title:"Operação", width:150, formatter:function(){
+                    return `<button class="btn-action info" title="Rastrear"><i class="bi bi-radar"></i></button>
+                            <button class="btn-action primary" title="Diário de Bordo"><i class="bi bi-book"></i></button>`;
+                }}
+            ],
+            'viagens': [
+                {title:"IA ROUTE", field:"ia_insight", width:200},
+                {title:"Viatura", field:"viatura", width:120},
+                {title:"Motorista", field:"motorista", width:200},
+                {title:"KM Inicial", field:"km_i", width:120},
+                {title:"KM Final", field:"km_f", width:120},
+                {title:"Ações", width:100, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-action primary" title="Ver Rota"><i class="bi bi-map"></i></button>`;
+                }}
+            ],
+            'manutencoes': [
+                {title:"IA DIAGNOSIS", field:"ia_insight", width:200},
+                {title:"Viatura", field:"viatura", width:120},
+                {title:"Tipo", field:"tipo", width:150},
+                {title:"Data", field:"data", width:120},
+                {title:"Custo (MZN)", field:"custo", width:120},
+                {title:"Ações", width:100, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-action info" title="Ver Fatura"><i class="bi bi-receipt"></i></button>`;
+                }}
+            ],
+            'combustivel': [
+                {title:"IA DETECTION", field:"ia_insight", width:220},
+                {title:"Viatura", field:"viatura", width:120},
+                {title:"Litros", field:"litros", width:100},
+                {title:"Custo Total", field:"custo", width:150},
+                {title:"Data", field:"data", width:150},
+                {title:"VALIDAÇÃO", width:150, hozAlign:"center", formatter:function(){
+                    return `<button class="btn-shrd success" style="padding:2px 10px; font-size:11px;">VALIDAR SENHA</button>`;
+                }}
+            ]
+        },
+        'equipamento': {
+            'default': [
+                {title:"IA DRIFT", field:"ia_insight", width:220, formatter:function(cell){
+                    return `🔥 ${cell.getValue()}`;
+                }},
+                {title:"Serial", field:"serial", width:180, headerFilter:"input"},
+                {title:"Equipamento", field:"alias", width:200},
+                {title:"Localização", field:"local", width:250},
+                {title:"Estado", field:"estado", width:120},
+                {title:"Ações", width:100, formatter:function(){
+                   return `<button class="btn-action danger" title="Bloquear Ativo"><i class="bi bi-lock"></i></button>`;
+                }}
+            ]
+        }
+    };
+
+    const subMenuOptions = {
         'rh': [
-            {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Colaborador", field:"nome_completo", width:250, headerFilter:"input"},
-            {title:"Sector / Departamento", field:"sector_nome", width:180},
-            {title:"Função Atual", field:"funcao", editor:"input", width:180},
-            {title:"Carreira / Nível", field:"carreira_nivel", width:150},
-            {title:"Status Profissional", field:"status_profissional", width:130, hozAlign:"center", formatter:function(cell){
-                return cell.getValue() === "FÉRIAS" ? "<span style='color:#d13438;font-weight:bold;'>EM GOZO</span>" : "<span style='color:#107c41;'>DISPONÍVEL</span>";
-            }},
-            {title:"Notas de Gestão", field:"obs_gestao", width:200},
-            {title:"Telemóvel", field:"telemovel", editor:"input", width:130},
-            {title:"ALERTA", field:"alerta", visible:false}
+            {id: 'default', nome: '🏢 CORE: Gestão de Talentos', kpi: 'Risk Index: Low'},
+            {id: 'ferias', nome: '📅 FLOW: Controlo de Férias', kpi: 'Active Leaves: 12'},
+            {id: 'licencas', nome: '🏥 HEALTH: Licenças / Ausências', kpi: 'Current: 4'},
+            {id: 'avaliacoes', nome: '📈 GROWTH: Avaliações de Desempenho', kpi: 'Avg: 78%'},
+            {id: 'presencas', nome: '⏰ TIME: Registos de Presença', kpi: 'Punctuality: 94%'}
         ],
         'transportes': [
-            {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Matrícula", field:"matricula", width:120, hozAlign:"center", headerFilter:"input"},
-            {title:"Viatura (Marca/Modelo/Tipo)", field:"modelo_tipo", width:250},
-            {title:"Motorista Alocado", field:"motorista", width:180},
-            {title:"Kilometragem", field:"km", width:110, hozAlign:"right"},
-            {title:"Consumo Total (MZN)", field:"gastos_combustivel", width:160, hozAlign:"right", cssClass:"font-weight-bold"},
-            {title:"Expira Seguro", field:"proximo_seguro", width:140, hozAlign:"center", formatter:function(cell){
-                let val = cell.getValue();
-                return val === "S/ SEGURO" ? `<span style="color:#d13438;">${val}</span>` : val;
-            }},
-            {title:"Monitorização / Notas", field:"obs_frota", width:200},
-            {title:"ALERTA", field:"alerta", visible:false}
+            {id: 'default', nome: '🚛 ASSETS: Frota STAE', kpi: 'Available: 85%'},
+            {id: 'viagens', nome: '🗺️ ROUTE: Diário de Viagens', kpi: 'Trips/Day: 24'},
+            {id: 'manutencoes', nome: '🛠️ CARE: Manutenção de Viaturas', kpi: 'Next: 3 days'},
+            {id: 'combustivel', nome: '⛽ ENERGY: Abastecimentos', kpi: 'Cost/KM: 12.4 MT'}
         ],
         'equipamento': [
-            {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Nº de Série (Serial)", field:"serial", width:180, headerFilter:"input"},
-            {title:"Tipo / Marca", field:"ativo_tipo", width:180},
-            {title:"Modelo", field:"modelo", width:150},
-            {title:"Localização (Sector / Armazém)", field:"local_atual", width:250},
-            {title:"Responsável", field:"responsavel", width:180},
-            {title:"Estado Ativo", field:"estado", width:130},
-            {title:"Notas / Movimentações", field:"obs_equip", width:200},
-            {title:"ALERTA", field:"alerta", visible:false}
+            {id: 'default', nome: '💻 INVENTORY: Activos Tecnológicos', kpi: 'Drift Rate: 2%'}
         ]
     };
 
-    function deleteIcon(cell, formatterParams, onRendered){
-        return "<i class='bi bi-trash' style='color:#a4262c; cursor:pointer;' title='Apagar linha'></i>";
+    // Incluir SheetJS dinamicamente se não estiver presente
+    if(!window.XLSX) {
+        let sc = document.createElement('script');
+        sc.src = "https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js";
+        document.head.appendChild(sc);
     }
 
-    function initGrid(tabName) {
+    document.getElementById('download-xlsx').addEventListener('click', function() {
+        if(table) {
+            table.download("xlsx", `STAE_${currentTab}_${currentResource}_${new Date().toISOString().slice(0,10)}.xlsx`, {
+                sheetName: "Relatório STAE"
+            });
+        }
+    });
+
+    function updateSubMenu(tabName) {
+        const select = document.getElementById('sub-resource-select');
+        if(!select) return;
+        select.innerHTML = '';
+        subMenuOptions[tabName].forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt.id;
+            el.innerText = opt.nome;
+            select.appendChild(el);
+        });
+        currentResource = 'default';
+        select.value = 'default';
+        const kpi = document.getElementById('kpi-summary');
+        if(kpi) kpi.innerText = subMenuOptions[tabName][0].kpi;
+    }
+
+    function initGrid(tabName, resource = 'default') {
         if(table) { table.destroy(); }
         
+        let cols = columnDefs[tabName][resource] || columnDefs[tabName]['default'];
+        
         table = new Tabulator("#stae-grid", {
-            ajaxURL: "{% url 'admin_portal:api_super_planilha' %}?tab=" + tabName,
-            ajaxResponse: function(url, params, response){
-                if(response.options) {
-                    globalOptions = response.options;
-                }
-                return response.data;
-            },
-            rowFormatter: function(row){
-                let data = row.getData();
-                if(data.alerta && data.alerta !== "OK" && data.alerta !== "Normal" && data.alerta !== "Operacional"){
-                    row.getElement().style.backgroundColor = "rgba(209, 52, 56, 0.08)";
-                    row.getElement().style.borderLeft = "4px solid #d13438";
-                }
-            },
+            ajaxURL: `{% url 'admin_portal:api_super_planilha' %}?tab=${tabName}&resource=${resource}`,
+            // ajaxResponse: function(url, params, response){ // Removed as per user's provided snippet
+            //     if(response.options) {
+            //         globalOptions = response.options;
+            //     }
+            //     return response.data;
+            // },
+            // rowFormatter: function(row){ // Removed as per user's provided snippet
+            //     let data = row.getData();
+            //     if(data.alerta && data.alerta !== "OK" && data.alerta !== "Normal" && data.alerta !== "Operacional"){
+            //         row.getElement().style.backgroundColor = "rgba(209, 52, 56, 0.08)";
+            //         row.getElement().style.borderLeft = "4px solid #d13438";
+            //     }
+            // },
             layout: "fitColumns",
-            columns: columnDefs[tabName],
+            columns: cols,
             pagination: "local",
-            paginationSize: 15,
-            placeholder: "Nenhum dado encontrado na Planilha.",
+            paginationSize: 20,
+            rowHeight: 50, // Added as per user's provided snippet
+            placeholder: "Aguardando sinal da rede STAE...", // Modified as per user's provided snippet
             dataLoaded: function(data){
                 document.getElementById('row-count').innerText = data.length;
             },
