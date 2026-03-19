@@ -444,7 +444,7 @@
         if(table) { table.destroy(); }
         
         table = new Tabulator("#stae-grid", {
-            ajaxURL: "api/super-planilha/?tab=" + tabName,
+            ajaxURL: "{% url 'admin_portal:api_super_planilha' %}?tab=" + tabName,
             layout: "fitColumns",
             columns: columnDefs[tabName],
             pagination: "local",
@@ -544,7 +544,7 @@
     }
 
     async function sendApiRequest(tab, action, data) {
-        const response = await fetch('api/super-planilha/?tab=' + tab, {
+        const response = await fetch("{% url 'admin_portal:api_super_planilha' %}?tab=" + tab, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({action: action, data: data})
