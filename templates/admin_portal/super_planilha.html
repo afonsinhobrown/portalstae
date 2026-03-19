@@ -418,49 +418,41 @@
     const columnDefs = {
         'rh': [
             {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Nome do Trabalhador", field:"nome_completo", editor:"input", headerFilter:"input"},
-            {title:"Nº Identificação", field:"numero_identificacao", editor:"input", headerFilter:"input", width:150},
-            {title:"Género", field:"genero", editor:"select", editorParams:{values:["M", "F"]}, headerFilter:"input", hozAlign:"center", width:100},
-            {title:"Função / Cargo", field:"funcao", editor:"input", headerFilter:"input"},
-            {title:"Contacto", field:"telefone", editor:"input", headerFilter:"input", width:150},
-            {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
+            {title:"Colaborador", field:"nome_completo", width:250, headerFilter:"input"},
+            {title:"Sector / Departamento", field:"sector_nome", width:180},
+            {title:"Função Atual", field:"funcao", editor:"input", width:180},
+            {title:"Carreira / Nível", field:"carreira_nivel", width:150},
+            {title:"Status Profissional", field:"status_profissional", width:130, hozAlign:"center", formatter:function(cell){
+                return cell.getValue() === "FÉRIAS" ? "<span style='color:#d13438;font-weight:bold;'>EM GOZO</span>" : "<span style='color:#107c41;'>DISPONÍVEL</span>";
+            }},
+            {title:"Notas de Gestão", field:"obs_gestao", width:200},
+            {title:"Telemóvel", field:"telemovel", editor:"input", width:130},
+            {title:"ALERTA", field:"alerta", visible:false}
         ],
         'transportes': [
             {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Matrícula", field:"matricula", editor:"input", headerFilter:"input", width:160},
-            {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
-            {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
-            {title:"Ano Fabrico", field:"ano_fabrico", editor:"number", headerFilter:"input", width:120, hozAlign:"center"},
-            {title:"Estado", field:"estado", editor:"input", headerFilter:"input", width:150},
-            {title:"Motorista", field:"funcionario_afecto_id", editor:"select", editorParams: function(){
-                return {values: globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {}};
-            }, formatter:"lookup", formatterParams: function(){
-                return globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {};
+            {title:"Matrícula", field:"matricula", width:120, hozAlign:"center", headerFilter:"input"},
+            {title:"Viatura (Marca/Modelo/Tipo)", field:"modelo_tipo", width:250},
+            {title:"Motorista Alocado", field:"motorista", width:180},
+            {title:"Kilometragem", field:"km", width:110, hozAlign:"right"},
+            {title:"Consumo Total (MZN)", field:"gastos_combustivel", width:160, hozAlign:"right", cssClass:"font-weight-bold"},
+            {title:"Expira Seguro", field:"proximo_seguro", width:140, hozAlign:"center", formatter:function(cell){
+                let val = cell.getValue();
+                return val === "S/ SEGURO" ? `<span style="color:#d13438;">${val}</span>` : val;
             }},
-            {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
+            {title:"Monitorização / Notas", field:"obs_frota", width:200},
+            {title:"ALERTA", field:"alerta", visible:false}
         ],
         'equipamento': [
             {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Nº de Série", field:"numero_serie", editor:"input", headerFilter:"input", width:180},
-            {title:"Tipo", field:"tipo_id", editor:"select", editorParams: function(){
-                return {values: globalOptions.tipos_equipamento ? globalOptions.tipos_equipamento.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {}};
-            }, formatter:"lookup", formatterParams: function(){
-                return globalOptions.tipos_equipamento ? globalOptions.tipos_equipamento.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {};
-            }},
-            {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
-            {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
-            {title:"Local (Setor)", field:"sector_atual_id", editor:"select", editorParams: function(){
-                return {values: globalOptions.sectores ? globalOptions.sectores.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {}};
-            }, formatter:"lookup", formatterParams: function(){
-                return globalOptions.sectores ? globalOptions.sectores.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {};
-            }},
-            {title:"Responsável", field:"funcionario_responsavel_id", editor:"select", editorParams: function(){
-                return {values: globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {}};
-            }, formatter:"lookup", formatterParams: function(){
-                return globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {};
-            }},
-            {title:"Estado", field:"estado", editor:"select", editorParams:{values:{"excelente":"Excelente", "bom":"Bom", "regular":"Regular", "precisa_manutencao":"Manutenção", "inutilizado":"Inutilizado"}}, width:150},
-            {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
+            {title:"Nº de Série (Serial)", field:"serial", width:180, headerFilter:"input"},
+            {title:"Tipo / Marca", field:"ativo_tipo", width:180},
+            {title:"Modelo", field:"modelo", width:150},
+            {title:"Localização (Sector / Armazém)", field:"local_atual", width:250},
+            {title:"Responsável", field:"responsavel", width:180},
+            {title:"Estado Ativo", field:"estado", width:130},
+            {title:"Notas / Movimentações", field:"obs_equip", width:200},
+            {title:"ALERTA", field:"alerta", visible:false}
         ]
     };
 
@@ -478,6 +470,13 @@
                     globalOptions = response.options;
                 }
                 return response.data;
+            },
+            rowFormatter: function(row){
+                let data = row.getData();
+                if(data.alerta && data.alerta !== "OK" && data.alerta !== "Normal" && data.alerta !== "Operacional"){
+                    row.getElement().style.backgroundColor = "rgba(209, 52, 56, 0.08)";
+                    row.getElement().style.borderLeft = "4px solid #d13438";
+                }
             },
             layout: "fitColumns",
             columns: columnDefs[tabName],

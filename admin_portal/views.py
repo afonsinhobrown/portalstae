@@ -725,51 +725,90 @@ def api_super_planilha(request):
         ModelClass = apps.get_model(app_label, model_name)
         
         if request.method == 'GET':
-            records = ModelClass.objects.all()
             data = []
             options = {}
-            
-            # Carregar opções para selects se necessário
-            if tab in ['equipamento', 'transportes']:
-                from recursoshumanos.models import Sector, Funcionario
-                from gestaoequipamentos.models import TipoEquipamento
-                options['sectores'] = list(Sector.objects.values('id', 'nome'))
-                options['funcionarios'] = list(Funcionario.objects.values('id', 'nome_completo'))
-                options['tipos_equipamento'] = list(TipoEquipamento.objects.values('id', 'nome'))
+            from django.db.models import Sum, Max, Q, Count
+            from django.utils import timezone
+            now = timezone.now()
 
             if tab == 'rh':
+                from recursoshumanos.models import Funcionario, PedidoFerias, Promocao, SaldoFerias
+                records = Funcionario.objects.select_related('sector').all()
                 for obj in records:
+                    # Informação Profissional e Férias
+                    ferias = PedidoFerias.objects.filter(funcionario=obj, status='aprovado', data_inicio__lte=now.date(), data_fim__gte=now.date()).first()
+                    alerta = "OK"
+                    if ferias: alerta = "Férias"
+                    
                     data.append({
                         'id': obj.id, 
                         'nome_completo': obj.nome_completo,
-                        'numero_identificacao': obj.numero_identificacao,
-                        'genero': obj.genero,
+                        'sector_nome': obj.sector.nome if obj.sector else "N/A",
                         'funcao': obj.funcao,
-                        'telefone': obj.telefone
+                        'carreira_nivel': f"{obj.carreira or ''} / {obj.nivel or ''}",
+                        'status_profissional': "FÉRIAS" if ferias else "DISPONÍVEL",
+                        'obs_gestao': f"Fim Férias: {ferias.data_fim}" if ferias else (f"Ident: {obj.numero_identificacao}" if obj.numero_identificacao else "-"),
+                        'telemovel': obj.telefone,
+                        'alerta': alerta
                     })
             elif tab == 'transportes':
+                from gestaocombustivel.models import Viatura, PedidoCombustivel, SeguroViatura, ManutencaoViatura
+                records = Viatura.objects.select_related('funcionario_afecto').all()
                 for obj in records:
+                    # Monitorização de Frota
+                    combustivel = PedidoCombustivel.objects.filter(viatura=obj, status='aprovado').aggregate(Sum('custo_total'))['custo_total__sum'] or 0
+                    seguro = SeguroViatura.objects.filter(viatura=obj, activo=True).first()
+                    manutencao = ManutencaoViatura.objects.filter(viatura=obj, status='pendente').first()
+                    
+                    status_operacional = obj.estado
+                    alerta = "Normal"
+                    if not obj.disponivel: alerta = "INDISPONÍVEL"
+                    if manutencao: alerta = "MANUTENÇÃO"
+                    
                     data.append({
                         'id': obj.id,
                         'matricula': obj.matricula,
-                        'marca': obj.marca,
-                        'modelo': obj.modelo,
-                        'ano_fabrico': obj.ano_fabrico,
-                        'estado': obj.estado,
-                        'funcionario_afecto_id': obj.funcionario_afecto_id
+                        'modelo_tipo': f"{obj.marca} {obj.modelo} ({obj.tipo_viatura or 'Geral'})",
+                        'motorista': obj.funcionario_afecto.nome_completo if obj.funcionario_afecto else "N/A",
+                        'km': f"{obj.kilometragem_actual or 0} KM",
+                        'gastos_combustivel': f"{combustivel:,.2f} MT",
+                        'proximo_seguro': seguro.data_fim if seguro else "S/ SEGURO",
+                        'obs_frota': f"Prox. Manut: {manutencao.data_agendada}" if manutencao else obj.motivo_indisponibilidade or "-",
+                        'alerta': alerta
                     })
             elif tab == 'equipamento':
+                from gestaoequipamentos.models import Equipamento, Inventario, MovimentacaoEquipamento
+                records = Equipamento.objects.select_related('tipo', 'sector_atual', 'funcionario_responsavel').all()
                 for obj in records:
+                    # Rastreamento de Localização e Movimentação
+                    inv = Inventario.objects.filter(equipamento=obj).first()
+                    mov = MovimentacaoEquipamento.objects.filter(equipamento=obj).order_by('-data_solicitacao').first()
+                    
+                    local = obj.sector_atual.nome if obj.sector_atual else "S/ LOCAL"
+                    if inv and inv.localizacao_especifica:
+                        local += f" ({inv.localizacao_especifica})"
+                        
                     data.append({
                         'id': obj.id,
-                        'numero_serie': obj.numero_serie,
-                        'marca': obj.marca,
+                        'serial': obj.numero_serie,
+                        'ativo_tipo': f"{obj.tipo.nome if obj.tipo else 'Equip.'} {obj.marca or ''}",
                         'modelo': obj.modelo,
-                        'estado': obj.estado,
-                        'tipo_id': obj.tipo_id,
-                        'sector_atual_id': obj.sector_atual_id,
-                        'funcionario_responsavel_id': obj.funcionario_responsavel_id
+                        'local_atual': local,
+                        'responsavel': obj.funcionario_responsavel.nome_completo if obj.funcionario_responsavel else "GESTÃO CENTRAL",
+                        'obs_equip': f"Mov. Pendente: {mov.status}" if mov and mov.status == 'pendente' else f"Adquirido: {obj.ano_aquisicao}",
+                        'estado': obj.get_estado_display() if hasattr(obj, 'get_estado_display') else obj.estado,
+                        'alerta': "Alerta" if obj.estado == 'precisa_manutencao' else "Operacional"
                     })
+
+            # Opções Globais para Selects
+            from recursoshumanos.models import Sector, Funcionario
+            from gestaoequipamentos.models import TipoEquipamento
+            options = {
+                'sectores': list(Sector.objects.values('id', 'nome')),
+                'funcionarios': list(Funcionario.objects.values('id', 'nome_completo')),
+                'tipos_equipamento': list(TipoEquipamento.objects.values('id', 'nome'))
+            }
+            
             return JsonResponse({'data': data, 'options': options}, safe=False)
             
         elif request.method == 'POST':
@@ -780,27 +819,25 @@ def api_super_planilha(request):
             
             if action == 'update':
                 obj = ModelClass.objects.get(id=row_data.get('id'))
+                # No update da planilha, permitimos editar campos básicos. Para campos complexos, usar o portal.
                 for key, value in row_data.items():
-                    if hasattr(obj, key) and key != 'id':
+                    if hasattr(obj, key) and key != 'id' and not key.endswith('_nome') and not key.endswith('_display'):
                         setattr(obj, key, value)
                 obj.save()
                 return JsonResponse({'sucesso': True, 'id': obj.id})
                 
             elif action == 'create':
                 obj = ModelClass()
-                
-                # Caso especial para Equipamentos (campos obrigatorios)
                 if tab == 'equipamento':
                     from gestaoequipamentos.models import TipoEquipamento
                     from recursoshumanos.models import Sector
                     obj.tipo = TipoEquipamento.objects.first()
                     obj.sector_atual = Sector.objects.first()
-                    obj.ano_aquisicao = 2026
+                    obj.ano_aquisicao = timezone.now().year
                     obj.fornecedor = "STAE Master Supply"
                     obj.atributos_especificos = {}
                     obj.criado_por = request.user
                 
-                # Caso especial para Viatura (ajuste de campo ano para ano_fabrico se necessario)
                 if tab == 'transportes' and 'ano' in row_data:
                     row_data['ano_fabrico'] = row_data.pop('ano')
 
