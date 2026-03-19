@@ -19,4 +19,8 @@ urlpatterns = [
 
     # Configuração
     path('configuracao/', views.configuracao_sistema, name='configuracao_sistema'),
+
+    # Super Planilha Excel
+    path('super-planilha/', views.super_planilha, name='super_planilha'),
+    path('api/super-planilha/', views.api_super_planilha, name='api_super_planilha'),
 ]

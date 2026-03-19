@@ -690,3 +690,101 @@ def processar_importacao_sincrona(importacao_id):
             'mensagem': f'Erro no processamento: {str(e)}',
             'dados': None
         }
+
+# ==================== SUPER PLANILHA EXCEL (FUTURISTICA) ====================
+from django.apps import apps
+
+@login_required_for_app('admin_portal')
+def super_planilha(request):
+    """Renderiza a super planilha futurística estilo Excel"""
+    context = {
+        'titulo': 'Super Planilha STAE',
+        'app_name': 'admin_portal',
+    }
+    return render(request, 'admin_portal/super_planilha.html', context)
+
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@login_required_for_app('admin_portal')
+def api_super_planilha(request):
+    """API Dinâmica para a Super Planilha Excel"""
+    try:
+        model_map = {
+            'rh': ('recursoshumanos', 'Funcionario'),
+            'transportes': ('gestaocombustivel', 'Viatura'),
+            'equipamento': ('gestaoequipamentos', 'Equipamento')
+        }
+        
+        tab = request.GET.get('tab', 'rh')
+        if tab not in model_map:
+            return JsonResponse({'sucesso': False, 'erro': 'Aba inválida'})
+            
+        app_label, model_name = model_map[tab]
+        ModelClass = apps.get_model(app_label, model_name)
+        
+        if request.method == 'GET':
+            # Ler Dados
+            records = ModelClass.objects.all()
+            data = []
+            if tab == 'rh':
+                for obj in records:
+                    data.append({
+                        'id': obj.id, 
+                        'nome_completo': obj.nome_completo,
+                        'numero_identificacao': obj.numero_identificacao,
+                        'genero': obj.genero,
+                        'funcao': obj.funcao,
+                        'telefone': obj.telefone
+                    })
+            elif tab == 'transportes':
+                for obj in records:
+                    data.append({
+                        'id': obj.id,
+                        'matricula': obj.matricula,
+                        'marca': obj.marca,
+                        'modelo': obj.modelo,
+                        'ano': obj.ano,
+                        'estado': obj.estado
+                    })
+            elif tab == 'equipamento':
+                for obj in records:
+                    data.append({
+                        'id': obj.id,
+                        'numero_serie': obj.numero_serie,
+                        'nome': obj.nome,
+                        'marca': obj.marca,
+                        'estado': obj.estado
+                    })
+            return JsonResponse(data, safe=False)
+            
+        elif request.method == 'POST':
+            # Criar/Atualizar dados
+            body = json.loads(request.body)
+            action = body.get('action')
+            row_data = body.get('data', {})
+            
+            if action == 'update':
+                obj = ModelClass.objects.get(id=row_data.get('id'))
+                for key, value in row_data.items():
+                    if hasattr(obj, key) and key != 'id':
+                        setattr(obj, key, value)
+                obj.save()
+                return JsonResponse({'sucesso': True, 'id': obj.id})
+                
+            elif action == 'create':
+                obj = ModelClass()
+                for key, value in row_data.items():
+                    if hasattr(obj, key) and key != 'id':
+                        setattr(obj, key, value)
+                obj.save()
+                return JsonResponse({'sucesso': True, 'id': obj.id})
+                
+            elif action == 'delete':
+                obj = ModelClass.objects.get(id=row_data.get('id'))
+                obj.delete()
+                return JsonResponse({'sucesso': True})
+                
+    except Exception as e:
+        return JsonResponse({'sucesso': False, 'erro': str(e)}, status=500)
