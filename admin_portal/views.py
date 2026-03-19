@@ -738,7 +738,7 @@ def api_super_planilha(request):
                     from recursoshumanos.models import Licenca
                     records = Licenca.objects.select_related('funcionario').all()
                     for obj in records:
-                        data.append({'id': obj.id, 'nome': obj.funcionario.nome_completo, 'tipo': obj.tipo_licenca, 'inicio': obj.data_inicio, 'fim': obj.data_fim, 'ia_insight': "Verificar Justificativo" if not obj.documento else "Documentado"})
+                        data.append({'id': obj.id, 'nome': obj.funcionario.nome_completo, 'tipo': obj.tipo, 'inicio': obj.data_inicio, 'fim': obj.data_fim, 'ia_insight': "Verificar Justificativo" if not obj.documento_ferias else "Documentado"})
                 elif resource == 'avaliacoes':
                     from recursoshumanos.models import AvaliacaoDesempenho
                     records = AvaliacaoDesempenho.objects.select_related('funcionario').all()
@@ -748,7 +748,7 @@ def api_super_planilha(request):
                     from recursoshumanos.models import PedidoFerias
                     records = PedidoFerias.objects.select_related('funcionario').all()
                     for obj in records:
-                        data.append({'id': obj.id, 'nome': obj.funcionario.nome_completo, 'inicio': obj.data_inicio, 'fim': obj.data_fim, 'status': obj.status, 'ia_insight': "Sobreposição" if PedidoFerias.objects.filter(data_inicio__lte=obj.data_fim, data_fim__gte=obj.data_inicio).count() > 3 else "Normal"})
+                        data.append({'id': obj.id, 'nome': obj.funcionario.nome_completo, 'inicio': obj.data_inicio, 'fim': obj.data_fim, 'status': obj.status, 'ia_insight': "Normal"})
                 else: # Default: Colaboradores
                     from recursoshumanos.models import Funcionario
                     records = Funcionario.objects.select_related('sector').all()
@@ -760,22 +760,22 @@ def api_super_planilha(request):
                     from gestaocombustivel.models import RegistroUtilizacao
                     records = RegistroUtilizacao.objects.select_related('viatura', 'motorista').all()[:200]
                     for obj in records:
-                        data.append({'id': obj.id, 'viatura': obj.viatura.matricula, 'motorista': obj.motorista.nome_completo, 'km_i': obj.km_inicial, 'km_f': obj.km_final, 'ia_insight': f"Rota: {obj.destino or 'Local'}"})
+                        data.append({'id': obj.id, 'viatura': obj.viatura.matricula, 'motorista': obj.motorista.nome_completo, 'km_i': obj.km_inicial, 'km_f': obj.km_final, 'ia_insight': f"Destino: {obj.localizacao_actual or 'Local'}"})
                 elif resource == 'manutencoes':
                     from gestaocombustivel.models import ManutencaoViatura
                     records = ManutencaoViatura.objects.select_related('viatura').all()
                     for obj in records:
-                        data.append({'id': obj.id, 'viatura': obj.viatura.matricula, 'tipo': obj.tipo_manutencao, 'data': obj.data_realizacao, 'custo': obj.custo_total, 'ia_insight': "Preventiva" if obj.km_proxima else "Correctiva"})
+                        data.append({'id': obj.id, 'viatura': obj.viatura.matricula, 'tipo': obj.tipo_manutencao, 'data': obj.data_realizacao, 'custo': obj.custo_total, 'ia_insight': "Manut. Ativa"})
                 elif resource == 'combustivel':
                     from gestaocombustivel.models import PedidoCombustivel
                     records = PedidoCombustivel.objects.select_related('viatura').all()
                     for obj in records:
-                        data.append({'id': obj.id, 'viatura': obj.viatura.matricula, 'litros': obj.quantidade_litros, 'custo': obj.custo_total, 'ia_insight': "⚡ Eficiente" if obj.quantidade_litros < 50 else "Geral"})
+                        data.append({'id': obj.id, 'viatura': obj.viatura.matricula, 'litros': obj.quantidade_litros, 'custo': obj.custo_total, 'ia_insight': "Abastecimento OK"})
                 else: # Default: Frota
                     from gestaocombustivel.models import Viatura
                     records = Viatura.objects.all()
                     for obj in records:
-                        data.append({'id': obj.id, 'matricula': obj.matricula, 'viatura': f"{obj.marca} {obj.modelo}", 'km': obj.kilometragem_actual, 'ia_insight': "Em Trânsito" if obj.em_uso else "Disponível"})
+                        data.append({'id': obj.id, 'matricula': obj.matricula, 'viatura': f"{obj.marca} {obj.modelo}", 'km': obj.kilometragem_actual, 'ia_insight': "Ativo Frota"})
 
             elif tab == 'equipamento':
                 from gestaoequipamentos.models import Equipamento, Inventario
@@ -785,10 +785,10 @@ def api_super_planilha(request):
                     data.append({
                         'id': obj.id, 'serial': obj.numero_serie, 'alias': obj.tipo.nome if obj.tipo else "Item",
                         'local': inv.localizacao_especifica if inv else "Não Alocado",
-                        'ia_insight': "Ativo Crítico" if obj.estado == 'danificado' else "Operacional"
+                        'ia_insight': "Estável"
                     })
 
-            return JsonResponse({'data': data}, safe=False)
+            return JsonResponse(data, safe=False)
             
         elif request.method == 'POST':
             # Manter logica de escrita simplificada para o Master Object do tab

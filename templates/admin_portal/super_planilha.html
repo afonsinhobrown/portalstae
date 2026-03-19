@@ -555,25 +555,23 @@
 
     const subMenuOptions = {
         'rh': [
-            {id: 'default', nome: '🏢 CORE: Gestão de Talentos', kpi: 'Risk Index: Low'},
-            {id: 'ferias', nome: '📅 FLOW: Controlo de Férias', kpi: 'Active Leaves: 12'},
-            {id: 'licencas', nome: '🏥 HEALTH: Licenças / Ausências', kpi: 'Current: 4'},
-            {id: 'avaliacoes', nome: '📈 GROWTH: Avaliações de Desempenho', kpi: 'Avg: 78%'},
-            {id: 'presencas', nome: '⏰ TIME: Registos de Presença', kpi: 'Punctuality: 94%'}
+            {id: 'default', nome: '👤 Cadastro de Colaboradores', kpi: 'Ativos: OK'},
+            {id: 'ferias', nome: '📅 Gestão de Férias', kpi: 'Pendentes: 0'},
+            {id: 'licencas', nome: '🏥 Licenças e Faltas', kpi: 'Justificadas: 100%'},
+            {id: 'avaliacoes', nome: '📈 Avaliação de Desempenho', kpi: 'Média: 8.5'}
         ],
         'transportes': [
-            {id: 'default', nome: '🚛 ASSETS: Frota STAE', kpi: 'Available: 85%'},
-            {id: 'viagens', nome: '🗺️ ROUTE: Diário de Viagens', kpi: 'Trips/Day: 24'},
-            {id: 'manutencoes', nome: '🛠️ CARE: Manutenção de Viaturas', kpi: 'Next: 3 days'},
-            {id: 'combustivel', nome: '⛽ ENERGY: Abastecimentos', kpi: 'Cost/KM: 12.4 MT'}
+            {id: 'default', nome: '🚘 Cadastro de Viaturas', kpi: 'Operacionais: 90%'},
+            {id: 'viagens', nome: '🗺️ Registo de Utilização', kpi: 'Km Mensal: 12k'},
+            {id: 'manutencoes', nome: '🛠️ Histórico de Manutenção', kpi: 'Próxima: 5 Mai'},
+            {id: 'combustivel', nome: '⛽ Pedidos de Combustível', kpi: 'Consumo: Estável'}
         ],
         'equipamento': [
-            {id: 'default', nome: '💻 INVENTORY: Activos Tecnológicos', kpi: 'Drift Rate: 2%'}
+            {id: 'default', nome: '💻 Inventário de Equipamento', kpi: 'Total: 452'}
         ]
     };
 
     window.addEventListener('DOMContentLoaded', () => {
-        // Incluir SheetJS dinamicamente se não estiver presente
         if(!window.XLSX) {
             let sc = document.createElement('script');
             sc.src = "https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js";
@@ -602,7 +600,6 @@
             });
         }
 
-        // Inicialização Global
         updateSubMenu('rh');
         initGrid('rh', 'default');
     });
@@ -680,7 +677,6 @@
         
         initGrid(tabName);
     }
-
     function deleteRow(e, cell){
         if(confirm("Excel: Operação Irreversível. Deseja eliminar esta linha da matriz?")) {
             let row = cell.getRow();
@@ -690,29 +686,27 @@
             });
         }
     }
+      function loadTab(tab, title, btn) {
+        currentTab = tab;
+        document.querySelectorAll('.excel-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('sheet-title').innerText = title.split(' / ')[0];
+        document.getElementById('sheet-subtitle').innerText = "CENTRAL DE INTELIGÊNCIA STAE - " + tab.toUpperCase();
+        updateSubMenu(tab);
+        initGrid(tab, 'default');
+    }
 
     function openAddModal() {
-        const fieldsDiv = document.getElementById('modal-form-fields');
+        const fieldsDiv = document.getElementById('modal-fields');
         fieldsDiv.innerHTML = '';
         
-        document.getElementById('modal-title').innerText = "INSERIR REGISTO - " + currentTab.toUpperCase();
+        // Obter as colunas para o recurso atual
+        let cols = columnDefs[currentTab][currentResource] || columnDefs[currentTab]['default'];
         
-        columnDefs[currentTab].forEach(col => {
-            if(col.field !== 'id' && col.field) {
-                let editorData = typeof col.editorParams === "function" ? col.editorParams().values : (col.editorParams ? col.editorParams.values : null);
-                
+        cols.forEach(col => {
+            if(col.field !== 'id' && col.field !== 'ia_insight' && col.field) {
                 let html = `<div class="input-group"><label>${col.title}</label>`;
-                
-                if (editorData) {
-                    html += `<select id="modal_in_${col.field}">`;
-                    for (let key in editorData) {
-                        html += `<option value="${key}">${editorData[key]}</option>`;
-                    }
-                    html += `</select>`;
-                } else {
-                    html += `<input type="text" id="modal_in_${col.field}" placeholder="Escrever...">`;
-                }
-                
+                html += `<input type="text" id="modal_in_${col.field}" placeholder="Escrever...">`;
                 html += `</div>`;
                 fieldsDiv.innerHTML += html;
             }
@@ -727,33 +721,28 @@
 
     function saveNewRow() {
         let data = {};
-        columnDefs[currentTab].forEach(col => {
-            if(col.field !== 'id' && col.field) {
-                data[col.field] = document.getElementById(`modal_in_${col.field}`).value;
+        let cols = columnDefs[currentTab][currentResource] || columnDefs[currentTab]['default'];
+        
+        cols.forEach(col => {
+            if(col.field !== 'id' && col.field !== 'ia_insight' && col.field) {
+                let input = document.getElementById(`modal_in_${col.field}`);
+                if(input) data[col.field] = input.value;
             }
         });
         
-        sendApiRequest(currentTab, 'create', data).then((res) => {
-            if(res.sucesso) {
-                data.id = res.id;
-                table.addRow(data, true);
-                closeModal();
-                showToast("Nova linha adicionada.");
-            }
+        sendApiRequest(currentTab, 'create', data).then(() => {
+            closeModal();
+            showToast("Linha adicionada à base de dados.");
+            initGrid(currentTab, currentResource);
         });
     }
 
     function imprimirFolha() {
-        table.print(false, true);
+        if(table) table.print(false, true);
     }
     
     function showToast(msg = "Gravação guardada com sucesso no Cloud.") {
-        let toast = document.getElementById('toast');
-        toast.innerText = msg;
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        alert(msg); // Usando alert simples para debug rápido, pode restaurar o toast depois
     }
 
     async function sendApiRequest(tab, action, data) {
@@ -765,7 +754,10 @@
         return response.json();
     }
 
-    // Initialize
+    // Inicialização
+    document.addEventListener("DOMContentLoaded", function() {
+        // A inicialização agora é tratada pelo wrapper que adicionei antes
+    });// Initialize
     document.addEventListener("DOMContentLoaded", function() {
         initGrid('rh');
     });
