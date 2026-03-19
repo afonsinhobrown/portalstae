@@ -1,327 +1,561 @@
-{% extends 'admin_portal/base.html' %}
-
-{% block content %}
-<link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator_midnight.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
-
-<style>
-/* ========================================= */
-/* FUTURISTIC NEON / GLASSMORPHISM EXCEL UX  */
-/* ========================================= */
-.super-wrapper {
-    padding: 20px;
-    background: radial-gradient(circle at top left, #0d1117, #000000);
-    min-height: 85vh;
-    border-radius: 15px;
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
-    color: #fff;
-    font-family: 'Inter', sans-serif;
-}
-
-.excel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
-    padding-bottom: 15px;
-}
-
-.excel-header h2 {
-    margin: 0;
-    font-weight: 800;
-    background: -webkit-linear-gradient(#00f2fe, #4facfe);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.excel-controls button {
-    background: rgba(0, 255, 255, 0.1);
-    border: 1px solid #00f2fe;
-    color: #00f2fe;
-    padding: 8px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-    margin-left: 10px;
-}
-
-.excel-controls button:hover {
-    background: #00f2fe;
-    color: #000;
-    box-shadow: 0 0 15px #00f2fe;
-}
-
-/* Tab Navigation (Sheets at Top) */
-.sheets-nav {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 15px;
-}
-
-.sheet-tab {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
-    padding: 10px 25px;
-    border-radius: 8px 8px 0 0;
-    color: #aaa;
-    cursor: pointer;
-    transition: 0.3s;
-    font-weight: 600;
-}
-
-.sheet-tab.active {
-    background: rgba(0, 255, 255, 0.15);
-    color: #00f2fe;
-    border: 1px solid #00f2fe;
-    border-bottom: none;
-    box-shadow: 0 -5px 15px rgba(0, 255, 255, 0.1);
-}
-
-.sheet-tab:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
-
-/* Tabulator Custom Overrides for Glassmorphism */
-.tabulator {
-    background: rgba(13, 17, 23, 0.7) !important;
-    border: 1px solid rgba(0, 255, 255, 0.2) !important;
-    border-radius: 0 8px 8px 8px;
-    backdrop-filter: blur(10px);
-}
-.tabulator-header {
-    background: rgba(0, 255, 255, 0.05) !important;
-    color: #00f2fe !important;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.3) !important;
-}
-.tabulator-row {
-    background-color: transparent !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-    color: #e6edf3 !important;
-}
-.tabulator-row:hover {
-    background-color: rgba(0, 255, 255, 0.1) !important;
-}
-.tabulator-cell {
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-.tabulator-cell input {
-    background: transparent !important;
-    color: #00f2fe !important;
-}
-
-/* Futuristic Modal */
-.neon-modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(5px);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-}
-.neon-modal-content {
-    background: #0d1117;
-    border: 1px solid #00f2fe;
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
-    border-radius: 15px;
-    padding: 30px;
-    width: 400px;
-    max-width: 90%;
-}
-.neon-modal h3 {
-    margin-top: 0;
-    color: #00f2fe;
-}
-.neon-modal input, .neon-modal select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(0,255,255,0.3);
-    color: #fff;
-    border-radius: 5px;
-}
-.neon-modal input:focus {
-    outline: none;
-    border-color: #00f2fe;
-    box-shadow: 0 0 10px rgba(0,255,255,0.5);
-}
-</style>
-
-<div class="super-wrapper">
-    <div class="excel-header">
-        <h2><i class="bi bi-grid-3x3-gap-fill"></i> PORTAL STAE - NEXUS GRID</h2>
-        <div class="excel-controls">
-            <button onclick="downloadCSV()"><i class="bi bi-download"></i> EXPORTAR CSV</button>
-            <button onclick="openAddModal()"><i class="bi bi-plus-lg"></i> NOVA LINHA</button>
-        </div>
-    </div>
-
-    <!-- Sheets Tabs -->
-    <div class="sheets-nav" id="sheets-nav">
-        <button class="sheet-tab active" onclick="loadTab('rh', this)"><i class="bi bi-people"></i> Humanos (RH)</button>
-        <button class="sheet-tab" onclick="loadTab('transportes', this)"><i class="bi bi-truck"></i> Frotas (Transportes)</button>
-        <button class="sheet-tab" onclick="loadTab('equipamento', this)"><i class="bi bi-pc-display"></i> Material (Equip.)</button>
-    </div>
-
-    <!-- The Spreadsheet -->
-    <div id="stae-grid"></div>
-</div>
-
-<!-- Add Modal -->
-<div class="neon-modal" id="addModal">
-    <div class="neon-modal-content">
-        <h3>ADICIONAR REGISTO</h3>
-        <div id="modal-form-fields"></div>
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-            <button class="btn btn-secondary" onclick="closeModal()">CANCELAR</button>
-            <button class="btn btn-info" style="background:#00f2fe; color:#000; border:none; font-weight:bold;" onclick="saveNewRow()">GUARDAR</button>
-        </div>
-    </div>
-</div>
-
-<script>
-let table;
-let currentTab = 'rh';
-
-// As configurações de colunas de acordo com cada Aba
-const columnDefs = {
-    'rh': [
-        {title:"ID", field:"id", width:60, visible:false},
-        {title:"Nome Completo", field:"nome_completo", editor:"input", headerFilter:"input"},
-        {title:"Nº Identificação", field:"numero_identificacao", editor:"input", headerFilter:"input"},
-        {title:"Gênero", field:"genero", editor:"select", editorParams:{values:["M", "F"]}, headerFilter:"input"},
-        {title:"Função", field:"funcao", editor:"input", headerFilter:"input"},
-        {title:"Telefone", field:"telefone", editor:"input", headerFilter:"input"},
-        {formatter:deleteIcon, width:60, hozAlign:"center", cellClick:deleteRow, headerSort:false}
-    ],
-    'transportes': [
-        {title:"ID", field:"id", width:60, visible:false},
-        {title:"Matrícula", field:"matricula", editor:"input", headerFilter:"input"},
-        {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
-        {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
-        {title:"Ano", field:"ano", editor:"number", headerFilter:"input"},
-        {title:"Estado", field:"estado", editor:"input", headerFilter:"input"},
-        {formatter:deleteIcon, width:60, hozAlign:"center", cellClick:deleteRow, headerSort:false}
-    ],
-    'equipamento': [
-        {title:"ID", field:"id", width:60, visible:false},
-        {title:"Nº Série", field:"numero_serie", editor:"input", headerFilter:"input"},
-        {title:"Nome", field:"nome", editor:"input", headerFilter:"input"},
-        {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
-        {title:"Estado Atual", field:"estado", editor:"input", headerFilter:"input"},
-        {formatter:deleteIcon, width:60, hozAlign:"center", cellClick:deleteRow, headerSort:false}
-    ]
-};
-
-// Icone de apagar
-function deleteIcon(cell, formatterParams, onRendered){
-    return "<i class='bi bi-trash' style='color:#ff4757; cursor:pointer;'></i>";
-}
-
-// Iniciar a grelha Tabulator
-function initGrid(tabName) {
-    if(table) { table.destroy(); }
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAE_Gestao_Global.xlsx - Excel</title>
+    <!-- Tabulator CSS (Light/CleanTheme) -->
+    <link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
     
-    table = new Tabulator("#stae-grid", {
-        ajaxURL: "/admin_portal/api/super-planilha/?tab=" + tabName,
-        layout: "fitColumns",
-        columns: columnDefs[tabName],
-        pagination: "local",
-        paginationSize: 20,
-        movableColumns: true,
-        resizableRows: true,
-        height: "600px",
-        placeholder: "Sem Dados",
-        cellEdited: function(cell) {
-            // Quando edita como excel, manda POST update automatico
-            let rowData = cell.getRow().getData();
-            sendApiRequest(tabName, 'update', rowData);
-        },
-    });
-}
+    <style>
+        :root {
+            --excel-green: #107c41;
+            --excel-light-bg: #f3f2f1;
+            --excel-border: #e1dfdd;
+            --excel-tab-active: #ffffff;
+            --excel-tab-hover: #faf9f8;
+            --text-main: #323130;
+        }
 
-// Mudar de Aba
-function loadTab(tabName, element) {
-    currentTab = tabName;
-    document.querySelectorAll('.sheet-tab').forEach(el => el.classList.remove('active'));
-    if(element) element.classList.add('active');
-    initGrid(tabName);
-}
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--excel-light-bg);
+            color: var(--text-main);
+            overflow: hidden;
+        }
 
-// Apagar Linha
-function deleteRow(e, cell){
-    if(confirm("Tens a certeza que queres eliminar esta linha?")) {
-        let row = cell.getRow();
-        sendApiRequest(currentTab, 'delete', {id: row.getData().id}).then(() => {
-            row.delete();
+        /* 1. TOP GREEN BAR */
+        .excel-titlebar {
+            background-color: var(--excel-green);
+            color: white;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 14px;
+            font-weight: 600;
+            user-select: none;
+        }
+        .excel-titlebar i {
+            font-size: 18px;
+            margin-right: 15px;
+        }
+
+        /* 2. RIBBON & FORMULA BAR */
+        .excel-ribbon {
+            background-color: white;
+            min-height: 80px;
+            border-bottom: 1px solid var(--excel-border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .print-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 10px;
+            color: var(--text-main);
+            border-right: 1px solid var(--excel-border);
+            padding-right: 20px;
+            margin-right: 20px;
+        }
+        .print-btn i {
+            font-size: 24px;
+            color: #605e5c;
+            margin-bottom: 5px;
+        }
+        .print-btn span {
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .print-btn:hover {
+            background-color: var(--excel-light-bg);
+        }
+
+        .formula-bar {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .formula-icon {
+            font-style: italic;
+            font-weight: bold;
+            color: #605e5c;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .formula-input {
+            width: 100%;
+            border: 1px solid var(--excel-border);
+            padding: 5px 10px;
+            outline: none;
+            color: #323130;
+        }
+
+        /* 3. TABS BAR (PLANILHAS) */
+        .excel-tabs-container {
+            background-color: #edebe9;
+            height: 40px;
+            display: flex;
+            align-items: flex-end;
+            padding-left: 10px;
+            border-bottom: 1px solid var(--excel-border);
+            gap: 2px;
+        }
+        .planilhas-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #605e5c;
+            text-transform: uppercase;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+        .excel-tab {
+            background-color: #e1dfdd;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--excel-border);
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            color: #605e5c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .excel-tab.active {
+            background-color: white;
+            color: var(--excel-green);
+            border-top: 3px solid var(--excel-green);
+        }
+        .excel-tab:hover:not(.active) {
+            background-color: var(--excel-light-bg);
+        }
+
+        /* 4. WORKSPACE / SPREADSHEET */
+        .workspace {
+            background-color: white;
+            height: calc(100vh - 168px); /* Total height minus header+ribbon+tabs */
+            padding: 20px 40px;
+            overflow: auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--excel-light-bg);
+            padding-bottom: 10px;
+        }
+        
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 5px 0;
+            color: #201f1e;
+        }
+        .page-header p {
+            font-size: 14px;
+            color: #a19f9d;
+            margin: 0;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .total-box {
+            background-color: #f7f9fa;
+            border: 1px solid #e1dfdd;
+            padding: 15px 30px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #323130;
+        }
+
+        /* TABULATOR CLEAN OVERRIDES */
+        .tabulator {
+            border: none;
+            background-color: white;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+        }
+        .tabulator-header {
+            border-bottom: 2px solid #edebe9 !important;
+            background-color: white !important;
+            color: #201f1e !important;
+            font-weight: 700 !important;
+        }
+        .tabulator-col {
+            background-color: white !important;
+            border-right: none !important;
+        }
+        .tabulator-col-title {
+            padding: 10px 0 !important;
+        }
+        .tabulator-row {
+            border-bottom: 1px dashed #e1dfdd !important;
+            background-color: white !important;
+        }
+        .tabulator-row.tabulator-row-even {
+            background-color: #faf9f8 !important;
+        }
+        .tabulator-row:hover {
+            background-color: #f3f2f1 !important;
+        }
+        .tabulator-cell {
+            padding: 15px 10px !important;
+            border-right: none !important;
+            color: #323130;
+            font-weight: 600;
+        }
+        
+        /* Colored top borders on specific columns to mimic the UI screenshot */
+        .tabulator-col:nth-child(2) { border-top: 3px solid #0078d4 !important; }
+        .tabulator-col:nth-child(3) { border-top: 3px solid #f2c811 !important; }
+        .tabulator-col:nth-child(4) { border-top: 3px solid #d13438 !important; }
+        .tabulator-col:nth-child(5) { border-top: 3px solid #107c41 !important; }
+        .tabulator-col:nth-child(6) { border-top: 3px solid #00a4ef !important; }
+
+        .add-row-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--excel-green);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .add-row-btn:hover {
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+            transform: translateY(-2px);
+        }
+
+        /* MODAL NATIVO LIMPO */
+        .excel-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .excel-modal-content {
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            width: 450px;
+            max-width: 90%;
+            border-top: 5px solid var(--excel-green);
+        }
+        .excel-modal h3 {
+            margin-top: 0;
+            color: #323130;
+            border-bottom: 1px solid #edebe9;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #605e5c;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #8a8886;
+            border-radius: 2px;
+            font-family: inherit;
+        }
+        .input-group input:focus {
+            outline: 1px solid var(--excel-green);
+            border-color: var(--excel-green);
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        .btn-cancel {
+            background: #edebe9;
+            border: 1px solid #8a8886;
+            padding: 8px 20px;
+            cursor: pointer;
+            color: #323130;
+        }
+        .btn-save {
+            background: var(--excel-green);
+            border: none;
+            padding: 8px 20px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Floating notification */
+        .toast-notification {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background-color: var(--excel-green);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: 600;
+            transform: translateX(150%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10000;
+        }
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. TOP TITLE BAR -->
+    <div class="excel-titlebar">
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i> STAE_Gestao_Global.xlsx - Excel
+    </div>
+
+    <!-- 2. RIBBON -->
+    <div class="excel-ribbon">
+        <div class="print-btn" onclick="imprimirFolha()">
+            <i class="bi bi-printer"></i>
+            <span>Imprimir Folha</span>
+        </div>
+        
+        <div class="formula-bar">
+            <div class="formula-icon">fx</div>
+            <input type="text" class="formula-input" id="formula-bar" value="=VLOOKUP(STAE_GERAL!A1:Z999)" readonly>
+        </div>
+    </div>
+
+    <!-- 3. TABS BAR -->
+    <div class="excel-tabs-container">
+        <div class="planilhas-label"><i class="bi bi-list" style="margin-right:5px; font-size:14px;"></i> PLANILHAS:</div>
+        <div class="excel-tab active" onclick="loadTab('rh', 'Recursos Humanos / RH', this)"><i class="bi bi-people-fill" style="color:#0078d4;"></i> Recursos Humanos</div>
+        <div class="excel-tab" onclick="loadTab('transportes', 'Frota & Transportes', this)"><i class="bi bi-truck" style="color:#f2c811;"></i> Frota & Transportes</div>
+        <div class="excel-tab" onclick="loadTab('equipamento', 'Inventário / Equipamentos', this)"><i class="bi bi-pc-display" style="color:#107c41;"></i> Inventário / Equip.</div>
+        <div class="excel-tab" onclick="window.location.href='/'" style="margin-left:auto; border:none; background:transparent;"><i class="bi bi-box-arrow-right"></i> Sair do Excel</div>
+    </div>
+
+    <!-- 4. WORKSPACE -->
+    <div class="workspace">
+        <div class="page-header">
+            <div>
+                <h1 id="sheet-title">Recursos Humanos</h1>
+                <p id="sheet-subtitle">GESTAO ATUAL DE PESSOAL</p>
+            </div>
+            <div class="total-box">
+                SELEÇÃO DE LINHAS (AUTO-SAVE ATIVADO)
+            </div>
+        </div>
+
+        <div id="stae-grid"></div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="add-row-btn" onclick="openAddModal()">
+        <i class="bi bi-plus-circle-fill"></i> Nova Linha na Planilha
+    </button>
+
+    <!-- Modal Adicionar -->
+    <div class="excel-modal" id="addModal">
+        <div class="excel-modal-content">
+            <h3 id="modal-title">INSERIR DADOS</h3>
+            <div id="modal-form-fields"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-save" onclick="saveNewRow()">Gravar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast-notification" id="toast">Gravação guardada com sucesso!</div>
+
+    <script>
+    let table;
+    let currentTab = 'rh';
+
+    const columnDefs = {
+        'rh': [
+            {title:"ID (REF)", field:"id", width:80, visible:false},
+            {title:"Nome do Trabalhador", field:"nome_completo", editor:"input", headerFilter:"input"},
+            {title:"Nº Identificação", field:"numero_identificacao", editor:"input", headerFilter:"input", width:150},
+            {title:"Género", field:"genero", editor:"select", editorParams:{values:["M", "F"]}, headerFilter:"input", hozAlign:"center", width:100},
+            {title:"Função / Cargo", field:"funcao", editor:"input", headerFilter:"input"},
+            {title:"Contacto", field:"telefone", editor:"input", headerFilter:"input", width:150},
+            {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
+        ],
+        'transportes': [
+            {title:"ID (REF)", field:"id", width:80, visible:false},
+            {title:"Matrícula da Viatura", field:"matricula", editor:"input", headerFilter:"input", width:160},
+            {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
+            {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
+            {title:"Ano Fabrico", field:"ano", editor:"number", headerFilter:"input", width:120, hozAlign:"center"},
+            {title:"Estado Conservância", field:"estado", editor:"input", headerFilter:"input", width:200},
+            {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
+        ],
+        'equipamento': [
+            {title:"ID (REF)", field:"id", width:80, visible:false},
+            {title:"Nº de Série", field:"numero_serie", editor:"input", headerFilter:"input", width:180},
+            {title:"Designação do Ativo", field:"nome", editor:"input", headerFilter:"input"},
+            {title:"Marca/Fabricante", field:"marca", editor:"input", headerFilter:"input"},
+            {title:"Estado Operacional", field:"estado", editor:"input", headerFilter:"input", width:200},
+            {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
+        ]
+    };
+
+    function deleteIcon(cell, formatterParams, onRendered){
+        return "<i class='bi bi-trash' style='color:#a4262c; cursor:pointer;' title='Apagar linha'></i>";
+    }
+
+    function initGrid(tabName) {
+        if(table) { table.destroy(); }
+        
+        table = new Tabulator("#stae-grid", {
+            ajaxURL: "/admin_portal/api/super-planilha/?tab=" + tabName,
+            layout: "fitColumns",
+            columns: columnDefs[tabName],
+            pagination: "local",
+            paginationSize: 15,
+            placeholder: "Nenhum dado encontrado na Planilha.",
+            cellEdited: function(cell) {
+                let rowData = cell.getRow().getData();
+                document.getElementById('formula-bar').value = "=UPDATE(" + cell.getField().toUpperCase() + ", \"" + cell.getValue() + "\")";
+                sendApiRequest(tabName, 'update', rowData).then(() => {
+                    showToast();
+                });
+            },
+            rowClick: function(e, row){
+                let data = row.getData();
+                document.getElementById('formula-bar').value = "=VLOOKUP(ID:" + data.id + ")";
+            }
         });
     }
-}
 
-// Modal de Criação Dinâmico
-function openAddModal() {
-    const fieldsDiv = document.getElementById('modal-form-fields');
-    fieldsDiv.innerHTML = '';
-    
-    columnDefs[currentTab].forEach(col => {
-        if(col.field !== 'id' && col.field) {
-            let html = `<label style="color:#aaa; font-size:12px;">${col.title}</label>`;
-            html += `<input type="text" id="modal_in_${col.field}" placeholder="${col.title}">`;
-            fieldsDiv.innerHTML += html;
+    function loadTab(tabName, title, element) {
+        currentTab = tabName;
+        document.getElementById('sheet-title').innerText = title;
+        if(tabName == 'rh') document.getElementById('sheet-subtitle').innerText = "QUADRO DE PESSOAL DO STAE";
+        if(tabName == 'transportes') document.getElementById('sheet-subtitle').innerText = "GESTÃO E ALOCAÇÃO DE FROTA";
+        if(tabName == 'equipamento') document.getElementById('sheet-subtitle').innerText = "INVENTÁRIO GERAL DO ESTADO";
+
+        document.querySelectorAll('.excel-tab').forEach(el => el.classList.remove('active'));
+        if(element) element.classList.add('active');
+        
+        document.getElementById('formula-bar').value = "=VLOOKUP("+tabName.toUpperCase()+"!A1:Z999)";
+        
+        initGrid(tabName);
+    }
+
+    function deleteRow(e, cell){
+        if(confirm("Excel: Operação Irreversível. Deseja eliminar esta linha da matriz?")) {
+            let row = cell.getRow();
+            sendApiRequest(currentTab, 'delete', {id: row.getData().id}).then(() => {
+                row.delete();
+                showToast("Linha apagada.");
+            });
         }
-    });
+    }
+
+    function openAddModal() {
+        const fieldsDiv = document.getElementById('modal-form-fields');
+        fieldsDiv.innerHTML = '';
+        
+        document.getElementById('modal-title').innerText = "INSERIR REGISTO - " + currentTab.toUpperCase();
+        
+        columnDefs[currentTab].forEach(col => {
+            if(col.field !== 'id' && col.field) {
+                let html = `<div class="input-group">
+                                <label>${col.title}</label>
+                                <input type="text" id="modal_in_${col.field}" placeholder="Escrever...">
+                            </div>`;
+                fieldsDiv.innerHTML += html;
+            }
+        });
+        
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('addModal').style.display = 'none';
+    }
+
+    function saveNewRow() {
+        let data = {};
+        columnDefs[currentTab].forEach(col => {
+            if(col.field !== 'id' && col.field) {
+                data[col.field] = document.getElementById(`modal_in_${col.field}`).value;
+            }
+        });
+        
+        sendApiRequest(currentTab, 'create', data).then((res) => {
+            if(res.sucesso) {
+                data.id = res.id;
+                table.addRow(data, true);
+                closeModal();
+                showToast("Nova linha adicionada.");
+            }
+        });
+    }
+
+    function imprimirFolha() {
+        table.print(false, true);
+    }
     
-    document.getElementById('addModal').style.display = 'flex';
-}
+    function showToast(msg = "Gravação guardada com sucesso no Cloud.") {
+        let toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
 
-function closeModal() {
-    document.getElementById('addModal').style.display = 'none';
-}
+    async function sendApiRequest(tab, action, data) {
+        const response = await fetch('/admin_portal/api/super-planilha/?tab=' + tab, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: action, data: data})
+        });
+        return response.json();
+    }
 
-function saveNewRow() {
-    let data = {};
-    columnDefs[currentTab].forEach(col => {
-        if(col.field !== 'id' && col.field) {
-            data[col.field] = document.getElementById(`modal_in_${col.field}`).value;
-        }
+    // Initialize
+    document.addEventListener("DOMContentLoaded", function() {
+        initGrid('rh');
     });
-    
-    sendApiRequest(currentTab, 'create', data).then((res) => {
-        if(res.sucesso) {
-            data.id = res.id;
-            table.addRow(data, true);
-            closeModal();
-        }
-    });
-}
-
-function downloadCSV() {
-    table.download("csv", currentTab + "_dados.csv");
-}
-
-// Funcao AJAX fetch genérica
-async function sendApiRequest(tab, action, data) {
-    const response = await fetch('/admin_portal/api/super-planilha/?tab=' + tab, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: action, data: data})
-    });
-    return response.json();
-}
-
-// Iniciar com RH
-document.addEventListener("DOMContentLoaded", function() {
-    initGrid('rh');
-});
-</script>
-
-{% endblock %}
+    </script>
+</body>
+</html>
