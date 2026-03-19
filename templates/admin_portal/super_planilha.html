@@ -413,6 +413,7 @@
     <script>
     let table;
     let currentTab = 'rh';
+    let globalOptions = {}; // Armazenar sectores, tipos, etc.
 
     const columnDefs = {
         'rh': [
@@ -426,21 +427,39 @@
         ],
         'transportes': [
             {title:"ID (REF)", field:"id", width:80, visible:false},
-            {title:"Matrícula da Viatura", field:"matricula", editor:"input", headerFilter:"input", width:160},
+            {title:"Matrícula", field:"matricula", editor:"input", headerFilter:"input", width:160},
             {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
             {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
             {title:"Ano Fabrico", field:"ano_fabrico", editor:"number", headerFilter:"input", width:120, hozAlign:"center"},
-            {title:"Estado Conservância", field:"estado", editor:"input", headerFilter:"input", width:200},
+            {title:"Estado", field:"estado", editor:"input", headerFilter:"input", width:150},
+            {title:"Motorista", field:"funcionario_afecto_id", editor:"select", editorParams: function(){
+                return {values: globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {}};
+            }, formatter:"lookup", formatterParams: function(){
+                return globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {};
+            }},
             {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
         ],
         'equipamento': [
             {title:"ID (REF)", field:"id", width:80, visible:false},
             {title:"Nº de Série", field:"numero_serie", editor:"input", headerFilter:"input", width:180},
-            {title:"Marca/Fabricante", field:"marca", editor:"input", headerFilter:"input"},
+            {title:"Tipo", field:"tipo_id", editor:"select", editorParams: function(){
+                return {values: globalOptions.tipos_equipamento ? globalOptions.tipos_equipamento.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {}};
+            }, formatter:"lookup", formatterParams: function(){
+                return globalOptions.tipos_equipamento ? globalOptions.tipos_equipamento.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {};
+            }},
+            {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
             {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
-            {title:"Fornecedor", field:"fornecedor", editor:"input", headerFilter:"input"},
-            {title:"Ano Aq.", field:"ano_aquisicao", editor:"number", headerFilter:"input", width:100},
-            {title:"Estado Operacional", field:"estado", editor:"input", headerFilter:"input", width:200},
+            {title:"Local (Setor)", field:"sector_atual_id", editor:"select", editorParams: function(){
+                return {values: globalOptions.sectores ? globalOptions.sectores.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {}};
+            }, formatter:"lookup", formatterParams: function(){
+                return globalOptions.sectores ? globalOptions.sectores.reduce((acc, obj) => { acc[obj.id] = obj.nome; return acc; }, {}) : {};
+            }},
+            {title:"Responsável", field:"funcionario_responsavel_id", editor:"select", editorParams: function(){
+                return {values: globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {}};
+            }, formatter:"lookup", formatterParams: function(){
+                return globalOptions.funcionarios ? globalOptions.funcionarios.reduce((acc, obj) => { acc[obj.id] = obj.nome_completo; return acc; }, {}) : {};
+            }},
+            {title:"Estado", field:"estado", editor:"select", editorParams:{values:{"excelente":"Excelente", "bom":"Bom", "regular":"Regular", "precisa_manutencao":"Manutenção", "inutilizado":"Inutilizado"}}, width:150},
             {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
         ]
     };
@@ -454,6 +473,12 @@
         
         table = new Tabulator("#stae-grid", {
             ajaxURL: "{% url 'admin_portal:api_super_planilha' %}?tab=" + tabName,
+            ajaxResponse: function(url, params, response){
+                if(response.options) {
+                    globalOptions = response.options;
+                }
+                return response.data;
+            },
             layout: "fitColumns",
             columns: columnDefs[tabName],
             pagination: "local",
@@ -509,10 +534,21 @@
         
         columnDefs[currentTab].forEach(col => {
             if(col.field !== 'id' && col.field) {
-                let html = `<div class="input-group">
-                                <label>${col.title}</label>
-                                <input type="text" id="modal_in_${col.field}" placeholder="Escrever...">
-                            </div>`;
+                let editorData = typeof col.editorParams === "function" ? col.editorParams().values : (col.editorParams ? col.editorParams.values : null);
+                
+                let html = `<div class="input-group"><label>${col.title}</label>`;
+                
+                if (editorData) {
+                    html += `<select id="modal_in_${col.field}">`;
+                    for (let key in editorData) {
+                        html += `<option value="${key}">${editorData[key]}</option>`;
+                    }
+                    html += `</select>`;
+                } else {
+                    html += `<input type="text" id="modal_in_${col.field}" placeholder="Escrever...">`;
+                }
+                
+                html += `</div>`;
                 fieldsDiv.innerHTML += html;
             }
         });

@@ -170,7 +170,7 @@ CHATBOT_CONFIG = {
 }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 180 # 3 minutos (conforme pedido pelo utilizador)
+SESSION_COOKIE_AGE = 600 # 10 minutos (ajustado de 3m para evitar logouts durante escrita)
 SESSION_SAVE_EVERY_REQUEST = True
 
 LOGGING = {

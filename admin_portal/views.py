@@ -725,9 +725,18 @@ def api_super_planilha(request):
         ModelClass = apps.get_model(app_label, model_name)
         
         if request.method == 'GET':
-            # Ler Dados
             records = ModelClass.objects.all()
             data = []
+            options = {}
+            
+            # Carregar opções para selects se necessário
+            if tab in ['equipamento', 'transportes']:
+                from recursoshumanos.models import Sector, Funcionario
+                from gestaoequipamentos.models import TipoEquipamento
+                options['sectores'] = list(Sector.objects.values('id', 'nome'))
+                options['funcionarios'] = list(Funcionario.objects.values('id', 'nome_completo'))
+                options['tipos_equipamento'] = list(TipoEquipamento.objects.values('id', 'nome'))
+
             if tab == 'rh':
                 for obj in records:
                     data.append({
@@ -746,7 +755,8 @@ def api_super_planilha(request):
                         'marca': obj.marca,
                         'modelo': obj.modelo,
                         'ano_fabrico': obj.ano_fabrico,
-                        'estado': obj.estado
+                        'estado': obj.estado,
+                        'funcionario_afecto_id': obj.funcionario_afecto_id
                     })
             elif tab == 'equipamento':
                 for obj in records:
@@ -755,9 +765,12 @@ def api_super_planilha(request):
                         'numero_serie': obj.numero_serie,
                         'marca': obj.marca,
                         'modelo': obj.modelo,
-                        'estado': obj.estado
+                        'estado': obj.estado,
+                        'tipo_id': obj.tipo_id,
+                        'sector_atual_id': obj.sector_atual_id,
+                        'funcionario_responsavel_id': obj.funcionario_responsavel_id
                     })
-            return JsonResponse(data, safe=False)
+            return JsonResponse({'data': data, 'options': options}, safe=False)
             
         elif request.method == 'POST':
             # Criar/Atualizar dados
