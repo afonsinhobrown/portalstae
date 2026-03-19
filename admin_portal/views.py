@@ -775,9 +775,24 @@ def api_super_planilha(request):
                 
             elif action == 'create':
                 obj = ModelClass()
+                
+                # Caso especial para Equipamentos (campos obrigatorios)
+                if tab == 'equipamento':
+                    from gestaoequipamentos.models import TipoEquipamento
+                    from recursoshumanos.models import Sector
+                    obj.tipo = TipoEquipamento.objects.first()
+                    obj.sector_atual = Sector.objects.first()
+                    obj.ano_aquisicao = 2026
+                    obj.criado_por = request.user
+                
+                # Caso especial para Viatura (ajuste de campo ano para ano_fabrico se necessario)
+                if tab == 'transportes' and 'ano' in row_data:
+                    row_data['ano_fabrico'] = row_data.pop('ano')
+
                 for key, value in row_data.items():
-                    if hasattr(obj, key) and key != 'id':
+                    if hasattr(obj, key) and key != 'id' and value is not None:
                         setattr(obj, key, value)
+                
                 obj.save()
                 return JsonResponse({'sucesso': True, 'id': obj.id})
                 

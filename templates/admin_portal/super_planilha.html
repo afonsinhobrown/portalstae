@@ -342,6 +342,14 @@
 </head>
 <body>
 
+    <!-- Barra de Acesso Rápido -->
+    <div style="background: #201f1e; color: #fff; height: 30px; display: flex; align-items: center; padding: 0 20px; font-size: 11px; gap: 15px;">
+        <span style="color: #00f2fe; font-weight: bold;">PORTAL STAE - MASTER ACCESS</span>
+        <a href="/portal-admin/" style="color: #ccc; text-decoration: none;">Dashboard</a>
+        <a href="/admin/" style="color: #ccc; text-decoration: none;">Admin Django</a>
+        <a href="/" style="color: #ccc; text-decoration: none;">Sair para o Início</a>
+    </div>
+
     <!-- 1. TOP TITLE BAR -->
     <div class="excel-titlebar">
         <i class="bi bi-file-earmark-spreadsheet-fill"></i> STAE_Gestao_Global.xlsx - Excel
@@ -366,7 +374,6 @@
         <div class="excel-tab active" onclick="loadTab('rh', 'Recursos Humanos / RH', this)"><i class="bi bi-people-fill" style="color:#0078d4;"></i> Recursos Humanos</div>
         <div class="excel-tab" onclick="loadTab('transportes', 'Frota & Transportes', this)"><i class="bi bi-truck" style="color:#f2c811;"></i> Frota & Transportes</div>
         <div class="excel-tab" onclick="loadTab('equipamento', 'Inventário / Equipamentos', this)"><i class="bi bi-pc-display" style="color:#107c41;"></i> Inventário / Equip.</div>
-        <div class="excel-tab" onclick="window.location.href='/'" style="margin-left:auto; border:none; background:transparent;"><i class="bi bi-box-arrow-right"></i> Sair do Excel</div>
     </div>
 
     <!-- 4. WORKSPACE -->
@@ -377,7 +384,7 @@
                 <p id="sheet-subtitle">GESTAO ATUAL DE PESSOAL</p>
             </div>
             <div class="total-box">
-                SELEÇÃO DE LINHAS (AUTO-SAVE ATIVADO)
+                REGISTOS NA MATRIZ: <span id="row-count">0</span>
             </div>
         </div>
 
@@ -450,6 +457,9 @@
             pagination: "local",
             paginationSize: 15,
             placeholder: "Nenhum dado encontrado na Planilha.",
+            dataLoaded: function(data){
+                document.getElementById('row-count').innerText = data.length;
+            },
             cellEdited: function(cell) {
                 let rowData = cell.getRow().getData();
                 document.getElementById('formula-bar').value = "=UPDATE(" + cell.getField().toUpperCase() + ", \"" + cell.getValue() + "\")";
