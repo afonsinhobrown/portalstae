@@ -422,15 +422,15 @@
             {title:"Matrícula da Viatura", field:"matricula", editor:"input", headerFilter:"input", width:160},
             {title:"Marca", field:"marca", editor:"input", headerFilter:"input"},
             {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
-            {title:"Ano Fabrico", field:"ano", editor:"number", headerFilter:"input", width:120, hozAlign:"center"},
+            {title:"Ano Fabrico", field:"ano_fabrico", editor:"number", headerFilter:"input", width:120, hozAlign:"center"},
             {title:"Estado Conservância", field:"estado", editor:"input", headerFilter:"input", width:200},
             {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
         ],
         'equipamento': [
             {title:"ID (REF)", field:"id", width:80, visible:false},
             {title:"Nº de Série", field:"numero_serie", editor:"input", headerFilter:"input", width:180},
-            {title:"Designação do Ativo", field:"nome", editor:"input", headerFilter:"input"},
             {title:"Marca/Fabricante", field:"marca", editor:"input", headerFilter:"input"},
+            {title:"Modelo", field:"modelo", editor:"input", headerFilter:"input"},
             {title:"Estado Operacional", field:"estado", editor:"input", headerFilter:"input", width:200},
             {formatter:deleteIcon, width:50, hozAlign:"center", cellClick:deleteRow, headerSort:false}
         ]
@@ -444,7 +444,7 @@
         if(table) { table.destroy(); }
         
         table = new Tabulator("#stae-grid", {
-            ajaxURL: "/admin_portal/api/super-planilha/?tab=" + tabName,
+            ajaxURL: "api/super-planilha/?tab=" + tabName,
             layout: "fitColumns",
             columns: columnDefs[tabName],
             pagination: "local",
@@ -544,7 +544,7 @@
     }
 
     async function sendApiRequest(tab, action, data) {
-        const response = await fetch('/admin_portal/api/super-planilha/?tab=' + tab, {
+        const response = await fetch('api/super-planilha/?tab=' + tab, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({action: action, data: data})

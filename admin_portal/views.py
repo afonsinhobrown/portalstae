@@ -745,7 +745,7 @@ def api_super_planilha(request):
                         'matricula': obj.matricula,
                         'marca': obj.marca,
                         'modelo': obj.modelo,
-                        'ano': obj.ano,
+                        'ano_fabrico': obj.ano_fabrico,
                         'estado': obj.estado
                     })
             elif tab == 'equipamento':
@@ -753,8 +753,8 @@ def api_super_planilha(request):
                     data.append({
                         'id': obj.id,
                         'numero_serie': obj.numero_serie,
-                        'nome': obj.nome,
                         'marca': obj.marca,
+                        'modelo': obj.modelo,
                         'estado': obj.estado
                     })
             return JsonResponse(data, safe=False)
