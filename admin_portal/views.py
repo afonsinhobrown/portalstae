@@ -783,6 +783,8 @@ def api_super_planilha(request):
                     obj.tipo = TipoEquipamento.objects.first()
                     obj.sector_atual = Sector.objects.first()
                     obj.ano_aquisicao = 2026
+                    obj.fornecedor = "STAE Master Supply"
+                    obj.atributos_especificos = {}
                     obj.criado_por = request.user
                 
                 # Caso especial para Viatura (ajuste de campo ano para ano_fabrico se necessario)
