@@ -4,7 +4,7 @@ import django
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'portalstae.settings')
-django.setup()
+# django.setup() foi removido pois o get_asgi_application() ja o faz implicitamente.
 
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack

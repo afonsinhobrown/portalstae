@@ -5,7 +5,7 @@ from django.contrib.messages import constants as messages
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-sua-chave-secreta-aqui-mude-em-producao'
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.localhost', '0.0.0.0', '.onrender.com', '*']
 
 INSTALLED_APPS = [
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 # ========== MIDDLEWARE SEM CSRF ==========
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     # NÃO TEM CSRF MIDDLEWARE AQUI - REMOVIDO
@@ -119,6 +120,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
