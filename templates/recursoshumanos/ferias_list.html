@@ -1,0 +1,116 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Pedidos de Férias • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Gestão de Férias</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">RH</a></li>
+                <li class="breadcrumb-item active">Férias</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'recursoshumanos:calendario_ferias' %}" class="btn btn-outline-primary">
+            <i class="fas fa-calendar me-2"></i>Calendário
+        </a>
+    </div>
+</div>
+
+<div class="rh-card">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-umbrella-beach me-2 text-warning"></i>
+            Pedidos de Férias
+        </h5>
+        <select class="form-select" style="width: auto;" onchange="filterByStatus(this.value)">
+            <option value="">Todos status</option>
+            <option value="pendente" {% if status_filter == 'pendente' %}selected{% endif %}>Pendentes</option>
+            <option value="aprovado" {% if status_filter == 'aprovado' %}selected{% endif %}>Aprovados</option>
+            <option value="rejeitado" {% if status_filter == 'rejeitado' %}selected{% endif %}>Rejeitados</option>
+        </select>
+    </div>
+    
+    <div class="card-body">
+        {% if pedidos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Funcionário</th>
+                        <th>Período</th>
+                        <th>Dias</th>
+                        <th>Data Pedido</th>
+                        <th>Status</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>
+                            <strong>{{ pedido.funcionario.nome_completo }}</strong>
+                            <br>
+                            <small class="text-muted">{{ pedido.funcionario.sector }}</small>
+                        </td>
+                        <td>
+                            {{ pedido.data_inicio|date:"d/m/Y" }}
+                            <br>
+                            <small>até {{ pedido.data_fim|date:"d/m/Y" }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ pedido.dias_solicitados }} dias</span>
+                        </td>
+                        <td>
+                            <small>{{ pedido.data_pedido|date:"d/m/Y H:i" }}</small>
+                        </td>
+                        <td>
+                            {% if pedido.status == 'pendente' %}
+                            <span class="badge bg-warning">Pendente</span>
+                            {% elif pedido.status == 'aprovado' %}
+                            <span class="badge bg-success">Aprovado</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rejeitado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if pedido.status == 'pendente' %}
+                            <a href="{% url 'recursoshumanos:aprovar_ferias' pedido.id %}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-check me-1"></i>Analisar
+                            </a>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-umbrella-beach fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum pedido de férias</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterByStatus(status) {
+    const params = new URLSearchParams();
+    if (status) {
+        params.set('status', status);
+    }
+    window.location.href = '?' + params.toString();
+}
+</script>
+{% endblock %}

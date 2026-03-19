@@ -1,0 +1,898 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Novo Funcionário • Sistema RH{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos para webcam e pré-visualização */
+    .webcam-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    #video {
+        width: 100%;
+        max-width: 320px;
+        border: 2px solid #007bff;
+        border-radius: 5px;
+        background: #000;
+    }
+
+    .captured-photo {
+        width: 120px;
+        height: 160px;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 2px solid #28a745;
+        margin: 10px auto;
+    }
+
+    .photo-options {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Pré-visualização do cartão */
+    .card-preview {
+        background: linear-gradient(135deg, #1a4a72 0%, #2c3e50 100%);
+        border-radius: 10px;
+        padding: 20px;
+        color: white;
+        max-width: 400px;
+        margin: 20px auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-preview::before {
+        content: "STAE";
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 14px;
+        font-weight: bold;
+        opacity: 0.3;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .card-photo {
+        width: 80px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 2px solid white;
+    }
+
+    .card-qr {
+        width: 70px;
+        height: 70px;
+        background: white;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    .card-details {
+        margin-top: 15px;
+    }
+
+    .card-row {
+        display: flex;
+        margin-bottom: 5px;
+        font-size: 12px;
+    }
+
+    .card-label {
+        width: 120px;
+        font-weight: bold;
+        opacity: 0.8;
+    }
+
+    .card-value {
+        flex: 1;
+    }
+
+    .card-footer {
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        font-size: 10px;
+        text-align: center;
+        opacity: 0.7;
+    }
+
+    /* Layout do formulário */
+    .form-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+        color: #1a4a72;
+        border-bottom: 2px solid #1a4a72;
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .field-required::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-actions {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+        border-top: 3px solid #1a4a72;
+    }
+
+    /* Estilo para campos com números automáticos */
+    .auto-generated {
+        background-color: #f8f9fa !important;
+        color: #6c757d !important;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .card-preview {
+            max-width: 100%;
+        }
+
+        .photo-options {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .photo-options button {
+            width: 100%;
+            max-width: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2"><i class="fas fa-user-plus me-2"></i>Novo Funcionário</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_funcionarios' %}">Funcionários</a></li>
+                    <li class="breadcrumb-item active">Novo Funcionário</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate id="funcionarioForm">
+        {% csrf_token %}
+        <input type="hidden" name="foto_webcam" id="fotoWebcamInput">
+
+        <div class="row">
+            <!-- COLUNA ESQUERDA: FORMULÁRIO -->
+            <div class="col-lg-8">
+                <!-- SEÇÃO 1: CAPTURA DE FOTO -->
+                <div class="form-section webcam-section">
+                    <h5 class="section-title"><i class="fas fa-camera me-2"></i>Foto do Funcionário</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="webcam-container text-center">
+                                <video id="video" autoplay playsinline></video>
+                                <canvas id="canvas" width="320" height="240"></canvas>
+
+                                <div class="photo-options mt-3">
+                                    <button type="button" id="captureBtn" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-camera me-1"></i>Tirar Foto
+                                    </button>
+                                    <button type="button" id="retakeBtn" class="btn btn-secondary btn-sm" style="display:none;">
+                                        <i class="fas fa-redo me-1"></i>Refazer
+                                    </button>
+                                    <button type="button" id="uploadBtn" class="btn btn-info btn-sm">
+                                        <i class="fas fa-upload me-1"></i>Carregar Arquivo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 text-center">
+                            <h6>Pré-visualização</h6>
+                            <img id="photoPreview" class="captured-photo" src="" alt="Foto do funcionário" style="display:none;">
+                            <div id="noPhoto" class="text-muted">
+                                <i class="fas fa-user-circle fa-4x mb-2"></i><br>
+                                Nenhuma foto selecionada
+                            </div>
+
+                            <div class="mt-3">
+                                {{ form.foto }}
+                                <small class="form-text text-muted">Ou selecione um arquivo de imagem</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 2: DADOS PESSOAIS -->
+                <div class="form-section">
+                    <h5 class="section-title"><i class="fas fa-id-card me-2"></i>Dados Pessoais</h5>
+                    <div class="row g-3">
+                        <!-- Nome Completo -->
+                        <div class="col-md-6">
+                            <label for="id_nome_completo" class="form-label field-required">Nome Completo</label>
+                            {{ form.nome_completo }}
+                            {% if form.nome_completo.errors %}
+                            <div class="invalid-feedback d-block">{{ form.nome_completo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Número será gerado automaticamente</strong><br>
+        Formato: STAE-2024-XXXX
+    </div>
+</div>
+
+                        <!-- Data de Nascimento -->
+                        <div class="col-md-4">
+                            <label for="id_data_nascimento" class="form-label field-required">Data de Nascimento</label>
+                            {{ form.data_nascimento }}
+                            {% if form.data_nascimento.errors %}
+                            <div class="invalid-feedback d-block">{{ form.data_nascimento.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Gênero -->
+                        <div class="col-md-4">
+                            <label for="id_genero" class="form-label field-required">Gênero</label>
+                            {{ form.genero }}
+                            {% if form.genero.errors %}
+                            <div class="invalid-feedback d-block">{{ form.genero.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Estado Civil -->
+                        <div class="col-md-4">
+                            <label for="id_estado_civil" class="form-label field-required">Estado Civil</label>
+                            {{ form.estado_civil }}
+                            {% if form.estado_civil.errors %}
+                            <div class="invalid-feedback d-block">{{ form.estado_civil.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 3: IDENTIFICAÇÃO OFICIAL -->
+                <div class="form-section">
+                    <h5 class="section-title"><i class="fas fa-passport me-2"></i>Identificação Oficial</h5>
+                    <div class="row g-3">
+                        <!-- Número do BI -->
+                        <div class="col-md-6">
+                            <label for="id_numero_bi" class="form-label">Número do BI</label>
+                            {{ form.numero_bi }}
+                            {% if form.numero_bi.errors %}
+                            <div class="invalid-feedback d-block">{{ form.numero_bi.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Data Emissão BI -->
+                        <div class="col-md-6">
+                            <label for="id_data_emissao_bi" class="form-label">Data de Emissão do BI</label>
+                            {{ form.data_emissao_bi }}
+                        </div>
+
+                        <!-- NUIT -->
+                        <div class="col-md-6">
+                            <label for="id_nuit" class="form-label field-required">NUIT</label>
+                            {{ form.nuit }}
+                            <small class="form-text text-muted">Número Único de Identificação Tributária (9-12 dígitos)</small>
+                            {% if form.nuit.errors %}
+                            <div class="invalid-feedback d-block">{{ form.nuit.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- NISS -->
+                        <div class="col-md-6">
+                            <label for="id_niss" class="form-label field-required">NISS</label>
+                            {{ form.niss }}
+                            <small class="form-text text-muted">Número de Identificação da Segurança Social</small>
+                            {% if form.niss.errors %}
+                            <div class="invalid-feedback d-block">{{ form.niss.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Local Emissão BI -->
+                        <div class="col-md-6">
+                            <label for="id_local_emissao_bi" class="form-label">Local de Emissão do BI</label>
+                            {{ form.local_emissao_bi }}
+                        </div>
+
+                        <!-- Data Inscrição INSS -->
+                        <div class="col-md-6">
+                            <label for="id_data_inscricao_inss" class="form-label">Data de Inscrição no INSS</label>
+                            {{ form.data_inscricao_inss }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 4: CONTACTOS -->
+                <div class="form-section">
+                    <h5 class="section-title"><i class="fas fa-phone me-2"></i>Contactos</h5>
+                    <div class="row g-3">
+                        <!-- Telefone -->
+                        <div class="col-md-6">
+                            <label for="id_telefone" class="form-label field-required">Telefone</label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}
+                            <div class="invalid-feedback d-block">{{ form.telefone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Telefone Alternativo -->
+                        <div class="col-md-6">
+                            <label for="id_telefone_alternativo" class="form-label">Telefone Alternativo</label>
+                            {{ form.telefone_alternativo }}
+                        </div>
+
+                        <!-- Email Pessoal -->
+                        <div class="col-md-6">
+                            <label for="id_email_pessoal" class="form-label">Email Pessoal</label>
+                            {{ form.email_pessoal }}
+                        </div>
+
+                        <!-- Email Institucional -->
+                        <div class="col-md-6">
+                            <label for="id_email_institucional" class="form-label">Email Institucional</label>
+                            {{ form.email_institucional }}
+                        </div>
+
+                        <!-- Endereço -->
+                        <div class="col-12">
+                            <label for="id_endereco" class="form-label field-required">Endereço Residencial</label>
+                            {{ form.endereco }}
+                            {% if form.endereco.errors %}
+                            <div class="invalid-feedback d-block">{{ form.endereco.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Bairro, Distrito, Província -->
+                        <div class="col-md-4">
+                            <label for="id_bairro" class="form-label">Bairro</label>
+                            {{ form.bairro }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="id_distrito" class="form-label">Distrito</label>
+                            {{ form.distrito }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="id_provincia" class="form-label">Província</label>
+                            {{ form.provincia }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 5: DADOS PROFISSIONAIS -->
+                <div class="form-section">
+                    <h5 class="section-title"><i class="fas fa-briefcase me-2"></i>Dados Profissionais</h5>
+                    <div class="row g-3">
+                        <!-- Setor -->
+                        <div class="col-md-6">
+                            <label for="id_sector" class="form-label field-required">Setor</label>
+                            {{ form.sector }}
+                            {% if form.sector.errors %}
+                            <div class="invalid-feedback d-block">{{ form.sector.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Função -->
+                        <div class="col-md-6">
+                            <label for="id_funcao" class="form-label field-required">Função</label>
+                            {{ form.funcao }}
+                            {% if form.funcao.errors %}
+                            <div class="invalid-feedback d-block">{{ form.funcao.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Data de Admissão -->
+                        <div class="col-md-6">
+                            <label for="id_data_admissao" class="form-label field-required">Data de Admissão</label>
+                            {{ form.data_admissao }}
+                            {% if form.data_admissao.errors %}
+                            <div class="invalid-feedback d-block">{{ form.data_admissao.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 6: DADOS BANCÁRIOS -->
+                <div class="form-section">
+                    <h5 class="section-title"><i class="fas fa-university me-2"></i>Dados Bancários</h5>
+                    <div class="row g-3">
+                        <!-- Banco -->
+                        <div class="col-md-6">
+                            <label for="id_banco" class="form-label field-required">Banco</label>
+                            {{ form.banco }}
+                            {% if form.banco.errors %}
+                            <div class="invalid-feedback d-block">{{ form.banco.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Outro Banco -->
+                        <div class="col-md-6" id="outroBancoContainer" style="display:none;">
+                            <label for="id_nome_banco_outro" class="form-label">Nome do Banco</label>
+                            {{ form.nome_banco_outro }}
+                        </div>
+
+                        <!-- Tipo de Conta -->
+                        <div class="col-md-6">
+                            <label for="id_tipo_conta" class="form-label field-required">Tipo de Conta</label>
+                            {{ form.tipo_conta }}
+                            {% if form.tipo_conta.errors %}
+                            <div class="invalid-feedback d-block">{{ form.tipo_conta.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Número da Conta -->
+                        <div class="col-md-6">
+                            <label for="id_numero_conta" class="form-label field-required">Número da Conta</label>
+                            {{ form.numero_conta }}
+                            {% if form.numero_conta.errors %}
+                            <div class="invalid-feedback d-block">{{ form.numero_conta.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- NIB -->
+                        <div class="col-md-6">
+                            <label for="id_nib" class="form-label field-required">NIB</label>
+                            {{ form.nib }}
+                            <small class="form-text text-muted">Número de Identificação Bancária</small>
+                            {% if form.nib.errors %}
+                            <div class="invalid-feedback d-block">{{ form.nib.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- NUB -->
+                        <div class="col-md-6">
+                            <label for="id_nub" class="form-label">NUB</label>
+                            {{ form.nub }}
+                            <small class="form-text text-muted">Número Único Bancário (opcional)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 7: INFORMAÇÕES ADICIONAIS -->
+                <div class="form-section">
+                    <h5 class="section-title"><i class="fas fa-info-circle me-2"></i>Informações Adicionais</h5>
+                    <div class="row g-3">
+                        <!-- Nacionalidade -->
+                        <div class="col-md-6">
+                            <label for="id_nacionalidade" class="form-label">Nacionalidade</label>
+                            {{ form.nacionalidade }}
+                        </div>
+
+                        <!-- Naturalidade -->
+                        <div class="col-md-6">
+                            <label for="id_naturalidade" class="form-label">Naturalidade</label>
+                            {{ form.naturalidade }}
+                        </div>
+
+                        <!-- Nome do Pai -->
+                        <div class="col-md-6">
+                            <label for="id_nome_pai" class="form-label">Nome do Pai</label>
+                            {{ form.nome_pai }}
+                        </div>
+
+                        <!-- Nome da Mãe -->
+                        <div class="col-md-6">
+                            <label for="id_nome_mae" class="form-label">Nome da Mãe</label>
+                            {{ form.nome_mae }}
+                        </div>
+
+                        <!-- Contacto de Emergência -->
+                        <div class="col-md-6">
+                            <label for="id_contacto_emergencia" class="form-label">Contacto de Emergência</label>
+                            {{ form.contacto_emergencia }}
+                        </div>
+
+                        <!-- Parentesco -->
+                        <div class="col-md-6">
+                            <label for="id_parentesco_emergencia" class="form-label">Parentesco</label>
+                            {{ form.parentesco_emergencia }}
+                        </div>
+
+                        <!-- Data Emissão Cartão -->
+                        <div class="col-md-6">
+                            <label for="id_data_emissao_cartao" class="form-label">Data de Emissão do Cartão</label>
+                            {{ form.data_emissao_cartao }}
+                        </div>
+
+                        <!-- Data Validade Cartão -->
+                        <div class="col-md-6">
+                            <label for="id_data_validade_cartao" class="form-label">Data de Validade do Cartão</label>
+                            {{ form.data_validade_cartao }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: PRÉ-VISUALIZAÇÃO DO CARTÃO -->
+            <div class="col-lg-4">
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="form-section">
+                        <h5 class="section-title"><i class="fas fa-id-card me-2"></i>Pré-visualização do Cartão</h5>
+
+                        <div class="card-preview">
+                            <div class="card-header">
+                                <div id="cardPhotoPreview" class="card-photo"></div>
+                                <div class="card-qr" id="qrPreview">
+                                    <div class="text-center text-dark">
+                                        <i class="fas fa-qrcode fa-3x"></i>
+                                        <div class="small">QR Code</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-details">
+                                <div class="card-row">
+                                    <div class="card-label">Nome:</div>
+                                    <div class="card-value" id="previewNome">[Nome]</div>
+                                </div>
+                                <div class="card-row">
+                                    <div class="card-label">Nº Funcionário:</div>
+                                    <div class="card-value" id="previewNumero">[Auto-gerado]</div>
+                                </div>
+                                <div class="card-row">
+                                    <div class="card-label">NUIT:</div>
+                                    <div class="card-value" id="previewNuit">[NUIT]</div>
+                                </div>
+                                <div class="card-row">
+                                    <div class="card-label">Setor:</div>
+                                    <div class="card-value" id="previewSetor">[Setor]</div>
+                                </div>
+                                <div class="card-row">
+                                    <div class="card-label">Função:</div>
+                                    <div class="card-value" id="previewFuncao">[Função]</div>
+                                </div>
+                                <div class="card-row">
+                                    <div class="card-label">Admissão:</div>
+                                    <div class="card-value" id="previewAdmissao">[Data]</div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer">
+                                <div>Cartão de Identificação STAE</div>
+                                <div>Válido até: <span id="previewValidade">{{ data_validade|default:"31/12/2025" }}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>O cartão será gerado automaticamente</strong> com QR Code único após salvar o funcionário.
+                        </div>
+                    </div>
+
+                    <!-- INFORMAÇÕES DO QR CODE -->
+                    <div class="form-section">
+                        <h5 class="section-title"><i class="fas fa-qrcode me-2"></i>Informações do QR Code</h5>
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-check-circle me-2"></i>QR Code Incluirá:</h6>
+                            <ul class="mb-0">
+                                <li>Nome completo</li>
+                                <li>Número de funcionário</li>
+                                <li>NUIT e NISS</li>
+                                <li>Setor e função</li>
+                                <li>Data de admissão</li>
+                                <li>Hash de validação</li>
+                                <li>Código STAE-MZ</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÕES DE AÇÃO -->
+        <div class="form-actions">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{% url 'recursoshumanos:lista_funcionarios' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <button type="button" class="btn btn-outline-primary" onclick="limparFormulario()">
+                        <i class="fas fa-eraser me-2"></i>Limpar
+                    </button>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Salvar e Gerar Cartão
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ========== WEBCAM ==========
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let photoPreview = document.getElementById('photoPreview');
+    let noPhoto = document.getElementById('noPhoto');
+    let fotoWebcamInput = document.getElementById('fotoWebcamInput');
+    let captureBtn = document.getElementById('captureBtn');
+    let retakeBtn = document.getElementById('retakeBtn');
+    let uploadBtn = document.getElementById('uploadBtn');
+    let fileInput = document.getElementById('id_foto');
+
+    let stream = null;
+    let photoTaken = false;
+
+    // Iniciar webcam
+    async function iniciarWebcam() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 320 },
+                    height: { ideal: 240 },
+                    facingMode: 'user'
+                },
+                audio: false
+            });
+            video.srcObject = stream;
+            captureBtn.disabled = false;
+        } catch (err) {
+            console.error('Erro ao acessar webcam:', err);
+            document.getElementById('video').style.display = 'none';
+            captureBtn.disabled = true;
+            alert('Não foi possível acessar a webcam. Use o upload de arquivo.');
+        }
+    }
+
+    // Tirar foto
+    captureBtn.addEventListener('click', function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Converter para base64
+        let photoData = canvas.toDataURL('image/jpeg', 0.8);
+        fotoWebcamInput.value = photoData;
+
+        // Mostrar pré-visualização
+        photoPreview.src = photoData;
+        photoPreview.style.display = 'block';
+        noPhoto.style.display = 'none';
+
+        // Atualizar preview do cartão
+        document.getElementById('cardPhotoPreview').innerHTML = `<img src="${photoData}" style="width:100%;height:100%;object-fit:cover;">`;
+
+        // Alternar botões
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-block';
+        photoTaken = true;
+    });
+
+    // Refazer foto
+    retakeBtn.addEventListener('click', function() {
+        fotoWebcamInput.value = '';
+        photoPreview.style.display = 'none';
+        noPhoto.style.display = 'block';
+        captureBtn.style.display = 'inline-block';
+        retakeBtn.style.display = 'none';
+        document.getElementById('cardPhotoPreview').innerHTML = '';
+        photoTaken = false;
+    });
+
+    // Upload de arquivo
+    uploadBtn.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.src = e.target.result;
+                photoPreview.style.display = 'block';
+                noPhoto.style.display = 'none';
+                fotoWebcamInput.value = '';
+
+                // Atualizar preview do cartão
+                document.getElementById('cardPhotoPreview').innerHTML =
+                    `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // ========== ATUALIZAÇÃO EM TEMPO REAL DO CARTÃO ==========
+    function atualizarPreviewCartao() {
+        // Nome
+        let nome = document.getElementById('id_nome_completo').value || '[Nome]';
+        document.getElementById('previewNome').textContent = nome.length > 25 ? nome.substring(0, 25) + '...' : nome;
+
+        // NUIT
+        let nuit = document.getElementById('id_nuit').value || '[NUIT]';
+        document.getElementById('previewNuit').textContent = nuit;
+
+        // Setor
+        let setorSelect = document.getElementById('id_sector');
+        let setorText = setorSelect.options[setorSelect.selectedIndex]?.text || '[Setor]';
+        setorText = setorText.split(' - ')[1] || setorText;
+        document.getElementById('previewSetor').textContent = setorText;
+
+        // Função
+        let funcaoSelect = document.getElementById('id_funcao');
+        let funcaoText = funcaoSelect.options[funcaoSelect.selectedIndex]?.text || '[Função]';
+        document.getElementById('previewFuncao').textContent = funcaoText;
+
+        // Data de admissão
+        let admissao = document.getElementById('id_data_admissao').value || '[Data]';
+        if (admissao !== '[Data]') {
+            let date = new Date(admissao);
+            admissao = date.toLocaleDateString('pt-MZ');
+        }
+        document.getElementById('previewAdmissao').textContent = admissao;
+
+        // Número gerado (vindo do Django)
+        document.getElementById('previewNumero').textContent = '{{ numero_preview }}';
+    }
+
+    // Atualizar cartão quando campos mudam
+    document.querySelectorAll('#id_nome_completo, #id_nuit, #id_sector, #id_funcao, #id_data_admissao').forEach(field => {
+        field.addEventListener('input', atualizarPreviewCartao);
+        field.addEventListener('change', atualizarPreviewCartao);
+    });
+
+    // ========== OUTRO BANCO ==========
+    document.getElementById('id_banco').addEventListener('change', function() {
+        let outroContainer = document.getElementById('outroBancoContainer');
+        if (this.value === 'outro') {
+            outroContainer.style.display = 'block';
+            document.getElementById('id_nome_banco_outro').required = true;
+        } else {
+            outroContainer.style.display = 'none';
+            document.getElementById('id_nome_banco_outro').required = false;
+        }
+    });
+
+    // ========== VALIDAÇÃO DO FORMULÁRIO ==========
+    function validarFormulario() {
+        let valido = true;
+        let camposObrigatorios = [
+            'id_nome_completo',
+            'id_data_nascimento',
+            'id_genero',
+            'id_estado_civil',
+            'id_nuit',
+            'id_niss',
+            'id_telefone',
+            'id_endereco',
+            'id_sector',
+            'id_funcao',
+            'id_data_admissao',
+            'id_banco',
+            'id_tipo_conta',
+            'id_numero_conta',
+            'id_nib'
+        ];
+
+        camposObrigatorios.forEach(id => {
+            let campo = document.getElementById(id);
+            if (campo && !campo.value.trim()) {
+                campo.classList.add('is-invalid');
+                valido = false;
+            } else if (campo) {
+                campo.classList.remove('is-invalid');
+            }
+        });
+
+        // Validar NUIT (9-12 dígitos)
+        let nuit = document.getElementById('id_nuit').value;
+        if (nuit && !/^\d{9,12}$/.test(nuit)) {
+            document.getElementById('id_nuit').classList.add('is-invalid');
+            valido = false;
+        }
+
+        return valido;
+    }
+
+    // ========== LIMPAR FORMULÁRIO ==========
+    function limparFormulario() {
+        if (confirm('Tem certeza que deseja limpar todos os campos?')) {
+            document.getElementById('funcionarioForm').reset();
+            fotoWebcamInput.value = '';
+            photoPreview.style.display = 'none';
+            noPhoto.style.display = 'block';
+            captureBtn.style.display = 'inline-block';
+            retakeBtn.style.display = 'none';
+            document.getElementById('outroBancoContainer').style.display = 'none';
+            atualizarPreviewCartao();
+            document.getElementById('cardPhotoPreview').innerHTML = '';
+        }
+    }
+
+    // ========== GERAR NOVO NÚMERO AUTOMÁTICO (opcional) ==========
+    function gerarNovoNumero() {
+        // Se quiser permitir gerar novo número sem recarregar a página
+        const ano = new Date().getFullYear();
+        const random = Math.floor(1000 + Math.random() * 9000);
+        const novoNumero = `STAE-${ano}-${random}`;
+
+        // Atualizar preview
+        document.getElementById('numeroGeradoPreview').textContent = novoNumero;
+        document.getElementById('previewNumero').textContent = novoNumero;
+    }
+
+    // ========== SUBMETER FORMULÁRIO ==========
+    document.getElementById('funcionarioForm').addEventListener('submit', function(e) {
+        if (!validarFormulario()) {
+            e.preventDefault();
+            alert('Por favor, preencha todos os campos obrigatórios corretamente.');
+        }
+    });
+
+    // ========== INICIALIZAÇÃO ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        // Iniciar webcam
+        iniciarWebcam();
+
+        // Inicializar preview do cartão
+        atualizarPreviewCartao();
+
+        // Verificar se "outro" banco já está selecionado
+        if (document.getElementById('id_banco').value === 'outro') {
+            document.getElementById('outroBancoContainer').style.display = 'block';
+        }
+
+        // Data de validade padrão (2 anos a partir de hoje)
+        let hoje = new Date();
+        let dataValidade = new Date(hoje.getFullYear() + 2, hoje.getMonth(), hoje.getDate());
+        document.getElementById('previewValidade').textContent =
+            dataValidade.toLocaleDateString('pt-MZ');
+
+        // Adicionar classes Bootstrap aos campos
+        document.querySelectorAll('input:not([type="file"]):not([type="hidden"]), select, textarea').forEach(field => {
+            if (!field.classList.contains('form-control') && !field.classList.contains('form-select')) {
+                if (field.tagName === 'SELECT') {
+                    field.classList.add('form-select');
+                } else {
+                    field.classList.add('form-control');
+                }
+            }
+        });
+
+        // Configurar número inicial no preview
+        document.getElementById('previewNumero').textContent = '{{ numero_preview }}';
+    });
+
+    // Parar webcam quando sair da página
+    window.addEventListener('beforeunload', function() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+</script>
+{% endblock %}

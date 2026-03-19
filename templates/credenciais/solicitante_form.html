@@ -1,0 +1,241 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}{{ titulo }} - Credenciais STAE{% endblock %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block breadcrumbs %}
+    <li class="breadcrumb-item"><a href="{% url 'credenciais:lista_solicitantes' %}">Solicitantes</a></li>
+    <li class="breadcrumb-item active">{{ titulo }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card card-stae">
+            <div class="card-header">
+                <h5 class="mb-0">Dados do Solicitante</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <!-- Tipo de Solicitante -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipo de Solicitante *</label>
+                            {{ form.tipo }}
+                            {% if form.tipo.errors %}
+                            <div class="text-danger">{{ form.tipo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Número de Identificação -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Número de Identificação *</label>
+                            {{ form.numero_identificacao }}
+                            {% if form.numero_identificacao.errors %}
+                            <div class="text-danger">{{ form.numero_identificacao.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Código único interno</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Dados Pessoais</h5>
+                    <div class="row">
+                        <!-- Nome Completo -->
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Nome Completo *</label>
+                            {{ form.nome_completo }}
+                            {% if form.nome_completo.errors %}
+                            <div class="text-danger">{{ form.nome_completo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Género -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Género *</label>
+                            {{ form.genero }}
+                            {% if form.genero.errors %}
+                            <div class="text-danger">{{ form.genero.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Data Nascimento -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Data de Nascimento</label>
+                            {{ form.data_nascimento }}
+                            {% if form.data_nascimento.errors %}
+                            <div class="text-danger">{{ form.data_nascimento.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Nacionalidade -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Nacionalidade *</label>
+                            {{ form.nacionalidade }}
+                            {% if form.nacionalidade.errors %}
+                            <div class="text-danger">{{ form.nacionalidade.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Foto -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Fotografia</label>
+                            {{ form.foto }}
+                            {% if form.foto.errors %}
+                            <div class="text-danger">{{ form.foto.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Documentos de Identificação</h5>
+                    <div class="row">
+                        <!-- Número de BI -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Número de BI</label>
+                            {{ form.numero_bi }}
+                            {% if form.numero_bi.errors %}
+                            <div class="text-danger">{{ form.numero_bi.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Formato: 1234567A0 1234567 LA 0 00M</small>
+                        </div>
+
+                        <!-- NIF -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">NIF</label>
+                            {{ form.nif }}
+                            {% if form.nif.errors %}
+                            <div class="text-danger">{{ form.nif.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Contactos</h5>
+                    <div class="row">
+                        <!-- Email -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Telefone -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefone *</label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}
+                            <div class="text-danger">{{ form.telefone.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Endereço -->
+                    <div class="mb-3">
+                        <label class="form-label">Endereço</label>
+                        {{ form.endereco }}
+                        {% if form.endereco.errors %}
+                        <div class="text-danger">{{ form.endereco.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Campos para Colectivos (aparecem dinamicamente) -->
+                    <div id="colectivo-campos" style="display: none;">
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">Dados do Colectivo</h5>
+                        <div class="row">
+                            <!-- Nome Colectivo -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nome do Colectivo *</label>
+                                {{ form.nome_colectivo }}
+                                {% if form.nome_colectivo.errors %}
+                                <div class="text-danger">{{ form.nome_colectivo.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Número de Registo -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Número de Registo</label>
+                                {{ form.numero_registo }}
+                                {% if form.numero_registo.errors %}
+                                <div class="text-danger">{{ form.numero_registo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Representante Legal -->
+                        <div class="mb-3">
+                            <label class="form-label">Representante Legal</label>
+                            {{ form.representante_legal }}
+                            {% if form.representante_legal.errors %}
+                            <div class="text-danger">{{ form.representante_legal.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'credenciais:lista_solicitantes' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar Solicitante
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Mostrar/ocultar campos de colectivo
+    function toggleColectivoCampos() {
+        if ($('#id_tipo').val() === 'colectivo') {
+            $('#colectivo-campos').show();
+            $('#id_nome_colectivo').prop('required', true);
+        } else {
+            $('#colectivo-campos').hide();
+            $('#id_nome_colectivo').prop('required', false);
+        }
+    }
+
+    $('#id_tipo').change(toggleColectivoCampos);
+    toggleColectivoCampos(); // Executar ao carregar
+
+    // Formatação automática do BI
+    $('#id_numero_bi').on('input', function() {
+        let value = $(this).val().replace(/\D/g, '');
+        if (value.length > 0) {
+            // Formatar como: 1234567A0 1234567 LA 0 00M
+            let formatted = '';
+            if (value.length > 7) {
+                formatted = value.substr(0, 7);
+                if (value.length > 8) {
+                    formatted += String.fromCharCode(65 + parseInt(value[7] || 0) % 26);
+                    formatted += value.substr(8, 1) || '0';
+                    formatted += ' ';
+                    if (value.length > 16) {
+                        formatted += value.substr(9, 7) + ' LA ' + (value[16] || '0') + ' 00M';
+                    }
+                }
+            } else {
+                formatted = value;
+            }
+            $(this).val(formatted);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Requisição Combustível #{{ pedido.id }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .page-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .via {
+            height: 50%;
+            /* Metade da página exata */
+            box-sizing: border-box;
+            padding: 30px 50px;
+            border-bottom: 2px dashed #aaa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .via:last-child {
+            border-bottom: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #0d6efd;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            margin: 0;
+            color: #0d6efd;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .logo p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .meta {
+            text-align: right;
+        }
+
+        .meta h3 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .meta p {
+            margin: 5px 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        .details-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .field {
+            margin-bottom: 5px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .field span {
+            display: block;
+            font-size: 16px;
+            color: #000;
+            font-weight: 500;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 2px;
+        }
+
+        .field.highlight span {
+            font-size: 22px;
+            font-weight: bold;
+            color: #0d6efd;
+            border-bottom: none;
+        }
+
+        .auth-section {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .senha-display {
+            font-size: 36px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #333;
+            margin: 10px 0;
+            background: #fff;
+            padding: 5px 15px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+        }
+
+        .qr-code img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 30px;
+        }
+
+        .signature {
+            width: 40%;
+            border-top: 1px solid #000;
+            text-align: center;
+            padding-top: 5px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .via-tag {
+            position: absolute;
+            top: 50%;
+            right: -60px;
+            transform: translateY(-50%) rotate(90deg);
+            background: #eee;
+            padding: 5px 20px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #999;
+            transform-origin: center;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print"
+        style="position: fixed; top: 20px; right: 20px; padding: 12px 24px; font-size: 16px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;">
+        <svg style="width:16px;height:16px;vertical-align:middle;margin-right:5px" viewBox="0 0 24 24">
+            <path fill="currentColor"
+                d="M18,3H6V7H18M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8Z" />
+        </svg>
+        IMPRIMIR REQUISIÇÃO
+    </button>
+
+    <div class="page-container">
+        <!-- VIA 1: FORNECEDOR / BOMBA -->
+        <div class="via">
+            <div class="via-tag">Via Fornecedor (Bomba)</div>
+            <div class="header">
+                <div class="logo">
+                    <h1>PORTAL STAE</h1>
+                    <p>Gestão de Hub de Combustíveis</p>
+                </div>
+                <div class="meta">
+                    <h3>REQUISIÇÃO #{{ pedido.id }}</h3>
+                    <p>Emitido em: {{ pedido.data_aprovacao|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="details-box">
+                    <div class="field">
+                        <label>Fornecedor Autorizado</label>
+                        <span>{{ pedido.fornecedor.nome }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Tipo de Pedido</label>
+                        <span>{{ pedido.get_tipo_pedido_display }}</span>
+                    </div>
+
+                    <div class="field">
+                        <label>Viatura</label>
+                        <span style="font-weight: bold;">{{ pedido.viatura.matricula }}</span>
+                        <small style="color:#666">{{ pedido.viatura.marca }} {{ pedido.viatura.modelo }}</small>
+                    </div>
+                    <div class="field">
+                        <label>Combustível</label>
+                        <span>{{ pedido.viatura.get_tipo_combustivel_display|upper }}</span>
+                    </div>
+
+                    <div class="field">
+                        <label>Motorista / Solicitante</label>
+                        <span>{{ pedido.solicitante.nome_completo }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Quilometragem Atual</label>
+                        <span>{{ pedido.viatura.kilometragem_actual|default:"--" }} km</span>
+                    </div>
+
+                    <div class="field highlight" style="grid-column: span 2; margin-top: 10px;">
+                        <label>Quantidade Autorizada</label>
+                        <span>{{ pedido.quantidade_litros }} Litros</span>
+                    </div>
+                </div>
+
+                <div class="auth-section">
+                    {% if qr_code %}
+                    <div class="qr-code">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+                    </div>
+                    {% endif %}
+                    <label style="font-size: 10px; text-transform: uppercase;">Código de Confirmação</label>
+                    <div class="senha-display">{{ pedido.numero_senha }}</div>
+                    <small>Este código deve ser inserido no sistema para validar o abastecimento.</small>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="signature">
+                    <strong>Autorizado por (STAE)</strong><br>
+                    <br>
+                    __________________________________
+                </div>
+                <div class="signature">
+                    <strong>Confirmado por (Motorista)</strong><br>
+                    <br>
+                    __________________________________
+                </div>
+            </div>
+        </div>
+
+        <!-- VIA 2: MOTORISTA / CONTROLE -->
+        <div class="via">
+            <div class="via-tag">Via Motorista / Controle</div>
+            <div class="header">
+                <div class="logo">
+                    <h1>PORTAL STAE</h1>
+                    <p>Gestão de Hub de Combustíveis</p>
+                </div>
+                <div class="meta">
+                    <h3>REQUISIÇÃO #{{ pedido.id }}</h3>
+                    <p>Emitido em: {{ pedido.data_aprovacao|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="details-box">
+                    <div class="field">
+                        <label>Fornecedor Autorizado</label>
+                        <span>{{ pedido.fornecedor.nome }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Tipo de Pedido</label>
+                        <span>{{ pedido.get_tipo_pedido_display }}</span>
+                    </div>
+
+                    <div class="field">
+                        <label>Viatura</label>
+                        <span style="font-weight: bold;">{{ pedido.viatura.matricula }}</span>
+                        <small style="color:#666">{{ pedido.viatura.marca }} {{ pedido.viatura.modelo }}</small>
+                    </div>
+                    <div class="field">
+                        <label>Combustível</label>
+                        <span>{{ pedido.viatura.get_tipo_combustivel_display|upper }}</span>
+                    </div>
+
+                    <div class="field">
+                        <label>Motorista / Solicitante</label>
+                        <span>{{ pedido.solicitante.nome_completo }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Quilometragem Atual</label>
+                        <span>{{ pedido.viatura.kilometragem_actual|default:"--" }} km</span>
+                    </div>
+
+                    <div class="field highlight" style="grid-column: span 2; margin-top: 10px;">
+                        <label>Quantidade Autorizada</label>
+                        <span>{{ pedido.quantidade_litros }} Litros</span>
+                    </div>
+                </div>
+
+                <div class="auth-section">
+                    {% if qr_code %}
+                    <div class="qr-code">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+                    </div>
+                    {% endif %}
+                    <label style="font-size: 10px; text-transform: uppercase;">Código de Confirmação</label>
+                    <div class="senha-display">{{ pedido.numero_senha }}</div>
+                    <small>Este código deve ser inserido no sistema para validar o abastecimento.</small>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="signature">
+                    <strong>Abastecido por (Bomba)</strong><br>
+                    <br>
+                    __________________________________
+                </div>
+                <div class="signature">
+                    <strong>Recebido por (Motorista)</strong><br>
+                    <br>
+                    __________________________________
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

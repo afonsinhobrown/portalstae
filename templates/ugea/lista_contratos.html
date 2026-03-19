@@ -1,0 +1,98 @@
+{% extends 'base_apps.html' %}
+{% block title %}Contratos Ativos - UGEA{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-file-signature{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Contratos em Execução{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <div>
+            <h3 style="margin:0;"><i class="fas fa-list"></i> Todos Contratos Geridos</h3>
+            <p style="margin:5px 0 0 0; color:#666;">Inclui contratos de fornecimento geral e combustíveis integrados.</p>
+        </div>
+        <div>
+           <a href="{% url 'ugea:novo_contrato' %}" class="action-btn"><i class="fas fa-plus"></i> Novo Contrato</a>
+        </div>
+    </div>
+
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom:2px solid #ddd; text-align:left; color:#555; background:#f9f9f9;">
+                <th style="padding:15px 10px;">ID Contrato</th>
+                <th style="padding:15px 10px;">Fornecedor</th>
+                <th style="padding:15px 10px;">Serviço / Preço</th>
+                <th style="padding:15px 10px;">Setor</th>
+                <th style="padding:15px 10px;">Vigência</th>
+                <th style="padding:15px 10px;">Valor Total</th>
+                <th style="padding:15px 10px;">Status Consumo</th>
+                <th style="padding:15px 10px;">Estado</th>
+                <th style="padding:15px 10px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in contratos %}
+            <tr style="border-bottom:1px solid #eee; height: 70px;">
+                <td style="padding:10px;">
+                    <a href="#" style="font-weight:bold; color:var(--primary); text-decoration:none;">{{ c.numero_contrato }}</a><br>
+                    <small style="color:#888;">Ref: {{ c.concurso.numero }}</small>
+                </td>
+                <td style="padding:10px;">
+                    <b>{{ c.proposta_vencedora.fornecedor }}</b><br>
+                    <small>NUIT: {{ c.proposta_vencedora.nuit }}</small>
+                </td>
+                <td style="padding:10px;">
+                    {{ c.tipo_servico }}<br>
+                    <small style="color:#666;">{{ c.preco_unitario }} MT/Un</small>
+                </td>
+                <td style="padding:10px;">
+                    <span style="background:#e3f2fd; color:#0d47a1; padding:3px 8px; border-radius:10px; font-size:11px;">
+                        <i class="fas fa-building"></i> {{ c.sector.nome|default:"Geral" }}
+                    </span>
+                </td>
+                <td style="padding:10px;">
+                    <i class="far fa-calendar-alt"></i> {{ c.data_inicio|date:"d/m/Y" }}<br>
+                    <i class="fas fa-arrow-right" style="font-size:10px; color:#999;"></i> {{ c.data_fim|date:"d/m/Y" }}
+                </td>
+                <td style="padding:10px; font-weight:bold;">
+                    {{ c.valor_total }} MT
+                </td>
+                <td style="padding:10px; width: 250px; padding-right: 20px;">
+                    <!-- Barra de Progresso -->
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
+                        <span>{{ c.valor_executado }} Executado</span>
+                        <span style="color:#666;">Saldo: {{ c.saldo_disponivel }}</span>
+                    </div>
+                    <div style="background:#eee; height:10px; border-radius:5px; overflow:hidden;">
+                        <!-- Lógica de largura: (Executado / Total) * 100 -->
+                        {% widthratio c.valor_executado c.valor_total 100 as pct %}
+                        <div style="background: linear-gradient(90deg, #4caf50, #2e7d32); height:100%; width: {{ pct|default:0 }}%;"></div>
+                    </div>
+                </td>
+                <td style="padding:10px;">
+                     {% if c.ativo %}
+                        <span style="background:#d4edda; color:#155724; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold;">Ativo</span>
+                     {% else %}
+                        <span style="background:#f8d7da; color:#721c24; padding:4px 8px; border-radius:4px; font-size:12px;">Inativo</span>
+                     {% endif %}
+                </td>
+                <td style="padding:10px;">
+                    <a href="{% url 'ugea:detalhe_contrato' c.id %}" class="action-btn small" title="Ver Detalhes"><i class="fas fa-eye"></i></a>
+                    {% if c.documento %}
+                        <a href="{{ c.documento.url }}" class="action-btn small secondary" title="Baixar PDF"><i class="fas fa-file-pdf"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="padding:30px; text-align:center; color:#999; font-size:16px;">Nenhum contrato registado na base de dados.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .action-btn.secondary { background: #6c757d; }
+    .action-btn.secondary:hover { background: #5a6268; }
+</style>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Contrato {{ contrato.numero_contrato }} • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold text-primary mb-1">Detalhes do Contrato</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a
+                                href="{% url 'gestaocombustivel:lista_contratos_manutencao' %}">Contratos</a></li>
+                        <li class="breadcrumb-item active">{{ contrato.numero_contrato }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'gestaocombustivel:editar_contrato_manutencao' contrato.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Editar Contrato
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="combustivel-card h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="fw-bold mb-0">Informações Gerais</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-sm-6">
+                                <label class="text-muted small text-uppercase fw-bold d-block">Número do
+                                    Contrato</label>
+                                <span class="h5 fw-bold">{{ contrato.numero_contrato }}</span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="text-muted small text-uppercase fw-bold d-block">Estado</label>
+                                <span
+                                    class="badge {% if contrato.estado == 'Ativo' %}bg-success{% else %}bg-danger{% endif %} h5">
+                                    {{ contrato.estado }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-muted small text-uppercase fw-bold d-block">Oficina / Prestador</label>
+                            <span class="h6">{{ contrato.fornecedor.nome }}</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-muted small text-uppercase fw-bold d-block">Descrição</label>
+                            <p class="text-secondary">{{ contrato.descricao|default:"Sem descrição adicional." }}</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label class="text-muted small text-uppercase fw-bold d-block">Data Início</label>
+                                <span>{{ contrato.data_inicio|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="text-muted small text-uppercase fw-bold d-block">Data Fim</label>
+                                <span>{{ contrato.data_fim|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="combustivel-card h-100">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="fw-bold mb-0">Execução Financeira</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4 text-center">
+                            <label class="text-muted small text-uppercase fw-bold d-block mb-2">Percentual de
+                                Consumo</label>
+                            <div class="display-4 fw-bold text-primary">{{ contrato.percentual_execucao }}%</div>
+                            <div class="progress mt-2" style="height: 12px;">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    style="width: {{ contrato.percentual_execucao }}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>Valor Total do Contrato</span>
+                                <span class="fw-bold">{{ contrato.valor_total|floatformat:2 }} MT</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>Valor Utilizado</span>
+                                <span class="fw-bold text-danger">{{ contrato.valor_gasto|floatformat:2 }} MT</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>Saldo Disponível</span>
+                                <span class="fw-bold text-success">{{ contrato.saldo_disponivel|floatformat:2 }}
+                                    MT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="combustivel-card">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="fw-bold mb-0">Tabela de Preços Negociada</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if contrato.precos_servicos.exists %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tipo de Serviço</th>
+                                        <th class="text-end">Preço de Tabela (MT)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in contrato.precos_servicos.all %}
+                                    <tr>
+                                        <td>{{ item.get_tipo_servico_display }}</td>
+                                        <td class="text-end fw-bold">{{ item.preco|floatformat:2 }} MT</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-3">Nenhum preço específico definido para este contrato.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

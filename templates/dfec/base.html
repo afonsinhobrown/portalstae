@@ -1,0 +1,127 @@
+<!-- templates/dfec/base.html -->
+{% load static %}
+<html lang="pt" data-bs-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DFEC - Sistema de Gestão de Educação Cívica{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'dfec/css/style.css' %}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'dfec/images/favicon.ico' %}">
+
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    {% include 'dfec/partials/header.html' %}
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            {% include 'dfec/partials/sidebar.html' %}
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- Breadcrumb -->
+                {% include 'dfec/partials/breadcrumb.html' %}
+
+                <!-- Page Header -->
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-3 mb-4 border-bottom">
+                    <div>
+                        <h1 class="h2 mb-0">{% block page_title %}{% endblock %}</h1>
+                        <p class="text-muted mb-0">{% block page_subtitle %}{% endblock %}</p>
+                    </div>
+                    <div class="btn-toolbar">
+                        {% block page_actions %}{% endblock %}
+                    </div>
+                </div>
+
+                <!-- Messages/Alerts -->
+                {% include 'dfec/partials/alertas.html' %}
+
+                <!-- Main Content Block -->
+                <div class="content-wrapper">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    {% include 'dfec/partials/footer.html' %}
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- DataTables -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'dfec/js/main.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Initialization Script -->
+    <script>
+        $(document).ready(function () {
+            // Inicializar DataTables
+            $('.datatable').each(function () {
+                if (!$.fn.DataTable.isDataTable(this)) {
+                    $(this).DataTable({
+                        language: {
+                            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-PT.json'
+                        },
+                        pageLength: 25,
+                        responsive: true
+                    });
+                }
+            });
+
+            // Inicializar Select2
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+
+            // Ativar tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+
+</html>

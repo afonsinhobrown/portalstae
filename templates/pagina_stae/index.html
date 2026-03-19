@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAE - Secretariado Técnico de Administração Eleitoral</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 100px 0;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'pagina_stae:pagina_principal' %}">
+                🏛️ STAE
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_stae:pagina_principal' %}">Início</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_stae:sobre' %}">Sobre</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_stae:servicos' %}">Serviços</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_stae:noticias' %}">Notícias</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pagina_stae:contactos' %}">Contactos</a></li>
+                </ul>
+                <div class="navbar-nav">
+                    <a href="/" class="btn btn-outline-light btn-sm">Portal Interno</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-4">Secretariado Técnico de Administração Eleitoral</h1>
+            <p class="lead mb-4">Garantindo processos eleitorais transparentes, livres e justos em Moçambique</p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{% url 'pagina_stae:sobre' %}" class="btn btn-light btn-lg">Conheça o STAE</a>
+                <a href="/" class="btn btn-outline-light btn-lg">Portal Interno</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-4 mb-4">
+                    <div class="feature-icon">🗳️</div>
+                    <h3>Processos Eleitorais</h3>
+                    <p>Organização e condução de eleições transparentes e credíveis em todo o território nacional.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-icon">👥</div>
+                    <h3>Recenseamento Eleitoral</h3>
+                    <p>Gestão do cadastro eleitoral e actualização contínua dos dados dos eleitores.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Fiscalização</h3>
+                    <p>Supervisão e monitorização de todo o processo eleitoral para garantir a sua integridade.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p>&copy; {% now "Y" %} STAE - Secretariado Técnico de Administração Eleitoral. Todos os direitos
+                reservados.</p>
+        </div>
+    </footer>
+</body>
+
+</html>

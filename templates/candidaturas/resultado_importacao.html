@@ -1,0 +1,55 @@
+{% extends 'base_apps.html' %}
+{% block title %}Resultado da Importação{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-7">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body text-center p-5">
+                <div class="mb-4">
+                    <span class="fa-stack fa-3x">
+                        <i class="fas fa-circle fa-stack-2x text-success opacity-25"></i>
+                        <i class="fas fa-check fa-stack-1x text-success"></i>
+                    </span>
+                </div>
+                
+                <h2 class="fw-bold mb-3">Submissão Concluída!</h2>
+                <div class="alert alert-success border-0 py-3 mb-4">
+                    <h5>Foram processados <strong>{{ total }}</strong> candidatos para o círculo de <strong>{{ circulo.nome }}</strong>.</h5>
+                </div>
+
+                <div class="bg-light p-4 rounded-3 text-start mb-4">
+                    <h6 class="text-uppercase text-muted small fw-bold mb-3">Resumo Técnico:</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Eleição:</span>
+                        <span class="fw-bold">{{ inscricao.eleicao.nome }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Partido:</span>
+                        <span class="fw-bold">{{ inscricao.partido.sigla }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Estado:</span>
+                        <span class="badge bg-warning">Pendente de Validação Biométrica</span>
+                    </div>
+                    {% if lista.submetido_por %}
+                    <div class="d-flex justify-content-between mt-2 border-top pt-2">
+                        <span class="text-muted small">Importado por:</span>
+                        <span class="fw-bold small">{{ lista.submetido_por.get_full_name|default:lista.submetido_por.username }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'candidaturas:detalhe_lista' lista.id %}" class="btn btn-primary btn-lg py-3 rounded-3">
+                        <i class="fas fa-users me-2"></i> Visualizar Lista de Candidatos
+                    </a>
+                    <a href="{% url 'candidaturas:gerenciar_listas' inscricao.id %}" class="btn btn-outline-secondary">
+                        Voltar à Gestão de Círculos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

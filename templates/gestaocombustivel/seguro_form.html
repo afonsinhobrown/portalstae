@@ -1,0 +1,432 @@
+<!-- gestaocombustivel/templates/gestaocombustivel/seguro_form.html -->
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • {% if object %}Editar{% else %}Novo{% endif %} Seguro{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="combustivel-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus-circle{% endif %} text-primary me-2"></i>
+                        {% if object %}Editar Seguro{% else %}Registar Novo Seguro{% endif %}
+                    </h1>
+                    <a href="{% url 'gestaocombustivel:lista_seguros' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Por favor, corrija os erros abaixo.
+                        <ul class="mb-0 mt-2">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Abas -->
+                    <ul class="nav nav-tabs mb-4" id="seguroTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="basico-tab" data-bs-toggle="tab"
+                                    data-bs-target="#basico" type="button" role="tab">
+                                <i class="fas fa-info-circle me-1"></i> Básico
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="coberturas-tab" data-bs-toggle="tab"
+                                    data-bs-target="#coberturas" type="button" role="tab">
+                                <i class="fas fa-list-check me-1"></i> Coberturas
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="documentos-tab" data-bs-toggle="tab"
+                                    data-bs-target="#documentos" type="button" role="tab">
+                                <i class="fas fa-file-alt me-1"></i> Documentos
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="seguroTabsContent">
+                        <!-- Aba Básico -->
+                        <div class="tab-pane fade show active" id="basico" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.viatura.id_for_label }}" class="form-label fw-bold">
+                                            Viatura *
+                                        </label>
+                                        {{ form.viatura }}
+                                        {% if form.viatura.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.viatura.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.tipo_seguro.id_for_label }}" class="form-label fw-bold">
+                                            Tipo de Seguro *
+                                        </label>
+                                        {{ form.tipo_seguro }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.companhia_seguros.id_for_label }}" class="form-label fw-bold">
+                                            Companhia de Seguros *
+                                        </label>
+                                        {{ form.companhia_seguros }}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.numero_apolice.id_for_label }}" class="form-label fw-bold">
+                                            Número da Apólice *
+                                        </label>
+                                        {{ form.numero_apolice }}
+                                        <div class="form-text">Número único da apólice</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.data_inicio.id_for_label }}" class="form-label fw-bold">
+                                            Data Início *
+                                        </label>
+                                        {{ form.data_inicio }}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.data_fim.id_for_label }}" class="form-label fw-bold">
+                                            Data Fim *
+                                        </label>
+                                        {{ form.data_fim }}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.premio_seguro.id_for_label }}" class="form-label fw-bold">
+                                            Prêmio do Seguro *
+                                        </label>
+                                        {{ form.premio_seguro }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.franquia.id_for_label }}" class="form-label fw-bold">
+                                            Franquia
+                                        </label>
+                                        {{ form.franquia }}
+                                        <div class="form-text">Valor da franquia (se aplicável)</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.valor_segurado.id_for_label }}" class="form-label fw-bold">
+                                            Valor Segurado
+                                        </label>
+                                        {{ form.valor_segurado }}
+                                        <div class="form-text">Valor total segurado</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.agente_seguros.id_for_label }}" class="form-label fw-bold">
+                                            Agente de Seguros
+                                        </label>
+                                        {{ form.agente_seguros }}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.contacto_agente.id_for_label }}" class="form-label fw-bold">
+                                            Contacto do Agente
+                                        </label>
+                                        {{ form.contacto_agente }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aba Coberturas -->
+                        <div class="tab-pane fade" id="coberturas" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="{{ form.coberturas.id_for_label }}" class="form-label fw-bold">
+                                    Coberturas Incluídas *
+                                </label>
+                                {{ form.coberturas }}
+                                <div class="form-text">Liste todas as coberturas incluídas no seguro</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.restricoes.id_for_label }}" class="form-label fw-bold">
+                                    Restrições/Exclusões
+                                </label>
+                                {{ form.restricoes }}
+                                <div class="form-text">Condições especiais ou exclusões aplicáveis</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.condicoes_especiais.id_for_label }}" class="form-label fw-bold">
+                                    Condições Especiais
+                                </label>
+                                {{ form.condicoes_especiais }}
+                                <div class="form-text">Outras condições importantes</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.contacto_seguros.id_for_label }}" class="form-label fw-bold">
+                                    Contacto da Companhia
+                                </label>
+                                {{ form.contacto_seguros }}
+                            </div>
+                        </div>
+
+                        <!-- Aba Documentos -->
+                        <div class="tab-pane fade" id="documentos" role="tabpanel">
+                            <div class="mb-3">
+                                <label for="{{ form.documento_seguro.id_for_label }}" class="form-label fw-bold">
+                                    Documento do Seguro (PDF)
+                                </label>
+                                {{ form.documento_seguro }}
+                                {% if object and object.documento_seguro %}
+                                <div class="mt-2">
+                                    <a href="{{ object.documento_seguro.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>Ver Documento
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.factura_seguro.id_for_label }}" class="form-label fw-bold">
+                                    Fatura do Seguro
+                                </label>
+                                {{ form.factura_seguro }}
+                                {% if object and object.factura_seguro %}
+                                <div class="mt-2">
+                                    <a href="{{ object.factura_seguro.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-file-invoice me-1"></i>Ver Fatura
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            {{ form.activo }}
+                                            <label for="{{ form.activo.id_for_label }}" class="form-check-label fw-bold">
+                                                Seguro Ativo
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Desmarque para arquivar seguro antigo</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            {{ form.renovacao_automatica }}
+                                            <label for="{{ form.renovacao_automatica.id_for_label }}" class="form-check-label fw-bold">
+                                                Renovação Automática
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Notificar para renovação automática</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <div>
+                            <a href="{% url 'gestaocombustivel:lista_seguros' %}"
+                               class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Atualizar Seguro{% else %}Registar Seguro{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Informações da Viatura (se selecionada) -->
+            {% if form.viatura.value %}
+            <div class="combustivel-card p-4 mt-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-car text-primary me-2"></i>
+                    Informações da Viatura
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                <strong>Quilometragem:</strong> {{ viatura_selecionada.kilometragem_actual|floatformat:0 }} km
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-gas-pump me-2"></i>
+                                <strong>Combustível:</strong> {{ viatura_selecionada.get_tipo_combustivel_display }}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                <strong>Ano:</strong> {{ viatura_selecionada.ano_fabrico }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <strong>Seguro Atual:</strong>
+                                {% if viatura_selecionada.data_proximo_seguro %}
+                                    {{ viatura_selecionada.data_proximo_seguro|date:"d/m/Y" }}
+                                {% else %}
+                                    Sem seguro
+                                {% endif %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-clipboard-check me-2"></i>
+                                <strong>Inspeção:</strong>
+                                {% if viatura_selecionada.data_proxima_inspecao %}
+                                    {{ viatura_selecionada.data_proxima_inspecao|date:"d/m/Y" }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-tools me-2"></i>
+                                <strong>Próx. Manutenção:</strong> {{ viatura_selecionada.proxima_manutencao_km|floatformat:0 }} km
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Formatar selects
+        const selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+            select.classList.add('form-select');
+        });
+
+        // Formatar inputs
+        const inputs = document.querySelectorAll('input[type="text"], input[type="number"]');
+        inputs.forEach(input => {
+            if (!input.classList.contains('form-check-input')) {
+                input.classList.add('form-control');
+            }
+        });
+
+        // Formatar dates
+        const dates = document.querySelectorAll('input[type="date"]');
+        dates.forEach(date => {
+            date.classList.add('form-control');
+        });
+
+        // Formatar textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('form-control');
+        });
+
+        // Formatar file inputs
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+
+        // Calcular diferença de datas
+        const dataInicio = document.getElementById('{{ form.data_inicio.id_for_label }}');
+        const dataFim = document.getElementById('{{ form.data_fim.id_for_label }}');
+
+        function calcularDuracao() {
+            if (dataInicio.value && dataFim.value) {
+                const inicio = new Date(dataInicio.value);
+                const fim = new Date(dataFim.value);
+                const diffTime = Math.abs(fim - inicio);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // Mostrar duração
+                let infoDiv = document.getElementById('duracao-info');
+                if (!infoDiv) {
+                    infoDiv = document.createElement('div');
+                    infoDiv.id = 'duracao-info';
+                    infoDiv.className = 'form-text text-info';
+                    dataFim.parentNode.appendChild(infoDiv);
+                }
+
+                if (diffDays > 0) {
+                    const anos = Math.floor(diffDays / 365);
+                    const meses = Math.floor((diffDays % 365) / 30);
+                    const dias = diffDays % 30;
+
+                    let duracaoText = 'Duração: ';
+                    if (anos > 0) duracaoText += `${anos} ano${anos > 1 ? 's' : ''} `;
+                    if (meses > 0) duracaoText += `${meses} mês${meses > 1 ? 'es' : ''} `;
+                    if (dias > 0 && meses === 0) duracaoText += `${dias} dia${dias > 1 ? 's' : ''}`;
+
+                    infoDiv.textContent = duracaoText.trim();
+                } else {
+                    infoDiv.textContent = 'Data fim deve ser posterior à data início';
+                    infoDiv.className = 'form-text text-danger';
+                }
+            }
+        }
+
+        if (dataInicio && dataFim) {
+            dataInicio.addEventListener('change', calcularDuracao);
+            dataFim.addEventListener('change', calcularDuracao);
+
+            // Calcular se já tem valores
+            if (dataInicio.value && dataFim.value) {
+                calcularDuracao();
+            }
+        }
+    });
+</script>
+{% endblock %}

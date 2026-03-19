@@ -1,0 +1,270 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Dar Parecer • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Dar Parecer sobre Licença</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Parecer</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Informações da Licença -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>Detalhes da Licença
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Funcionário</h6>
+                        <p class="mb-3">
+                            <strong>{{ licenca.funcionario.nome_completo }}</strong><br>
+                            <small class="text-muted">
+                                {{ licenca.funcionario.sector.codigo }} • {{ licenca.funcionario.get_funcao_display }}
+                            </small>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Período Solicitado</h6>
+                        <p class="mb-3">
+                            <strong>{{ licenca.data_inicio|date:"d/m/Y" }} - {{ licenca.data_fim|date:"d/m/Y"
+                                }}</strong><br>
+                            <span class="badge bg-info">{{ licenca.dias_utilizados }} dias</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Tipo de Licença</h6>
+                        <p class="mb-3">{{ licenca.get_tipo_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Status Atual</h6>
+                        <p class="mb-0">
+                            <span class="status-badge status-{{ licenca.status }}">
+                                {{ licenca.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                {% if licenca.motivo %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Motivo Apresentado</h6>
+                        <div class="alert alert-light">
+                            {{ licenca.motivo }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if licenca.endereco_durante_licenca %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Endereço Durante Licença</h6>
+                        <p class="mb-0">{{ licenca.endereco_durante_licenca }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Formulário de Parecer -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-comment-medical me-2"></i>Parecer do Chefe
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Status do Parecer -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Status do Parecer *</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="favoravel"
+                                        value="favoravel" checked>
+                                    <label class="form-check-label" for="favoravel">
+                                        <span class="badge bg-success">Favorável</span>
+                                        <small class="d-block text-muted">Aprovar e enviar ao diretor</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="desfavoravel"
+                                        value="desfavoravel">
+                                    <label class="form-check-label" for="desfavoravel">
+                                        <span class="badge bg-danger">Desfavorável</span>
+                                        <small class="d-block text-muted">Rejeitar a solicitação</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parecer Detalhado -->
+                    <div class="mb-4">
+                        <label for="parecer" class="form-label">
+                            Parecer Detalhado *
+                        </label>
+                        <textarea class="form-control" id="parecer" name="parecer" rows="6"
+                            placeholder="Descreva seu parecer detalhadamente..." required></textarea>
+                        <small class="form-text text-muted">
+                            Inclua considerações sobre: impacto na equipa, substituição necessária, histórico do
+                            funcionário, etc.
+                        </small>
+                    </div>
+
+                    <!-- Recomendações -->
+                    <div class="mb-4">
+                        <label for="recomendacoes" class="form-label">
+                            Recomendações (opcional)
+                        </label>
+                        <textarea class="form-control" id="recomendacoes" name="recomendacoes" rows="3"
+                            placeholder="Recomendações específicas para o período de licença..."></textarea>
+                    </div>
+
+                    <!-- Informações Adicionais -->
+                    <div class="alert alert-warning">
+                        <h6>
+                            <i class="fas fa-exclamation-triangle me-2"></i>Importante
+                        </h6>
+                        <ul class="mb-0">
+                            <li>O parecer será registrado permanentemente no sistema.</li>
+                            <li>O funcionário será notificado sobre sua decisão.</li>
+                            <li>Em caso de aprovação, a solicitação seguirá para o diretor.</li>
+                            <li>Em caso de rejeição, a solicitação será arquivada.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'recursoshumanos:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar Parecer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Histórico do Funcionário -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Histórico do Funcionário
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Licenças Anteriores (últimos 12 meses)</h6>
+                        <ul class="list-unstyled">
+                            {% for hist_licenca in licenca.funcionario.licenca_set.all|slice:":3" %}
+                            {% if hist_licenca.id != licenca.id %}
+                            <li class="mb-2">
+                                <small>
+                                    {{ hist_licenca.data_inicio|date:"d/m/Y" }} - {{ hist_licenca.data_fim|date:"d/m/Y"
+                                    }}
+                                    <span
+                                        class="badge bg-{% if hist_licenca.status == 'aprovado' %}success{% else %}secondary{% endif %}">
+                                        {{ hist_licenca.get_status_display }}
+                                    </span>
+                                </small>
+                            </li>
+                            {% endif %}
+                            {% empty %}
+                            <li class="text-muted">Nenhuma licença anterior</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Avaliações Recentes</h6>
+                        <ul class="list-unstyled">
+                            {% for avaliacao in licenca.funcionario.avaliacaodesempenho_set.all|slice:":2" %}
+                            <li class="mb-2">
+                                <small>
+                                    {{ avaliacao.periodo }}:
+                                    <span class="badge bg-{{ avaliacao.classificacao_final|lower }}">
+                                        {{ avaliacao.nota_final_geral }}
+                                    </span>
+                                </small>
+                            </li>
+                            {% empty %}
+                            <li class="text-muted">Nenhuma avaliação recente</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label {
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-expand textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
+
+        // Status change effect
+        const statusRadios = document.querySelectorAll('input[name="status"]');
+        const parecerField = document.getElementById('parecer');
+
+        function updateStatusColor() {
+            const selectedValue = document.querySelector('input[name="status"]:checked').value;
+
+            if (selectedValue === 'desfavoravel') {
+                parecerField.style.borderColor = '#dc3545';
+                parecerField.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+            } else {
+                parecerField.style.borderColor = '';
+                parecerField.style.boxShadow = '';
+            }
+        }
+
+        statusRadios.forEach(radio => {
+            radio.addEventListener('change', updateStatusColor);
+        });
+
+        // Initial call
+        updateStatusColor();
+    });
+</script>
+{% endblock %}

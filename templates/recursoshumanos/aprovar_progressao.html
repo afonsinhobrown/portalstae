@@ -1,0 +1,276 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Aprovar Progressão de Escalão • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Aprovar Progressão de Escalão</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_progressoes_escalao' %}">Progressões</a></li>
+                <li class="breadcrumb-item active">Aprovar</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-user-tie me-2 text-primary"></i>Informações do Funcionário
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3 text-center">
+                        <div class="avatar-xl bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                            {{ progressao.funcionario.nome_completo|slice:":1" }}
+                        </div>
+                        <h5 class="fw-bold">{{ progressao.funcionario.nome_completo }}</h5>
+                        <p class="text-muted mb-0">{{ progressao.funcionario.numero_identificacao }}</p>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Função</small>
+                                    <p class="fw-bold">{{ progressao.funcionario.get_funcao_display }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Sector</small>
+                                    <p class="fw-bold">{{ progressao.funcionario.sector.nome }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Data de Ingresso</small>
+                                    <p class="fw-bold">{{ progressao.funcionario.data_ingresso|date:"d/m/Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Categoria</small>
+                                    <p class="fw-bold">{{ progressao.funcionario.categoria.get_categoria_display }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Tempo de Serviço</small>
+                                    <p class="fw-bold">{{ progressao.funcionario.tempo_servico }} anos</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Status</small>
+                                    <span class="badge bg-warning">Pendente</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progressão -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3">Detalhes da Progressão</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h5 class="fw-bold text-primary mb-1">Escalão Atual</h5>
+                                <div class="display-4 fw-bold text-primary">{{ progressao.escalao_atual }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-arrow-right fa-2x text-muted"></i>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h5 class="fw-bold text-success mb-1">Novo Escalão</h5>
+                                <div class="display-4 fw-bold text-success">{{ progressao.novo_escalao }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="p-3 bg-light rounded">
+                                <h5 class="fw-bold mb-2">Informações</h5>
+                                <p class="mb-1"><strong>Data Efetiva:</strong> {{ progressao.data_efectiva|date:"d/m/Y" }}</p>
+                                <p class="mb-1"><strong>Anos de Serviço:</strong> {{ progressao.anos_servico }} anos</p>
+                                <p class="mb-1"><strong>Solicitado por:</strong> {{ progressao.solicitado_por.username|default:"Sistema" }}</p>
+                                <p class="mb-0"><strong>Data Solicitação:</strong> {{ progressao.data_solicitacao|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motivo -->
+                {% if progressao.motivo %}
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Motivo</h6>
+                    <div class="p-3 bg-light rounded">
+                        {{ progressao.motivo|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Formulário de Aprovação -->
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Decisão</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">Observações (opcional)</label>
+                                    <textarea name="observacoes" class="form-control" rows="3" placeholder="Adicione observações sobre a aprovação/rejeição..."></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">Data Efetiva da Progressão</label>
+                                    <input type="date" name="data_efetiva" class="form-control" value="{{ progressao.data_efectiva|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Atenção!</h5>
+                                <p class="mb-0">
+                                    Esta ação irá alterar permanentemente o escalão do funcionário.
+                                    A mudança será registada no histórico e não poderá ser revertida facilmente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{% url 'recursoshumanos:lista_progressoes_escalao' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" name="acao" value="rejeitar" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja REJEITAR esta progressão?')">
+                            <i class="fas fa-times me-2"></i>Rejeitar Progressão
+                        </button>
+                        <button type="submit" name="acao" value="aprovar" class="btn btn-success" onclick="return confirm('Tem certeza que deseja APROVAR esta progressão?')">
+                            <i class="fas fa-check me-2"></i>Aprovar Progressão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Histórico do Funcionário -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history me-2 text-info"></i>Histórico de Progressões
+                </h5>
+            </div>
+            <div class="card-body">
+                {% with historico=progressao.funcionario.mudancas_escalao.all|slice:":5" %}
+                {% if historico %}
+                <div class="list-group list-group-flush">
+                    {% for mudanca in historico %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-{% if mudanca.tipo == 'progressao' %}primary{% else %}warning{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">{{ mudanca.escalao_antigo }} → {{ mudanca.escalao_novo }}</h6>
+                                <small class="text-muted">{{ mudanca.data_mudanca|date:"d/m/Y" }} • {{ mudanca.get_tipo_display }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhuma progressão anterior</p>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Última Avaliação -->
+        {% with ultima_avaliacao=progressao.funcionario.avaliacoes.all|first %}
+        {% if ultima_avaliacao %}
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-star me-2 text-warning"></i>Última Avaliação
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <span class="badge bg-primary fs-6">{{ ultima_avaliacao.ano }}</span>
+                    </div>
+                    <h3 class="fw-bold display-6">{{ ultima_avaliacao.nota_final_geral }}</h3>
+                    <div class="mb-2">
+                        <span class="badge {% if ultima_avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif ultima_avaliacao.classificacao_final == 'Bom' %}bg-info{% elif ultima_avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ ultima_avaliacao.classificacao_final }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0">Avaliado por: {{ ultima_avaliacao.avaliado_por.username|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Informações Adicionais -->
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>Informações
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold mb-2">Regras de Progressão:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Tempo mínimo: <strong>2 anos</strong> por escalão
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Escala: <strong>A → B → C → D</strong>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Avaliação mínima: <strong>Satisfatório</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-2">Ações Rápidas:</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'recursoshumanos:avaliar_desempenho' progressao.funcionario.id %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-star me-2"></i>Avaliar Desempenho
+                        </a>
+                        <a href="{% url 'recursoshumanos:historico_funcionario' progressao.funcionario.id %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-history me-2"></i>Ver Histórico Completo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

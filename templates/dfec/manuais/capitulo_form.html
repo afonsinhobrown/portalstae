@@ -1,0 +1,197 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dfec:manuais_lista' %}">Manuais</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dfec:manual_detalhe' pk=manual.pk %}">{{
+                    manual.titulo|truncatechars:30 }}</a></li>
+            <li class="breadcrumb-item active">{{ titulo }}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-edit"></i> {{ titulo }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Informações do Manual -->
+            <div class="alert alert-info mb-4">
+                <h6 class="alert-heading"><i class="fas fa-book"></i> Manual: {{ manual.titulo }}</h6>
+                <p class="mb-0">
+                    <strong>Código:</strong> {{ manual.codigo }} |
+                    <strong>Versão:</strong> {{ manual.versao }}
+                </p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="capituloForm">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row mb-3">
+                    <!-- Título -->
+                    <div class="col-md-8">
+                        <label for="{{ form.titulo.id_for_label }}" class="form-label">
+                            <i class="fas fa-heading"></i> {{ form.titulo.label }} *
+                        </label>
+                        {{ form.titulo }}
+                        {% if form.titulo.errors %}
+                        <div class="text-danger small">{{ form.titulo.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Número -->
+                    <div class="col-md-2">
+                        <label for="{{ form.numero.id_for_label }}" class="form-label">
+                            <i class="fas fa-hashtag"></i> {{ form.numero.label }} *
+                        </label>
+                        {{ form.numero }}
+                        {% if form.numero.errors %}
+                        <div class="text-danger small">{{ form.numero.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ordem -->
+                    <div class="col-md-2">
+                        <label for="{{ form.ordem.id_for_label }}" class="form-label">
+                            <i class="fas fa-sort-numeric-down"></i> {{ form.ordem.label }} *
+                        </label>
+                        {{ form.ordem }}
+                        {% if form.ordem.errors %}
+                        <div class="text-danger small">{{ form.ordem.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Conteúdo com TinyMCE -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label for="{{ form.conteudo.id_for_label }}" class="form-label">
+                            <i class="fas fa-file-alt"></i> {{ form.conteudo.label }} *
+                        </label>
+                        <small class="text-muted">Use as ferramentas de formatação abaixo</small>
+                    </div>
+                    {{ form.conteudo }}
+                    {% if form.conteudo.errors %}
+                    <div class="text-danger small">{{ form.conteudo.errors }}</div>
+                    {% endif %}
+                    {% if form.conteudo.help_text %}
+                    <div class="form-text">{{ form.conteudo.help_text }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="d-flex justify-content-between mt-4">
+                    <div>
+                        <a href="{% url 'dfec:manual_detalhe' pk=manual.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        {% if capitulo %}
+                        <a href="{% url 'dfec:capitulo_excluir' pk=capitulo.pk %}" class="btn btn-outline-danger ms-2"
+                            onclick="return confirm('Tem certeza que deseja excluir ESTE capítulo?\nEssa ação não pode ser desfeita.')">
+                            <i class="fas fa-trash"></i> Excluir
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-success">
+                            {% if capitulo %}
+                            <i class="fas fa-save"></i> Atualizar Capítulo
+                            {% else %}
+                            <i class="fas fa-plus"></i> Criar Capítulo
+                            {% endif %}
+                        </button>
+
+                        {% if capitulo %}
+                        <a href="{% url 'dfec:manual_detalhe' pk=manual.pk %}" class="btn btn-info ms-2">
+                            <i class="fas fa-eye"></i> Visualizar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos para o editor */
+    .tox-tinymce {
+        border-radius: 4px;
+        border: 1px solid #ced4da !important;
+    }
+
+    /* Estilo para campos obrigatórios */
+    .form-label[for*="titulo"]:after,
+    .form-label[for*="numero"]:after,
+    .form-label[for*="ordem"]:after,
+    .form-label[for*="conteudo"]:after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    /* Estilo para mensagens de ajuda */
+    .form-text {
+        font-size: 0.875em;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Summernote Lite JS (Melhor suporte nativo para Base64/Imagens) -->
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-pt-BR.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        console.log("Iniciando Summernote (Modo Base64)...");
+
+        // Inicializar Summernote no campo de conteúdo
+        $('#id_conteudo').summernote({
+            placeholder: 'Escreva o conteúdo do capítulo aqui. As imagens coladas serão salvas diretamente no texto.',
+            tabsize: 2,
+            height: 600,
+            lang: 'pt-BR',
+            toolbar: [
+                ['style', ['style', 'bold', 'italic', 'underline', 'clear']],
+                ['font', ['strikethrough', 'superscript', 'subscript']],
+                ['fontname', ['fontname']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph', 'height']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video', 'hr']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            // Configurações críticas para Base64
+            maximumImageFileSize: 5242880, // 5MB limit
+            dialogsInBody: true, // Ajuda a manter o foco ao abrir janelas
+            focus: true,         // Mantém o foco no editor
+        });
+
+        // Ajustes visuais
+        $('.note-editor').addClass('border-secondary');
+    });
+</script>
+{% endblock %}

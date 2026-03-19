@@ -1,0 +1,70 @@
+{% extends 'base_apps.html' %}
+{% block title %}Avaliação de Proposta{% endblock %}
+{% block module_name %}UGEA - MESA DE AVALIAÇÃO{% endblock %}
+{% block icon %}fas fa-balance-scale{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Avaliar: {{ proposta.fornecedor }}{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+    <!-- Resumo da Proposta -->
+    <div class="card">
+        <h3>Dados da Proposta</h3>
+        <p><strong>Concorrente:</strong> {{ proposta.fornecedor }}</p>
+        <p><strong>NUIT:</strong> {{ proposta.nuit }}</p>
+        <hr>
+        <p><strong>Valor:</strong> <span style="font-size: 18px; font-weight: bold;">{{ proposta.valor_proposto }} MT</span></p>
+        <p><strong>Prazo:</strong> {{ proposta.prazo_entrega_dias }} dias</p>
+        <div style="margin-top: 20px;">
+            <a href="{{ proposta.documento_tecnico.url }}" class="action-btn secondary" target="_blank"><i class="fas fa-file-alt"></i> Ver Proposta Técnica (PDF)</a>
+            <br><br>
+            <a href="{{ proposta.documento_financeiro.url }}" class="action-btn secondary" target="_blank"><i class="fas fa-file-invoice-dollar"></i> Ver Proposta Financeira (PDF)</a>
+        </div>
+        
+        <!-- Contexto do Caderno -->
+        <div style="margin-top: 30px; background: #fff3cd; padding: 15px; border-left: 5px solid #ffc107;">
+            <h4 style="margin-top:0;">Critérios do Caderno</h4>
+            <div style="font-size: 12px; max-height: 200px; overflow-y: auto;">
+                {{ proposta.concurso.cadernoencargos.criterios_avaliacao|linebreaks }}
+            </div>
+            <hr>
+            <h4 style="margin-top:10px;">Requisitos Técnicos</h4>
+            <div style="font-size: 12px; max-height: 200px; overflow-y: auto;">
+                {{ proposta.concurso.cadernoencargos.especificacoes_tecnicas|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de Avaliação -->
+    <div class="card">
+        <h3>Lançamento de Pontuação</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <label>Pontuação Técnica (0-100)</label>
+                {{ form.pontuacao_tecnica }}
+                <small style="color: #666;">Avalie com base na conformidade com o Caderno de Encargos.</small>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <label>Pontuação Financeira (0-100)</label>
+                {{ form.pontuacao_financeira }}
+                <small style="color: #666;">Calculada automaticamente se usar fórmula, ou manual.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Parecer do Júri</label>
+                {{ form.observacoes_juri }}
+            </div>
+
+            <button type="submit" class="action-btn success" style="margin-top: 20px; width: 100%;">REGISTAR AVALIAÇÃO</button>
+            <a href="{% url 'ugea:detalhe_concurso' proposta.concurso.id %}" style="display: block; text-align: center; margin-top: 15px; color: #666;">Cancelar</a>
+        </form>
+    </div>
+</div>
+<style>
+    .secondary { background: #6c757d; font-size: 13px; }
+    .success { background: #28a745; font-size: 16px; font-weight: bold; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+</style>
+{% endblock %}

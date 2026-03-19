@@ -1,0 +1,487 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Avaliar Funcionário • Sistema RH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .competencia-card {
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .competencia-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    .star-rating {
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .star-rating .fas {
+        transition: all 0.2s;
+    }
+
+    .star-rating .fas:hover {
+        transform: scale(1.2);
+    }
+
+    .nivel-descricao {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 5px;
+        min-height: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Avaliar Funcionário</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Avaliação</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Informações do Funcionário -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center">
+                        {% if funcionario.foto %}
+                        <img src="{{ funcionario.foto.url }}" alt="{{ funcionario.nome_completo }}"
+                            class="rounded-circle" width="80" height="80">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto"
+                            style="width: 80px; height: 80px; font-size: 2rem;">
+                            {{ funcionario.nome_completo|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-10">
+                        <h4 class="mb-1">{{ funcionario.nome_completo }}</h4>
+                        <p class="text-muted mb-2">
+                            {{ funcionario.get_funcao_display }} •
+                            <span class="badge bg-primary">{{ funcionario.sector.codigo }}</span>
+                        </p>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">Admissão:</small><br>
+                                <strong>{{ funcionario.data_admissao|date:"d/m/Y" }}</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Avaliações Anteriores:</small><br>
+                                <strong>{{ funcionario.avaliacaodesempenho_set.count }}</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Última Avaliação:</small><br>
+                                <strong>
+                                    {% if funcionario.avaliacaodesempenho_set.last %}
+                                    {{ funcionario.avaliacaodesempenho_set.last.nota_final_geral }}
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de Avaliação -->
+        <form method="post" id="avaliacaoForm">
+            {% csrf_token %}
+
+            <!-- Período de Avaliação -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Período de Avaliação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="periodo" class="form-label">Período *</label>
+                            <select name="periodo" id="periodo" class="form-select" required>
+                                <option value="">Selecione o período</option>
+                                {% for ano in anos_disponiveis %}
+                                <option value="{{ ano }}">{{ ano }}</option>
+                                {% endfor %}
+                                <option value="1º Semestre {{ ano_atual }}">1º Semestre {{ ano_atual }}</option>
+                                <option value="2º Semestre {{ ano_atual }}">2º Semestre {{ ano_atual }}</option>
+                                <option value="Ano {{ ano_atual }}">Ano {{ ano_atual }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Data da Avaliação</label>
+                            <input type="date" name="data_avaliacao" class="form-control"
+                                value="{{ hoje|date:'Y-m-d' }}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avaliação por Competências -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Avaliação por Competências
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Avalie cada competência de 1 a 5 estrelas, onde 1 = Insatisfatório e 5 = Excelente.
+                    </div>
+
+                    <div class="row g-4" id="competenciasContainer">
+                        {% for competencia in competencias %}
+                        <div class="col-md-6">
+                            <div class="card competencia-card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ competencia.nome }}</h6>
+                                    <p class="card-text small text-muted mb-3">
+                                        {{ competencia.descricao }}
+                                    </p>
+
+                                    <!-- Star Rating -->
+                                    <div class="star-rating mb-2" id="rating-{{ competencia.id }}">
+                                        {% for i in "12345" %}
+                                        <i class="fas fa-star text-muted star-icon"
+                                            data-competencia="{{ competencia.id }}" data-valor="{{ forloop.counter }}"
+                                            style="cursor: pointer;"></i>
+                                        {% endfor %}
+                                    </div>
+
+                                    <!-- Descrição do Nível -->
+                                    <div class="nivel-descricao" id="desc-{{ competencia.id }}">
+                                        Selecione um nível para ver a descrição
+                                    </div>
+
+                                    <!-- Hidden Input -->
+                                    <input type="hidden" name="competencia_{{ competencia.id }}"
+                                        id="input-{{ competencia.id }}" value="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhuma competência configurada</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Total Points -->
+                    <div class="mt-4 text-center">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="mb-0">
+                                    Pontuação Total: <span id="totalPontos">0</span> / <span id="maxPontos">{{
+                                        competencias.count }}</span>
+                                </h5>
+                                <small class="text-muted">
+                                    Média: <span id="mediaPontos">0.0</span>
+                                </small>
+                                <div class="progress mt-2" style="height: 10px;">
+                                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observações e Recomendações -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comment-alt me-2"></i>Observações e Recomendações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Observações Gerais -->
+                    <div class="mb-4">
+                        <label for="observacoes" class="form-label">
+                            Observações Gerais *
+                        </label>
+                        <textarea name="observacoes" id="observacoes" class="form-control" rows="4"
+                            placeholder="Descreva o desempenho geral do funcionário..." required></textarea>
+                    </div>
+
+                    <!-- Pontos Fortes -->
+                    <div class="mb-4">
+                        <label for="pontos_fortes" class="form-label">
+                            Pontos Fortes
+                        </label>
+                        <textarea name="pontos_fortes" id="pontos_fortes" class="form-control" rows="3"
+                            placeholder="Liste os principais pontos fortes..."></textarea>
+                        <small class="form-text text-muted">
+                            Separe cada ponto forte com uma nova linha
+                        </small>
+                    </div>
+
+                    <!-- Áreas de Melhoria -->
+                    <div class="mb-4">
+                        <label for="areas_melhoria" class="form-label">
+                            Áreas de Melhoria
+                        </label>
+                        <textarea name="areas_melhoria" id="areas_melhoria" class="form-control" rows="3"
+                            placeholder="Sugira áreas para desenvolvimento..."></textarea>
+                        <small class="form-text text-muted">
+                            Seja construtivo e específico
+                        </small>
+                    </div>
+
+                    <!-- Metas para Próximo Período -->
+                    <div class="mb-4">
+                        <label for="metas_proximo_periodo" class="form-label">
+                            Metas para o Próximo Período
+                        </label>
+                        <textarea name="metas_proximo_periodo" id="metas_proximo_periodo" class="form-control" rows="3"
+                            placeholder="Estabeleça metas claras e mensuráveis..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classificação Final -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Classificação Final
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h2 class="mb-0" id="notaFinal">0.0</h2>
+                                    <p class="text-muted mb-0">Nota Final</p>
+                                    <div class="mt-2">
+                                        <span class="badge bg-secondary" id="classificacaoFinal">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Escala de Classificação</h6>
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-1">
+                                            <span class="badge bg-success me-2">4.5 - 5.0</span>
+                                            <small>Excelente</small>
+                                        </li>
+                                        <li class="mb-1">
+                                            <span class="badge bg-primary me-2">3.5 - 4.4</span>
+                                            <small>Bom</small>
+                                        </li>
+                                        <li class="mb-1">
+                                            <span class="badge bg-warning me-2">2.5 - 3.4</span>
+                                            <small>Satisfatório</small>
+                                        </li>
+                                        <li class="mb-1">
+                                            <span class="badge bg-danger me-2">1.5 - 2.4</span>
+                                            <small>Regular</small>
+                                        </li>
+                                        <li>
+                                            <span class="badge bg-dark me-2">0.0 - 1.4</span>
+                                            <small>Insatisfatório</small>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'recursoshumanos:dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Salvar Avaliação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    // Versão SIMPLIFICADA - Sem template tags no JavaScript
+    console.log("Avaliação carregada");
+
+    // Descrições dos níveis
+    const niveisDescricao = {
+        1: "Insatisfatório - Não atende aos requisitos básicos",
+        2: "Regular - Atende parcialmente aos requisitos",
+        3: "Satisfatório - Atende adequadamente aos requisitos",
+        4: "Bom - Excede as expectativas em algumas áreas",
+        5: "Excelente - Excede consistentemente as expectativas"
+    };
+
+    // Armazenar ratings
+    let ratings = {};
+
+    // Função principal - agora global
+    window.setRating = function (competenciaId, valor) {
+        console.log("Avaliando competencia", competenciaId, "com", valor, "estrelas");
+
+        // Salvar avaliação
+        ratings[competenciaId] = valor;
+
+        // Atualizar estrelas
+        const estrelas = document.querySelectorAll('#rating-' + competenciaId + ' .fa-star');
+        for (let i = 0; i < estrelas.length; i++) {
+            if (i < valor) {
+                estrelas[i].classList.remove('text-muted');
+                estrelas[i].classList.add('text-warning');
+            } else {
+                estrelas[i].classList.remove('text-warning');
+                estrelas[i].classList.add('text-muted');
+            }
+        }
+
+        // Atualizar descrição
+        const descricao = document.getElementById('desc-' + competenciaId);
+        if (niveisDescricao[valor]) {
+            descricao.textContent = niveisDescricao[valor];
+            descricao.classList.remove('text-muted');
+            descricao.classList.add('text-warning');
+        }
+
+        // Atualizar input hidden
+        document.getElementById('input-' + competenciaId).value = valor;
+
+        // Calcular média
+        calcularMedia();
+    };
+
+    function calcularMedia() {
+        let total = 0;
+        let contagem = 0;
+
+        // Obter todos os inputs hidden
+        const inputs = document.querySelectorAll('input[id^="input-"]');
+        for (let i = 0; i < inputs.length; i++) {
+            const valor = parseInt(inputs[i].value);
+            if (valor > 0) {
+                total += valor;
+                contagem++;
+            }
+        }
+
+        // Atualizar exibição
+        const media = contagem > 0 ? (total / contagem).toFixed(2) : '0.0';
+        document.getElementById('mediaPontos').textContent = media;
+        document.getElementById('notaFinal').textContent = media;
+
+        // Atualizar barra de progresso
+        const maxPontos = inputs.length * 5;
+        const progresso = maxPontos > 0 ? (total / maxPontos) * 100 : 0;
+        document.getElementById('progressBar').style.width = progresso + '%';
+
+        // Atualizar classificação
+        classificarNota(parseFloat(media));
+    }
+
+    function classificarNota(nota) {
+        let classificacao = '-';
+        let cor = 'secondary';
+
+        if (nota >= 4.5) {
+            classificacao = 'Excelente';
+            cor = 'success';
+        } else if (nota >= 3.5) {
+            classificacao = 'Bom';
+            cor = 'primary';
+        } else if (nota >= 2.5) {
+            classificacao = 'Satisfatório';
+            cor = 'warning';
+        } else if (nota >= 1.5) {
+            classificacao = 'Regular';
+            cor = 'danger';
+        } else if (nota > 0) {
+            classificacao = 'Insatisfatório';
+            cor = 'dark';
+        }
+
+        const elemento = document.getElementById('classificacaoFinal');
+        if (elemento) {
+            elemento.textContent = classificacao;
+            elemento.className = 'badge bg-' + cor;
+        }
+    }
+
+    // Quando a página carregar
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log("Sistema de avaliação inicializado");
+        calcularMedia();
+
+        // Adicionar eventos de clique nas estrelas
+        document.querySelectorAll('.star-icon').forEach(star => {
+            star.addEventListener('click', function () {
+                const compId = this.dataset.competencia;
+                const valor = this.dataset.valor;
+                if (compId && valor) {
+                    setRating(compId, parseInt(valor));
+                }
+            });
+        });
+
+        // Validar formulário
+        const formulario = document.getElementById('avaliacaoForm');
+        if (formulario) {
+            formulario.addEventListener('submit', function (evento) {
+                const inputs = document.querySelectorAll('input[id^="input-"]');
+                let todasAvaliadas = true;
+
+                for (let i = 0; i < inputs.length; i++) {
+                    if (parseInt(inputs[i].value) === 0) {
+                        todasAvaliadas = false;
+                        const card = inputs[i].closest('.competencia-card');
+                        if (card) {
+                            card.style.borderColor = '#dc3545';
+                        }
+                        break;
+                    }
+                }
+
+                if (!todasAvaliadas) {
+                    evento.preventDefault();
+                    alert('Por favor, avalie todas as competências.');
+                    return false;
+                }
+
+                const observacoes = document.getElementById('observacoes');
+                if (!observacoes || !observacoes.value.trim()) {
+                    evento.preventDefault();
+                    alert('As observações gerais são obrigatórias.');
+                    return false;
+                }
+
+                // Botão de loading
+                const botao = this.querySelector('button[type="submit"]');
+                if (botao) {
+                    botao.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+                    botao.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}RS & LOGÍSTICA{% endblock %}
+{% block icon %}fas fa-truck-loading{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">{{ form.nome.label_tag }}{{ form.nome }}</div>
+            <div class="form-group">{{ form.tipo.label_tag }}{{ form.tipo }}</div>
+            <div class="form-group">{{ form.orcamento_total.label_tag }}{{ form.orcamento_total }}</div>
+            <div class="form-group">{{ form.data_inicio.label_tag }}{{ form.data_inicio }}</div>
+            <div class="form-group">{{ form.data_fim.label_tag }}{{ form.data_fim }}</div>
+            <div class="form-group" style="grid-column: span 2;">{{ form.descricao.label_tag }}{{ form.descricao }}</div>
+        </div>
+        <button type="submit" class="action-btn" style="margin-top:20px;">Salvar Plano</button>
+    </form>
+</div>
+<style>.form-control{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;margin-top:5px;}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}</style>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Avaliar Funcionário • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 fw-bold text-primary">
+                <i class="fas fa-star me-2"></i>Avaliar Desempenho
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Avaliar Funcionário</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Cabeçalho com informações -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Informações da Avaliação</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 80px; height: 80px; font-size: 2rem;">
+                                {{ funcionario.nome_completo|slice:":1" }}
+                            </div>
+                            <h5 class="fw-bold">{{ funcionario.nome_completo }}</h5>
+                            <p class="text-muted small">{{ funcionario.numero_identificacao }}</p>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <p><strong>Setor:</strong><br>
+                            {{ funcionario.sector.codigo }} - {{ funcionario.sector.nome }}</p>
+                            
+                            <p><strong>Função:</strong><br>
+                            {{ funcionario.get_funcao_display }}</p>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <p><strong>Avaliador:</strong><br>
+                            {{ avaliador.nome_completo|default:user.get_full_name }}</p>
+                            
+                            <p><strong>Período de Avaliação:</strong><br>
+                            <span class="text-success fw-bold">{{ date.today|date:"Y" }}</span></p>
+                        </div>
+                    </div>
+                    
+                    {% if avaliacao_recente %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Já existe uma avaliação para este funcionário no período atual.
+                        Avaliação anterior: <strong>{{ avaliacao_recente.nota_final_geral }}</strong> 
+                        ({{ avaliacao_recente.classificacao_final }}) em 
+                        {{ avaliacao_recente.data_avaliacao|date:"d/m/Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Formulário de Avaliação -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Formulário de Avaliação de Desempenho</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <input type="hidden" name="periodo" value="{{ date.today.year }}">
+                        
+                        <!-- Competências -->
+                        <div class="mb-5">
+                            <h5 class="mb-4 border-bottom pb-2">Competências (1-5 pontos)</h5>
+                            
+                            {% for competencia in competencias %}
+                            <div class="competencia-item mb-4">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">{{ competencia.nome }}</h6>
+                                        <p class="small text-muted mb-0">{{ competencia.descricao }}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-light text-dark">
+                                            Peso: {{ competencia.peso }}x
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="pontuacao-container">
+                                    <div class="btn-group w-100" role="group">
+                                        {% for i in "12345" %}
+                                        <input type="radio" class="btn-check" 
+                                               name="competencia_{{ competencia.id }}" 
+                                               id="comp{{ competencia.id }}_{{ forloop.counter }}" 
+                                               value="{{ forloop.counter }}" 
+                                               {% if forloop.counter == 3 %}checked{% endif %}>
+                                        <label class="btn btn-outline-primary" 
+                                               for="comp{{ competencia.id }}_{{ forloop.counter }}">
+                                            {{ forloop.counter }}
+                                            {% if forloop.counter == 1 %}
+                                            <small class="d-block">Insuficiente</small>
+                                            {% elif forloop.counter == 2 %}
+                                            <small class="d-block">Regular</small>
+                                            {% elif forloop.counter == 3 %}
+                                            <small class="d-block">Adequado</small>
+                                            {% elif forloop.counter == 4 %}
+                                            <small class="d-block">Bom</small>
+                                            {% elif forloop.counter == 5 %}
+                                            <small class="d-block">Excelente</small>
+                                            {% endif %}
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Nenhuma competência configurada no sistema.
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Observações e Recomendações</h5>
+                            <textarea name="observacoes" class="form-control" rows="6"
+                                     placeholder="Inclua observações detalhadas sobre o desempenho, pontos fortes, áreas de melhoria, recomendações para desenvolvimento, etc."></textarea>
+                            <small class="text-muted">Estas observações serão partilhadas com o funcionário.</small>
+                        </div>
+
+                        <!-- Legenda -->
+                        <div class="alert alert-light mb-4">
+                            <h6 class="fw-bold">Legenda de Pontuação:</h6>
+                            <div class="row">
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-danger">1</span>
+                                    <small class="d-block">Insuficiente</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-warning">2</span>
+                                    <small class="d-block">Regular</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-info">3</span>
+                                    <small class="d-block">Adequado</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-primary">4</span>
+                                    <small class="d-block">Bom</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-success">5</span>
+                                    <small class="d-block">Excelente</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Avaliação
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Informação sobre classificação automática -->
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-calculator me-2"></i>
+                <strong>Classificação Automática:</strong> O sistema calculará automaticamente a nota final e classificação:
+                <ul class="mb-0 mt-2">
+                    <li><strong>4.5 - 5.0:</strong> Excelente</li>
+                    <li><strong>3.5 - 4.4:</strong> Bom</li>
+                    <li><strong>2.5 - 3.4:</strong> Satisfatório</li>
+                    <li><strong>1.5 - 2.4:</strong> Regular</li>
+                    <li><strong>0.0 - 1.4:</strong> Insuficiente</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.competencia-item {
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+.competencia-item:hover {
+    background-color: #e9ecef;
+}
+.btn-check:checked + .btn-outline-primary {
+    background-color: #0d6efd;
+    color: white;
+}
+.pontuacao-container .btn {
+    padding: 10px 5px;
+}
+</style>
+{% endblock %}

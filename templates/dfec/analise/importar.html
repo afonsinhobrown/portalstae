@@ -1,0 +1,622 @@
+<!-- templates/dfec/analise/importar.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Importar Dados Eleitorais - DFEC{% endblock %}
+{% block page_title %}Importar Dados Eleitorais{% endblock %}
+{% block page_subtitle %}Carregue dados históricos para análise e recomendações{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'analise_dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Voltar
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-file-import me-2"></i>Importar Arquivo
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="importForm">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <!-- Seleção de Eleição -->
+                        <div class="col-md-6">
+                            <label for="{{ form.eleicao.id_for_label }}" class="form-label">
+                                {{ form.eleicao.label }} *
+                            </label>
+                            {{ form.eleicao }}
+                            {% if form.eleicao.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.eleicao.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Selecione o tipo e ano da eleição</small>
+                        </div>
+
+                        <!-- Campo para novo ano se necessário -->
+                        <div class="col-md-6">
+                            <label class="form-label">Ano da Eleição</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="ano_eleicao"
+                                       min="1990" max="2100" value="{% now 'Y' %}">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="criarNovaEleicao()">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Ou crie uma nova eleição</small>
+                        </div>
+
+                        <!-- Upload de Arquivo -->
+                        <div class="col-12">
+                            <label for="{{ form.arquivo.id_for_label }}" class="form-label">
+                                {{ form.arquivo.label }} *
+                            </label>
+                            <div class="file-upload-area border rounded p-4 text-center">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                <h5>Arraste e solte seu arquivo aqui</h5>
+                                <p class="text-muted mb-3">ou</p>
+                                <div class="mb-3">
+                                    {{ form.arquivo }}
+                                </div>
+                                <div class="form-text">
+                                    Formatos suportados: CSV, Excel (.xlsx, .xls)
+                                    <br>
+                                    Tamanho máximo: 10MB
+                                </div>
+                            </div>
+                            {% if form.arquivo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.arquivo.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Template Download -->
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-download me-2"></i>Baixar Template
+                                </h6>
+                                <p class="mb-2">Use nosso template para garantir que os dados sejam importados corretamente:</p>
+                                <div class="btn-group">
+                                    <a href="{% static 'dfec/templates/template_dados_eleicao.csv' %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-file-csv me-1"></i>Template CSV
+                                    </a>
+                                    <a href="{% static 'dfec/templates/template_dados_eleicao.xlsx' %}"
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-file-excel me-1"></i>Template Excel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validação -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="validarDados" checked>
+                                <label class="form-check-label" for="validarDados">
+                                    Validar dados automaticamente antes de importar
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="normalizarNomes" checked>
+                                <label class="form-check-label" for="normalizarNomes">
+                                    Normalizar nomes de regiões automaticamente
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary" id="importBtn">
+                            <i class="fas fa-upload me-1"></i> Iniciar Importação
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="previewData()">
+                            <i class="fas fa-eye me-1"></i> Pré-visualizar Dados
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pré-visualização -->
+        <div class="card shadow" id="previewCard" style="display: none;">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-eye me-2"></i>Pré-visualização dos Dados
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="previewContent">
+                    <!-- Os dados serão carregados aqui via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Instruções -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-info-circle me-2"></i>Instruções
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Estrutura Obrigatória
+                    </h6>
+                    <p class="mb-2">O arquivo deve conter estas colunas exatas:</p>
+                    <code class="d-block bg-light p-2 rounded mb-2">
+                        provincia,distrito,posto_administrativo,localidade,posto_votacao,mesa_voto,total_inscritos,votos_validos,votos_nulos,votos_brancos
+                    </code>
+                    <small class="text-muted">A ordem das colunas não importa</small>
+                </div>
+
+                <div class="alert alert-success">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-lightbulb me-2"></i>Dicas
+                    </h6>
+                    <ul class="mb-0 ps-3">
+                        <li>Use nomes consistentes para regiões</li>
+                        <li>Verifique se os totais estão corretos</li>
+                        <li>Importe por província para melhor performance</li>
+                        <li>Faça backup antes de importações grandes</li>
+                    </ul>
+                </div>
+
+                <!-- Estatísticas de Importações -->
+                <div class="mt-4">
+                    <h6 class="fw-bold text-primary mb-3">Últimas Importações</h6>
+                    <div class="list-group">
+                        {% for eleicao in ultimas_eleicoes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">{{ eleicao.get_tipo_display }} {{ eleicao.ano }}</h6>
+                                    <small class="text-muted">
+                                        Importado por {{ eleicao.carregado_por.get_full_name }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{% if eleicao.dados_carregados %}success{% else %}warning{% endif %}">
+                                    {{ eleicao.dados_carregados|yesno:"Carregado,Pendente" }}
+                                </span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-database fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Nenhuma importação realizada</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validação em Tempo Real -->
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-check-circle me-2"></i>Validação
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="validationResults">
+                    <div class="text-center py-4">
+                        <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Faça upload de um arquivo para validar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Pré-visualização -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Pré-visualização dos Dados</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="previewTable">
+                        <thead>
+                            <tr>
+                                <th>Linha</th>
+                                <th>Província</th>
+                                <th>Distrito</th>
+                                <th>Posto</th>
+                                <th>Localidade</th>
+                                <th>Posto Votação</th>
+                                <th>Mesa</th>
+                                <th>Inscritos</th>
+                                <th>Válidos</th>
+                                <th>Nulos</th>
+                                <th>Brancos</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                            <!-- Dados serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmImport()">Confirmar Importação</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Drag and drop
+const uploadArea = document.querySelector('.file-upload-area');
+const fileInput = document.querySelector('#id_arquivo');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('bg-light');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('bg-light');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('bg-light');
+
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        validateFile(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        validateFile(e.target.files[0]);
+    }
+});
+
+// Validação do arquivo
+function validateFile(file) {
+    const validationResults = document.getElementById('validationResults');
+    validationResults.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Validando...</span>
+            </div>
+            <p>Validando arquivo...</p>
+        </div>
+    `;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('/api/analise/validar-arquivo/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            validationResults.innerHTML = `
+                <div class="alert alert-success">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-check-circle me-2"></i>Arquivo Válido
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Linhas: ${data.stats.rows}</li>
+                        <li>Colunas: ${data.stats.columns}</li>
+                        <li>Tamanho: ${(file.size / 1024 / 1024).toFixed(2)} MB</li>
+                        <li>Formato: ${file.name.split('.').pop().toUpperCase()}</li>
+                    </ul>
+                </div>
+            `;
+        } else {
+            validationResults.innerHTML = `
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-circle me-2"></i>Arquivo Inválido
+                    </h6>
+                    <p class="mb-2">${data.error}</p>
+                    ${data.details ? `<small class="text-muted">${data.details}</small>` : ''}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        validationResults.innerHTML = `
+            <div class="alert alert-danger">
+                <h6 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Erro na Validação
+                </h6>
+                <p class="mb-0">${error.message}</p>
+            </div>
+        `;
+    });
+}
+
+// Pré-visualização de dados
+function previewData() {
+    const file = fileInput.files[0];
+    if (!file) {
+        showToast('Selecione um arquivo primeiro', 'warning');
+        return;
+    }
+
+    const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+    const tableBody = document.getElementById('previewTableBody');
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="12" class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2">Carregando pré-visualização...</p>
+            </td>
+        </tr>
+    `;
+
+    previewModal.show();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = e.target.result;
+
+        if (file.name.endsWith('.csv')) {
+            parseCSV(data);
+        } else {
+            parseExcel(data);
+        }
+    };
+
+    if (file.name.endsWith('.csv')) {
+        reader.readAsText(file);
+    } else {
+        reader.readAsArrayBuffer(file);
+    }
+}
+
+function parseCSV(csvData) {
+    const rows = csvData.split('\n');
+    const headers = rows[0].split(',').map(h => h.trim());
+
+    // Verificar se tem as colunas necessárias
+    const requiredColumns = [
+        'provincia', 'distrito', 'posto_administrativo', 'localidade',
+        'posto_votacao', 'mesa_voto', 'total_inscritos', 'votos_validos',
+        'votos_nulos', 'votos_brancos'
+    ];
+
+    const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+
+    if (missingColumns.length > 0) {
+        document.getElementById('previewTableBody').innerHTML = `
+            <tr>
+                <td colspan="12" class="text-center text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Colunas faltando: ${missingColumns.join(', ')}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Mostrar primeiras 10 linhas
+    const tableBody = document.getElementById('previewTableBody');
+    tableBody.innerHTML = '';
+
+    for (let i = 1; i < Math.min(11, rows.length); i++) {
+        if (!rows[i].trim()) continue;
+
+        const cols = rows[i].split(',');
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = cols[index] ? cols[index].trim() : '';
+        });
+
+        // Validar dados
+        const isValid = validateRow(row);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i}</td>
+            <td>${row.provincia || ''}</td>
+            <td>${row.distrito || ''}</td>
+            <td>${row.posto_administrativo || ''}</td>
+            <td>${row.localidade || ''}</td>
+            <td>${row.posto_votacao || ''}</td>
+            <td>${row.mesa_voto || ''}</td>
+            <td>${row.total_inscritos || ''}</td>
+            <td>${row.votos_validos || ''}</td>
+            <td>${row.votos_nulos || ''}</td>
+            <td>${row.votos_brancos || ''}</td>
+            <td>
+                <span class="badge bg-${isValid ? 'success' : 'danger'}">
+                    ${isValid ? 'OK' : 'Inválido'}
+                </span>
+            </td>
+        `;
+
+        if (!isValid) {
+            tr.classList.add('table-danger');
+        }
+
+        tableBody.appendChild(tr);
+    }
+
+    // Adicionar resumo
+    if (rows.length > 11) {
+        const summaryRow = document.createElement('tr');
+        summaryRow.classList.add('table-info');
+        summaryRow.innerHTML = `
+            <td colspan="12" class="text-center">
+                Mostrando 10 de ${rows.length - 1} linhas
+            </td>
+        `;
+        tableBody.appendChild(summaryRow);
+    }
+}
+
+function parseExcel(arrayBuffer) {
+    // Para Excel, precisaríamos de uma biblioteca como SheetJS
+    // Esta é uma implementação simplificada
+    document.getElementById('previewTableBody').innerHTML = `
+        <tr>
+            <td colspan="12" class="text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                Pré-visualização de Excel requer biblioteca adicional
+            </td>
+        </tr>
+    `;
+}
+
+function validateRow(row) {
+    // Verificar se todos os campos numéricos são válidos
+    const numericFields = ['total_inscritos', 'votos_validos', 'votos_nulos', 'votos_brancos'];
+
+    for (const field of numericFields) {
+        const value = parseInt(row[field]);
+        if (isNaN(value) || value < 0) {
+            return false;
+        }
+    }
+
+    // Verificar se a soma faz sentido
+    const total = parseInt(row.total_inscritos);
+    const sum = parseInt(row.votos_validos) + parseInt(row.votos_nulos) + parseInt(row.votos_brancos);
+
+    if (sum > total) {
+        return false;
+    }
+
+    return true;
+}
+
+function criarNovaEleicao() {
+    const ano = document.getElementById('ano_eleicao').value;
+    const tipoSelect = document.getElementById('id_eleicao');
+
+    if (!ano || ano < 1990 || ano > 2100) {
+        showToast('Ano inválido', 'danger');
+        return;
+    }
+
+    // Criar nova eleição via API
+    fetch('/api/analise/nova-eleicao/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            ano: parseInt(ano),
+            tipo: 'AR' // Tipo padrão, pode ser ajustado
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Adicionar nova opção ao select
+            const option = document.createElement('option');
+            option.value = data.eleicao_id;
+            option.textContent = `Eleição ${data.tipo} ${data.ano}`;
+            option.selected = true;
+            tipoSelect.appendChild(option);
+
+            showToast('Nova eleição criada com sucesso', 'success');
+        } else {
+            showToast('Erro ao criar eleição: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        showToast('Erro de conexão: ' + error, 'danger');
+    });
+}
+
+function confirmImport() {
+    document.getElementById('importForm').submit();
+}
+
+// Toast notifications
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    const container = document.getElementById('toastContainer') || createToastContainer();
+    container.appendChild(toast);
+
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    document.body.appendChild(container);
+    return container;
+}
+</script>
+
+<style>
+.file-upload-area {
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.file-upload-area.bg-light {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border-color: #0d6efd !important;
+}
+
+#previewTable {
+    font-size: 0.875rem;
+}
+
+#previewTable th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

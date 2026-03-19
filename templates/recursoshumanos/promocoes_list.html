@@ -1,0 +1,220 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Promoções • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Gestão de Promoções</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Promoções</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'admin:recursoshumanos_promocao_add' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Nova Promoção
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex gap-3 align-items-center">
+                            <span class="fw-bold">Filtrar:</span>
+                            <div class="btn-group" role="group">
+                                <a href="?status=pendente" class="btn {% if status_filter == 'pendente' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                                    Pendentes
+                                </a>
+                                <a href="?status=aprovada" class="btn {% if status_filter == 'aprovada' %}btn-success{% else %}btn-outline-success{% endif %}">
+                                    Aprovadas
+                                </a>
+                                <a href="?status=rejeitada" class="btn {% if status_filter == 'rejeitada' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                                    Rejeitadas
+                                </a>
+                                <a href="?" class="btn {% if not status_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                    Todas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Buscar funcionário..." id="searchInput">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Promoções -->
+<div class="row">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-list me-2 text-primary"></i>Lista de Promoções
+                </h5>
+                <div>
+                    <span class="text-muted me-3">{{ promocoes.count }} registos</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if promocoes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Promoção</th>
+                                <th>Setor</th>
+                                <th>Solicitado Por</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for promocao in promocoes %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            {{ promocao.funcionario.nome_completo|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">{{ promocao.funcionario.nome_completo }}</h6>
+                                            <small class="text-muted">{{ promocao.funcionario.numero_identificacao }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-secondary me-2">{{ promocao.funcao_antiga|title }}</span>
+                                        <i class="fas fa-arrow-right text-muted mx-1"></i>
+                                        <span class="badge bg-success ms-2">{{ promocao.funcao_nova|title }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if promocao.sector_antigo and promocao.sector_novo %}
+                                    <div class="d-flex align-items-center">
+                                        <small class="text-muted">{{ promocao.sector_antigo.codigo }}</small>
+                                        <i class="fas fa-arrow-right text-muted mx-1"></i>
+                                        <small>{{ promocao.sector_novo.codigo }}</small>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">Mesmo setor</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if promocao.proposta_por %}
+                                    <span class="badge bg-info">{{ promocao.proposta_por.username }}</span>
+                                    {% else %}
+                                    <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ promocao.data_promocao|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if promocao.status == 'pendente' %}
+                                    <span class="badge bg-warning">Pendente</span>
+                                    {% elif promocao.status == 'aprovada' %}
+                                    <span class="badge bg-success">Aprovada</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Rejeitada</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'recursoshumanos:aprovar_promocao' promocao.id %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if promocao.status == 'pendente' %}
+                                        <a href="{% url 'recursoshumanos:aprovar_promocao' promocao.id %}" 
+                                           class="btn btn-sm btn-success" title="Aprovar">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'recursoshumanos:aprovar_promocao' promocao.id %}" 
+                                           class="btn btn-sm btn-danger" title="Rejeitar">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
+                    <h4 class="fw-bold mb-3">Nenhuma promoção encontrada</h4>
+                    <p class="text-muted mb-4">
+                        Não existem promoções {{ status_filter|default:"registadas" }} no momento.
+                    </p>
+                    <a href="{% url 'admin:recursoshumanos_promocao_add' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Criar Primeira Promoção
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x text-warning mb-3"></i>
+                <h3 class="fw-bold">{{ pendentes|default:0 }}</h3>
+                <p class="text-muted mb-0">Pendentes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                <h3 class="fw-bold">{{ aprovadas|default:0 }}</h3>
+                <p class="text-muted mb-0">Aprovadas</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-times-circle fa-2x text-danger mb-3"></i>
+                <h3 class="fw-bold">{{ rejeitadas|default:0 }}</h3>
+                <p class="text-muted mb-0">Rejeitadas</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x text-info mb-3"></i>
+                <h3 class="fw-bold">{{ total|default:0 }}</h3>
+                <p class="text-muted mb-0">Total</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

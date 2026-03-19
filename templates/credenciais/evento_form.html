@@ -1,0 +1,116 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}{{ titulo }} • Credenciais{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-plus me-2 text-primary"></i>
+                    {{ titulo }}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Nome do Evento *</label>
+                            {{ form.nome }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Descrição</label>
+                            {{ form.descricao }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Data Início *</label>
+                            {{ form.data_inicio }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Data Fim *</label>
+                            {{ form.data_fim }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Abrangência do Evento *</label>
+                            {{ form.abrangencia }}
+                            <div class="form-text small text-info">Define se o evento é Nacional, restrito a uma
+                                Província ou Local.</div>
+                        </div>
+
+                        <div class="col-md-8" id="div_local">
+                            <label class="form-label fw-bold small">Local / Endereço</label>
+                            {{ form.local }}
+                        </div>
+
+                        <div class="col-md-4" id="div_provincia">
+                            <label class="form-label fw-bold small">Província</label>
+                            {{ form.provincia }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Limite de Participantes</label>
+                            {{ form.limite_participantes }}
+                            <div class="form-text small">0 para ilimitado</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Logotipo</label>
+                            {{ form.logotipo }}
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <div class="form-check form-switch mb-2">
+                                {{ form.permite_pedidos_remotos }}
+                                <label class="form-check-label fw-bold small ms-2">Permitir Solicitações Remotas
+                                    (Públicas)</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                {{ form.ativo }}
+                                <label class="form-check-label fw-bold small ms-2">Evento Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 d-flex justify-content-between">
+                        <a href="{% url 'credenciais:lista_eventos' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-5">Salvar Evento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const abrangenciaField = document.getElementById('id_abrangencia');
+        const localDiv = document.getElementById('div_local');
+        const provinciaDiv = document.getElementById('div_provincia');
+
+        function toggleFields() {
+            const val = abrangenciaField.value;
+            if (val === 'nacional') {
+                localDiv.classList.add('d-none');
+                provinciaDiv.classList.add('d-none');
+            } else if (val === 'provincial') {
+                localDiv.classList.add('d-none');
+                provinciaDiv.classList.remove('d-none');
+                provinciaDiv.classList.replace('col-md-4', 'col-md-12');
+            } else {
+                localDiv.classList.remove('d-none');
+                provinciaDiv.classList.remove('d-none');
+                provinciaDiv.classList.replace('col-md-12', 'col-md-4');
+            }
+        }
+
+        if (abrangenciaField) {
+            abrangenciaField.addEventListener('change', toggleFields);
+            toggleFields();
+        }
+    });
+</script>
+{% endblock %}

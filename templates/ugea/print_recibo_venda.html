@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Recibo - {{ inscricao.concurso.numero }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @page { size: A4 portrait; margin: 1.5cm; }
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; background: #f0f2f5; margin: 0; padding: 20px; }
+        
+        .receipt-container { background: white; max-width: 800px; margin: 0 auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #003366; position: relative; overflow: hidden; }
+        
+        /* Watermark */
+        .receipt-container::after { content: "STAE"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 150px; color: rgba(0,0,0,0.03); font-weight: bold; pointer-events: none; }
+
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; }
+        .republica { font-weight: 800; font-size: 18px; letter-spacing: 2px; color: #000; }
+        .stae-title { font-weight: 700; font-size: 14px; margin-top: 5px; color: #555; }
+        
+        .doc-title { background: #003366; color: white; display: inline-block; padding: 8px 30px; border-radius: 4px; font-weight: bold; font-size: 16px; margin: 20px 0; text-transform: uppercase; }
+        
+        .receipt-id { font-family: monospace; font-weight: bold; color: #d9534f; font-size: 18px; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .info-item { background: #f8fafc; padding: 12px; border-radius: 6px; border-left: 3px solid #003366; }
+        .info-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .info-value { font-size: 14px; font-weight: 600; color: #1e293b; }
+
+        .items-table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+        .items-table th { background: #f1f5f9; text-align: left; padding: 12px; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+        .items-table td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        
+        .total-box { margin-left: auto; width: 300px; background: #003366; color: white; padding: 15px; border-radius: 6px; text-align: right; }
+        .total-label { font-size: 12px; opacity: 0.8; margin-right: 10px; }
+        .total-value { font-size: 22px; font-weight: 800; }
+
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 80px; }
+        .sig-line { border-top: 1px solid #333; text-align: center; padding-top: 10px; font-size: 12px; color: #666; }
+
+        .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+
+        .btn-print { position: fixed; bottom: 20px; right: 20px; padding: 15px 30px; background: #003366; color: white; border: none; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; z-index: 100; display: flex; align-items: center; gap: 10px; }
+        .btn-print:hover { transform: scale(1.05); }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .receipt-container { box-shadow: none; border: 1px solid #eee; margin: 0; max-width: 100%; }
+            .btn-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="btn-print">
+        <i class="fas fa-print"></i> IMPRIMIR DOCUMENTO
+    </button>
+
+    <div class="receipt-container">
+        <div class="header">
+            <div class="republica">REPÚBLICA DE MOÇAMBIQUE</div>
+            <div class="stae-title">SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</div>
+            <div style="font-size: 12px; color: #777;">UNIDADE GESTORA EXECUTIVA DAS AQUISIÇÕES (UGEA)</div>
+            <br>
+            <div class="doc-title">Recibo de Quitação</div>
+            <div class="receipt-id">Nº {{ inscricao.id | stringformat:"06d" }}/{% now "Y" %}</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Concurso de Referência</span>
+                <span class="info-value">{{ inscricao.concurso.numero }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Data de Emissão</span>
+                <span class="info-value">{{ inscricao.data_inscricao|date:"d \d\e F \d\e Y | H:i" }}</span>
+            </div>
+            <div class="info-item" style="grid-column: span 2;">
+                <span class="info-label">Entidade Adquirente</span>
+                <span class="info-value">{{ inscricao.empresa_nome|upper }}</span>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">NUIT: {{ inscricao.nuit }}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Representante</span>
+                <span class="info-value">{{ inscricao.representante_nome }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Contacto</span>
+                <span class="info-value">{{ inscricao.representante_contacto }}</span>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">DESCRIÇÃO DO SERVIÇO / TAXA</th>
+                    <th style="text-align: right;">MONTANTE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>Aquisição de Caderno de Encargos</strong><br>
+                        <small style="color: #666;">Objecto: {{ inscricao.concurso.titulo }}</small>
+                    </td>
+                    <td style="text-align: right; font-weight: 600;">{{ inscricao.valor_pago|floatformat:2 }} MT</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-box">
+            <span class="total-label">TOTAL PAGO:</span>
+            <span class="total-value">{{ inscricao.valor_pago|floatformat:2 }} MT</span>
+        </div>
+
+        <div style="margin-top: 30px; font-size: 12px; color: #444; background: #fffbeb; padding: 15px; border: 1px solid #fef3c7; border-radius: 6px;">
+            <i class="fas fa-info-circle me-1"></i> Este recibo confirma que o Caderno de Encargos 
+            {% if inscricao.caderno_entregue %}
+                <strong>foi entregue</strong>
+            {% else %}
+                será entregue
+            {% endif %} 
+            à entidade acima referida após validação financeira.
+        </div>
+
+        <div class="signatures">
+            <div class="sig-line">
+                <strong>STAE - UGEA</strong><br>
+                <small>(Assinatura e Carimbo)</small>
+            </div>
+            <div class="sig-line">
+                <strong>O CLIENTE</strong><br>
+                {{ inscricao.representante_nome }}
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="margin-bottom: 5px;">Secretariado Técnico de Administração Eleitora - UGEA</div>
+            <div>Documento Autenticado Eletronicamente - Portal Interno STAE</div>
+            <div style="font-size: 9px; margin-top: 10px; opacity: 0.6;">Hash: {{ inscricao.id }}{{ inscricao.nuit|make_list|first }}{% now "U" %}</div>
+        </div>
+    </div>
+</body>
+</html>

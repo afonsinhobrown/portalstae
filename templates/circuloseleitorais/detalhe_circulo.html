@@ -1,0 +1,75 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}{{ circulo.nome }}{% endblock %}
+{% block module_name %}CÍRCULOS{% endblock %}
+{% block icon %}fas fa-map-marked-alt{% endblock %}
+{% block dashboard_url %}{% url 'circuloseleitorais:dashboard' %}{% endblock %}
+
+{% block page_title %}{{ circulo.nome }} ({{ circulo.codigo }}){% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+    
+    <!-- Detalhes do Círculo -->
+    <div class="card">
+        <h3>Dados do Círculo</h3>
+        <p><strong>Província:</strong> {{ circulo.provincia }}</p>
+        <p><strong>Mandatos:</strong> <span class="badge bg-primary fs-6">{{ circulo.num_mandatos }}</span></p>
+        <p><strong>Eleitores Previstos:</strong> {{ circulo.num_eleitores }}</p>
+        <p><strong>Mesas Previstas:</strong> {{ circulo.num_mesas }}</p>
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <a href="{% url 'circuloseleitorais:editar_circulo' circulo.id %}" class="action-btn">Editar Dados</a>
+            <a href="{% url 'circuloseleitorais:importar_postos' circulo.id %}" class="action-btn" style="background-color: #198754; color: white;">
+                <i class="fas fa-file-excel me-1"></i> Importar Postos/Mesas
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Postos -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Postos de Votação ({{ postos.count }})</h3>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                    <th style="padding: 10px;">Código</th>
+                    <th style="padding: 10px;">Nome</th>
+                    <th style="padding: 10px;">Mesas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for posto in postos %}
+                <tr style="border-bottom: 1px solid #f9f9f9;">
+                    <td style="padding: 10px;"><b>{{ posto.codigo }}</b></td>
+                    <td style="padding: 10px;">{{ posto.nome }}</td>
+                    <td style="padding: 10px;">{{ posto.num_mesas }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="padding: 20px; text-align: center; color: #777;">Nenhum posto registado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Adicionar Posto Rápido -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc;">
+            <h4>Adicionar Novo Posto</h4>
+            <form method="post">
+                {% csrf_token %}
+                <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px;">
+                    <div>{{ form_posto.codigo }}</div>
+                    <div>{{ form_posto.nome }}</div>
+                    <div>{{ form_posto.num_mesas }}</div>
+                </div>
+                <div style="margin-top: 10px;">{{ form_posto.endereco }}</div>
+                <button type="submit" class="action-btn" style="margin-top: 10px; font-size: 14px;">Adicionar Posto</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+</style>
+{% endblock %}

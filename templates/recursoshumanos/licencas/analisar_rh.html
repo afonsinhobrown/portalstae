@@ -1,0 +1,291 @@
+<!-- templates/recursoshumanos/licencas/analisar_rh.html -->
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Analisar Licença • RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">
+                <i class="fas fa-clipboard-check text-primary me-2"></i>Analisar Licença
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard RH</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_licencas_pendentes_rh' %}">Licenças Pendentes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Analisar</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'recursoshumanos:lista_licencas_pendentes_rh' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <!-- Informações do Funcionário -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informações do Funcionário
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nome:</strong> {{ licenca.funcionario.nome_completo }}</p>
+                            <p><strong>Nº Funcionário:</strong> {{ licenca.funcionario.numero_identificacao }}</p>
+                            <p><strong>Setor:</strong> {{ licenca.funcionario.sector.codigo }} - {{ licenca.funcionario.sector.nome }}</p>
+                            <p><strong>Função:</strong> {{ licenca.funcionario.get_funcao_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Data Admissão:</strong> {{ licenca.funcionario.data_admissao|date:"d/m/Y" }}</p>
+                            <p><strong>NUIT:</strong> {{ licenca.funcionario.nuit|default:"N/D" }}</p>
+                            <p><strong>Contacto:</strong> {{ licenca.funcionario.telefone|default:"N/D" }}</p>
+                            <p><strong>Email:</strong> {{ licenca.funcionario.user.email|default:"N/D" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Detalhes da Licença
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tipo:</strong> {{ licenca.get_tipo_display }}</p>
+                            <p><strong>Data Início:</strong> {{ licenca.data_inicio|date:"d/m/Y" }}</p>
+                            <p><strong>Data Fim:</strong> {{ licenca.data_fim|date:"d/m/Y" }}</p>
+                            <p><strong>Dias Solicitados:</strong> {{ licenca.dias_utilizados }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Período Total:</strong> {{ licenca.dias_utilizados }} dias</p>
+                            <p><strong>Motivo:</strong> {{ licenca.motivo|default:"Não especificado" }}</p>
+                            <p><strong>Data Solicitação:</strong> {{ licenca.data_criacao|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Status:</strong>
+                                <span class="badge bg-warning">{{ licenca.get_status_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saldo de Férias (se for férias) -->
+    {% if licenca.tipo == 'ferias' %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>Saldo de Férias {{ ano_atual }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <h2 class="mb-1">{{ saldo_ferias.dias_disponiveis }}</h2>
+                                    <p class="text-muted mb-0">Dias Disponíveis</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h2 class="mb-1">{{ dias_ja_gozados }}</h2>
+                                    <p class="text-muted mb-0">Dias Já Gozados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card {% if saldo_ferias.dias_saldo >= licenca.dias_utilizados %}border-success{% else %}border-danger{% endif %}">
+                                <div class="card-body">
+                                    <h2 class="mb-1">{{ saldo_ferias.dias_saldo }}</h2>
+                                    <p class="text-muted mb-0">Saldo Atual</p>
+                                    <small class="{% if saldo_ferias.dias_saldo >= licenca.dias_utilizados %}text-success{% else %}text-danger{% endif %}">
+                                        {% if saldo_ferias.dias_saldo >= licenca.dias_utilizados %}
+                                        ✅ Saldo suficiente
+                                        {% else %}
+                                        ❌ Saldo insuficiente
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h2 class="mb-1">{{ licenca.dias_utilizados }}</h2>
+                                    <p class="text-muted mb-0">Dias Solicitados</p>
+                                    <small class="text-info">
+                                        {% if saldo_ferias.dias_saldo >= licenca.dias_utilizados %}
+                                        Restariam {{ saldo_ferias.dias_saldo|add:"-"|add:licenca.dias_utilizados }} dias
+                                        {% else %}
+                                        Faltam {{ licenca.dias_utilizados|add:"-"|add:saldo_ferias.dias_saldo }} dias
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Férias do Ano -->
+    {% if licencas_ano.exists %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Histórico de Férias {{ ano_atual }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Dias</th>
+                                    <th>Status</th>
+                                    <th>Data Autorização</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lic in licencas_ano %}
+                                <tr>
+                                    <td>{{ lic.data_inicio|date:"d/m/Y" }} - {{ lic.data_fim|date:"d/m/Y" }}</td>
+                                    <td>{{ lic.dias_utilizados }}</td>
+                                    <td><span class="badge bg-success">{{ lic.get_status_display }}</span></td>
+                                    <td>{{ lic.data_parecer_diretor|date:"d/m/Y"|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Formulário de Análise do RH -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-signature me-2"></i>Análise do RH
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Observações/Restrições:</strong></label>
+                            <textarea name="observacoes_rh" class="form-control" rows="4"
+                                      placeholder="Digite suas observações sobre esta licença (obrigatório)..."
+                                      required></textarea>
+                            <small class="text-muted">Estas observações serão visíveis para o chefe e diretor.</small>
+                        </div>
+
+                        {% if licenca.tipo == 'ferias' %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>Ajustar Dias Autorizados:</strong></label>
+                                <div class="input-group">
+                                    <input type="number" name="dias_autorizados" class="form-control"
+                                           value="{{ licenca.dias_utilizados }}" min="1" max="{{ saldo_ferias.dias_saldo }}">
+                                    <span class="input-group-text">dias</span>
+                                </div>
+                                <small class="text-muted">
+                                    Pode ajustar o número de dias autorizados. Saldo disponível: {{ saldo_ferias.dias_saldo }} dias.
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-success">
+                                            <i class="fas fa-check-circle fa-2x mb-3"></i><br>
+                                            Aprovar e Enviar para Chefe
+                                        </h5>
+                                        <p class="card-text">
+                                            A licença será enviada para análise do chefe imediato.
+                                        </p>
+                                        <button type="submit" name="decisao" value="aprovar"
+                                                class="btn btn-success btn-lg w-100 {% if licenca.tipo == 'ferias' and saldo_ferias.dias_saldo < licenca.dias_utilizados %}disabled{% endif %}"
+                                                {% if licenca.tipo == 'ferias' and saldo_ferias.dias_saldo < licenca.dias_utilizados %}disabled{% endif %}>
+                                            <i class="fas fa-check me-2"></i>Aprovar
+                                        </button>
+                                        {% if licenca.tipo == 'ferias' and saldo_ferias.dias_saldo < licenca.dias_utilizados %}
+                                        <small class="text-danger mt-2 d-block">
+                                            ❌ Não pode aprovar: saldo insuficiente!
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-danger">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-danger">
+                                            <i class="fas fa-times-circle fa-2x mb-3"></i><br>
+                                            Rejeitar Licença
+                                        </h5>
+                                        <p class="card-text">
+                                            A licença será rejeitada e o funcionário notificado.
+                                        </p>
+                                        <button type="submit" name="decisao" value="rejeitar"
+                                                class="btn btn-danger btn-lg w-100">
+                                            <i class="fas fa-times me-2"></i>Rejeitar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Nota:</strong> Sua decisão será registrada e notificará o funcionário.
+                            Se aprovar, a licença será enviada para o chefe do setor. Se rejeitar, o processo será encerrado.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validação antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    const textarea = document.querySelector('textarea[name="observacoes_rh"]');
+    if (!textarea.value.trim()) {
+        e.preventDefault();
+        alert('Por favor, preencha as observações antes de enviar.');
+        textarea.focus();
+    }
+});
+</script>
+{% endblock %}

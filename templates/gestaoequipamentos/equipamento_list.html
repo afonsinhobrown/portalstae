@@ -1,0 +1,161 @@
+{% extends 'gestaoequipamentos/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">💻 Lista de Equipamentos</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'gestaoequipamentos:dashboard_equipamentos' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Equipamentos</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'gestaoequipamentos:novo_equipamento' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Novo Equipamento
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Categoria</label>
+                <select name="categoria" class="form-select">
+                    <option value="">Todas as categorias</option>
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}"
+                            {% if request.GET.categoria == categoria.id|stringformat:"i" %}selected{% endif %}>
+                        {{ categoria.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Sector</label>
+                <select name="sector" class="form-select">
+                    <option value="">Todos os sectores</option>
+                    {% for sector in sectores %}
+                    <option value="{{ sector.id }}"
+                            {% if request.GET.sector == sector.id|stringformat:"i" %}selected{% endif %}>
+                        {{ sector.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos os estados</option>
+                    <option value="excelente" {% if request.GET.estado == "excelente" %}selected{% endif %}>Excelente</option>
+                    <option value="bom" {% if request.GET.estado == "bom" %}selected{% endif %}>Bom</option>
+                    <option value="regular" {% if request.GET.estado == "regular" %}selected{% endif %}>Regular</option>
+                    <option value="precisa_manutencao" {% if request.GET.estado == "precisa_manutencao" %}selected{% endif %}>Precisa Manutenção</option>
+                    <option value="inutilizado" {% if request.GET.estado == "inutilizado" %}selected{% endif %}>Inutilizado</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-2"></i>Filtrar
+                </button>
+                <a href="{% url 'gestaoequipamentos:lista_equipamentos' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Equipamentos -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        {% if equipamentos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Equipamento</th>
+                        <th>Identificação</th>
+                        <th>Sector</th>
+                        <th>Estado</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipamento in equipamentos %}
+                    <tr>
+                        <td>
+                            <strong>{{ equipamento.tipo.nome }}</strong>
+                            <br>
+                            <small class="text-muted">{{ equipamento.marca }} {{ equipamento.modelo }}</small>
+                        </td>
+                        <td>
+                            {% if equipamento.numero_serie %}
+                            <code>{{ equipamento.numero_serie }}</code>
+                            {% elif equipamento.matricula %}
+                            <code>{{ equipamento.matricula }}</code>
+                            {% else %}
+                            <span class="text-muted">ID{{ equipamento.id }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ equipamento.sector_atual.nome }}</span>
+                        </td>
+                        <td>
+                            {% if equipamento.estado == 'excelente' %}
+                            <span class="badge bg-success">Excelente</span>
+                            {% elif equipamento.estado == 'bom' %}
+                            <span class="badge bg-primary">Bom</span>
+                            {% elif equipamento.estado == 'regular' %}
+                            <span class="badge bg-warning">Regular</span>
+                            {% elif equipamento.estado == 'precisa_manutencao' %}
+                            <span class="badge bg-danger">Precisa Manutenção</span>
+                            {% else %}
+                            <span class="badge bg-dark">Inutilizado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if equipamento.funcionario_responsavel %}
+                            {{ equipamento.funcionario_responsavel.nome_completo }}
+                            {% else %}
+                            <span class="text-muted">Não atribuído</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'gestaoequipamentos:detalhe_equipamento' equipamento.id %}"
+                                   class="btn btn-outline-primary" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'gestaoequipamentos:editar_equipamento' equipamento.id %}"
+                                   class="btn btn-outline-secondary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'gestaoequipamentos:movimentar_equipamento' equipamento.id %}"
+                                   class="btn btn-outline-warning" title="Movimentar">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-laptop fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Nenhum equipamento encontrado</h4>
+            <p class="text-muted">Tente ajustar os filtros ou adicione um novo equipamento.</p>
+            <a href="{% url 'gestaoequipamentos:novo_equipamento' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Adicionar Primeiro Equipamento
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

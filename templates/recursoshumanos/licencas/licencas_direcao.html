@@ -1,0 +1,380 @@
+<!-- templates/recursoshumanos/licencas/licencas_direcao.html -->
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Licenças da Direção • Diretor{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">
+                <i class="fas fa-user-tie text-primary me-2"></i>Licenças da Direção
+            </h1>
+            <p class="text-muted mb-0">
+                Direção: <strong>{{ director.sector.direcao.nome|default:"Geral" }}</strong> |
+                Diretor: {{ director.nome_completo }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'recursoshumanos:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ aguardando_diretor }}</h2>
+                            <p class="text-muted mb-0">Aguardando Autorização</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-user-tie fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Precisam da sua decisão</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ aprovadas_mes }}</h2>
+                            <p class="text-muted mb-0">Aprovadas (Mês)</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Autorizadas este mês</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ total_setores }}</h2>
+                            <p class="text-muted mb-0">Setores</p>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-sitemap fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Sob sua jurisdição</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ total_licencas }}</h2>
+                            <p class="text-muted mb-0">Total Licenças</p>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-calendar-alt fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Da sua direção</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos os Status</option>
+                        <option value="aguardando_diretor" {% if status_filter == 'aguardando_diretor' %}selected{% endif %}>
+                            Aguardando Autorização
+                        </option>
+                        <option value="aprovado" {% if status_filter == 'aprovado' %}selected{% endif %}>
+                            Aprovadas
+                        </option>
+                        <option value="rejeitado" {% if status_filter == 'rejeitado' %}selected{% endif %}>
+                            Rejeitadas
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Setor</label>
+                    <select name="setor" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos os Setores</option>
+                        {% for setor in setores_direcao %}
+                        <option value="{{ setor.id }}" {% if setor_filter == setor.id|stringformat:"s" %}selected{% endif %}>
+                            {{ setor.codigo }} - {{ setor.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos os Tipos</option>
+                        <option value="ferias" {% if tipo_filter == 'ferias' %}selected{% endif %}>
+                            Férias
+                        </option>
+                        <option value="maternidade" {% if tipo_filter == 'maternidade' %}selected{% endif %}>
+                            Maternidade
+                        </option>
+                        <option value="doenca" {% if tipo_filter == 'doenca' %}selected{% endif %}>
+                            Doença
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <a href="{% url 'recursoshumanos:licencas_direcao' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-times"></i> Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Licenças -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Licenças para Autorização
+            </h5>
+            <span class="badge bg-primary">{{ licencas.count }} encontradas</span>
+        </div>
+        <div class="card-body">
+            {% if licencas %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Funcionário</th>
+                            <th>Setor</th>
+                            <th>Chefe</th>
+                            <th>Tipo</th>
+                            <th>Período</th>
+                            <th>Status Atual</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for licenca in licencas %}
+                        <tr class="{% if licenca.status == 'aguardando_diretor' %}table-info{% endif %}">
+                            <td>
+                                <strong>{{ licenca.funcionario.nome_completo }}</strong><br>
+                                <small class="text-muted">{{ licenca.funcionario.get_funcao_display }}</small>
+                            </td>
+                            <td>
+                                {{ licenca.funcionario.sector.codigo }}<br>
+                                <small class="text-muted">{{ licenca.funcionario.sector.nome|truncatechars:20 }}</small>
+                            </td>
+                            <td>
+                                {% if licenca.chefe_aprovador %}
+                                {{ licenca.chefe_aprovador.get_full_name }}<br>
+                                <small class="text-success">
+                                    <i class="fas fa-check"></i> Parecer dado
+                                </small>
+                                {% else %}
+                                <small class="text-danger">
+                                    <i class="fas fa-times"></i> Sem parecer
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>{{ licenca.get_tipo_display }}</td>
+                            <td>
+                                {{ licenca.data_inicio|date:"d/m/Y" }}<br>
+                                <small>até</small><br>
+                                {{ licenca.data_fim|date:"d/m/Y" }}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if licenca.status == 'aguardando_diretor' %}info
+                                                     {% elif licenca.status == 'aprovado' %}success
+                                                     {% elif licenca.status == 'rejeitado' %}danger
+                                                     {% else %}secondary{% endif %}">
+                                    {{ licenca.get_status_display }}
+                                </span>
+                                {% if licenca.status_chefia %}
+                                <br><small class="text-muted">Chefe: {{ licenca.get_status_chefia_display }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if licenca.status == 'aguardando_diretor' %}
+                                    <a href="{% url 'recursoshumanos:autorizar_licenca' licenca.id %}"
+                                       class="btn btn-primary">
+                                        <i class="fas fa-gavel"></i> Autorizar
+                                    </a>
+                                    {% else %}
+                                    <button class="btn btn-outline-secondary disabled">
+                                        <i class="fas fa-check"></i> Processada
+                                    </button>
+                                    {% endif %}
+                                    <a href="#" class="btn btn-info" data-bs-toggle="modal"
+                                       data-bs-target="#modalDetalhes{{ licenca.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal de Detalhes -->
+                        <div class="modal fade" id="modalDetalhes{{ licenca.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Detalhes para Autorização</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- Resumo -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <h6><i class="fas fa-user me-1"></i>Funcionário</h6>
+                                                <p><strong>Nome:</strong> {{ licenca.funcionario.nome_completo }}</p>
+                                                <p><strong>Setor:</strong> {{ licenca.funcionario.sector.codigo }}</p>
+                                                <p><strong>Admissão:</strong> {{ licenca.funcionario.data_admissao|date:"d/m/Y" }}</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <h6><i class="fas fa-calendar-alt me-1"></i>Licença</h6>
+                                                <p><strong>Tipo:</strong> {{ licenca.get_tipo_display }}</p>
+                                                <p><strong>Período:</strong> {{ licenca.data_inicio|date:"d/m/Y" }} a {{ licenca.data_fim|date:"d/m/Y" }}</p>
+                                                <p><strong>Dias:</strong> {{ licenca.dias_utilizados }}</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <h6><i class="fas fa-history me-1"></i>Histórico</h6>
+                                                <p><strong>Solicitado:</strong> {{ licenca.data_criacao|date:"d/m/Y" }}</p>
+                                                <p><strong>RH Analisou:</strong> {{ licenca.data_analise_rh|date:"d/m/Y"|default:"-" }}</p>
+                                                <p><strong>Chefe Analisou:</strong> {{ licenca.data_parecer_chefe|date:"d/m/Y"|default:"-" }}</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Análise do RH -->
+                                        {% if licenca.observacoes_rh %}
+                                        <div class="alert alert-info">
+                                            <h6><i class="fas fa-clipboard-check me-1"></i>Análise do RH</h6>
+                                            <p class="mb-1">{{ licenca.observacoes_rh }}</p>
+                                            <small class="text-muted">
+                                                Analisado por: {{ licenca.rh_aprovador.get_full_name|default:"RH" }}
+                                                em {{ licenca.data_analise_rh|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Parecer do Chefe -->
+                                        {% if licenca.parecer_chefe %}
+                                        <div class="alert
+                                            {% if licenca.status_chefia == 'favoravel' %}alert-success
+                                            {% else %}alert-warning{% endif %}">
+                                            <h6><i class="fas fa-user-tie me-1"></i>Parecer do Chefe</h6>
+                                            <p class="mb-1"><strong>Decisão:</strong> {{ licenca.get_status_chefia_display }}</p>
+                                            <p class="mb-1">{{ licenca.parecer_chefe }}</p>
+                                            <small class="text-muted">
+                                                Chefe: {{ licenca.chefe_aprovador.get_full_name|default:"Chefe" }} •
+                                                Data: {{ licenca.data_parecer_chefe|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Se for férias, mostrar saldo -->
+                                        {% if licenca.tipo == 'ferias' %}
+                                        <div class="alert alert-warning">
+                                            <h6><i class="fas fa-calculator me-1"></i>Saldo de Férias</h6>
+                                            <p class="mb-0">
+                                                Esta licença consumirá {{ licenca.dias_utilizados }} dias do saldo de férias.
+                                                {% if licenca.dias_autorizados_rh %}
+                                                <br><small>RH autorizou: {{ licenca.dias_autorizados_rh }} dias</small>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                        {% if licenca.status == 'aguardando_diretor' %}
+                                        <a href="{% url 'recursoshumanos:autorizar_licenca' licenca.id %}"
+                                           class="btn btn-primary">
+                                            <i class="fas fa-gavel me-1"></i> Autorizar/Reprovar
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h5 class="text-success">✅ Nenhuma licença pendente!</h5>
+                <p class="text-muted">Todas as licenças da sua direção foram processadas.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card-footer">
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <strong>Sua função:</strong> Autorização final após análise do RH e chefe
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Setores sob sua direção: {{ setores_direcao.count }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo por Setor -->
+    {% if resumo_setores %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>Resumo por Setor
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for setor in resumo_setores %}
+                <div class="col-md-3 mb-3">
+                    <div class="card border-{% if setor.aguardando > 0 %}warning{% else %}success{% endif %}">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ setor.codigo }}</h6>
+                            <p class="card-text small text-muted mb-1">{{ setor.nome|truncatechars:20 }}</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-{% if setor.aguardando > 0 %}warning{% else %}success{% endif %}">
+                                    {{ setor.aguardando }} pendentes
+                                </span>
+                                <span class="badge bg-info">{{ setor.total }} total</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

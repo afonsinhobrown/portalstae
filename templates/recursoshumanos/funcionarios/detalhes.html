@@ -1,0 +1,345 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}{{ funcionario.nome_completo }} • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">{{ funcionario.nome_completo }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_funcionarios' %}">Funcionários</a>
+                </li>
+                <li class="breadcrumb-item active">Detalhes</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'recursoshumanos:avaliar_funcionario' funcionario.id %}" class="btn btn-warning">
+            <i class="fas fa-star me-2"></i>Avaliar
+        </a>
+        <a href="{% url 'recursoshumanos:gerar_cartao_funcionario' funcionario.id %}" class="btn btn-info">
+            <i class="fas fa-id-card me-2"></i>Cartão
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informações Pessoais -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>Informações Pessoais
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if funcionario.foto %}
+                <img src="{{ funcionario.foto.url }}" alt="{{ funcionario.nome_completo }}"
+                     class="rounded-circle mb-3" width="120" height="120">
+                {% else %}
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                     style="width: 120px; height: 120px; font-size: 3rem;">
+                    {{ funcionario.nome_completo|slice:":1"|upper }}
+                </div>
+                {% endif %}
+
+                <h4>{{ funcionario.nome_completo }}</h4>
+                <p class="text-muted mb-0">{{ funcionario.get_funcao_display }}</p>
+
+                <hr>
+
+                <div class="text-start">
+                    <p><strong>Identificação:</strong> {{ funcionario.numero_identificacao }}</p>
+                    <p><strong>Email:</strong> {{ funcionario.email }}</p>
+                    <p><strong>Telefone:</strong> {{ funcionario.telefone|default:"Não informado" }}</p>
+                    <p><strong>Admissão:</strong> {{ funcionario.data_admissao|date:"d/m/Y" }}</p>
+                    <p>
+                        <strong>Status:</strong>
+                        {% if funcionario.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Setor -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>Setor
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ funcionario.sector.codigo }} - {{ funcionario.sector.nome }}</h6>
+                {% if funcionario.sector.direcao %}
+                <p class="text-muted mb-0">
+                    <small>Direção: {{ funcionario.sector.direcao }}</small>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="col-md-8">
+        <!-- Abas -->
+        <ul class="nav nav-tabs mb-4" id="funcionarioTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="licencas-tab" data-bs-toggle="tab" data-bs-target="#licencas"
+                        type="button">
+                    Licenças ({{ licencas.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="avaliacoes-tab" data-bs-toggle="tab" data-bs-target="#avaliacoes"
+                        type="button">
+                    Avaliações ({{ avaliacoes.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="promocoes-tab" data-bs-toggle="tab" data-bs-target="#promocoes"
+                        type="button">
+                    Promoções ({{ promocoes.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="presenca-tab" data-bs-toggle="tab" data-bs-target="#presenca"
+                        type="button">
+                    Presença
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="funcionarioTabsContent">
+            <!-- Licenças -->
+            <div class="tab-pane fade show active" id="licencas" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Histórico de Licenças</h5>
+                        {% if perms.recursoshumanos.add_licenca %}
+                        <a href="{% url 'admin:recursoshumanos_licenca_add' %}?funcionario={{ funcionario.id }}"
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>Adicionar
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if licencas %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Tipo</th>
+                                    <th>Dias</th>
+                                    <th>Status</th>
+                                    <th>Documento</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for licenca in licencas %}
+                                <tr>
+                                    <td>{{ licenca.data_inicio|date:"d/m/Y" }} - {{ licenca.data_fim|date:"d/m/Y" }}
+                                    </td>
+                                    <td>{{ licenca.get_tipo_display }}</td>
+                                    <td>{{ licenca.dias_utilizados }}</td>
+                                    <td>
+                                            <span class="status-badge status-{{ licenca.status }}">
+                                                {{ licenca.get_status_display }}
+                                            </span>
+                                    </td>
+                                    <td>
+                                        {% if licenca.documento_ferias %}
+                                        <a href="{{ licenca.documento_ferias.url }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-alt fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhuma licença registrada</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avaliações -->
+            <div class="tab-pane fade" id="avaliacoes" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Histórico de Avaliações</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if avaliacoes %}
+                        <div class="row">
+                            {% for avaliacao in avaliacoes %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0">{{ avaliacao.periodo }}</h6>
+                                            <span class="badge bg-{{ avaliacao.classificacao_final|lower }}">
+                                                {{ avaliacao.nota_final_geral }}
+                                            </span>
+                                        </div>
+                                        <p class="small text-muted mb-2">
+                                            Avaliado por: {{
+                                            avaliacao.avaliado_por.get_full_name|default:avaliacao.avaliado_por.username
+                                            }}
+                                        </p>
+                                        <p class="small mb-0">{{ avaliacao.observacoes|truncatechars:150 }}</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <small class="text-muted">
+                                            {{ avaliacao.data_avaliacao|date:"d/m/Y" }}
+                                            {% if avaliacao.classificacao_final %}
+                                            • {{ avaliacao.classificacao_final }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-star fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhuma avaliação registrada</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promoções -->
+            <div class="tab-pane fade" id="promocoes" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Histórico de Promoções</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if promocoes %}
+                        <div class="timeline">
+                            {% for promocao in promocoes %}
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <div class="timeline-marker"></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ promocao.cargo_anterior }} → {{ promocao.novo_cargo }}</h6>
+                                        <p class="mb-1 small">{{ promocao.motivo }}</p>
+                                        <small class="text-muted">{{ promocao.data_promocao|date:"d/m/Y" }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhuma promoção registrada</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presença -->
+            <div class="tab-pane fade" id="presenca" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Registros de Presença Recentes</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if registros_recentes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Método</th>
+                                    <th>Observações</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for registro in registros_recentes %}
+                                <tr>
+                                    <td>{{ registro.data_hora|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                            <span class="badge bg-{% if registro.tipo == 'entrada' %}success{% else %}secondary{% endif %}">
+    {{ registro.get_tipo_display }}
+</span>
+                                    </td>
+                                    <td>{{ registro.get_metodo_display }}</td>
+                                    <td>{{ registro.observacoes|default:"-"|truncatechars:30 }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-check fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhum registro de presença recente</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+    }
+    
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 17px;
+        bottom: -15px;
+        width: 2px;
+        background-color: #e9ecef;
+    }
+</style>
+
+<script>
+    // Ativar abas via URL hash
+    document.addEventListener('DOMContentLoaded', function() {
+        const hash = window.location.hash;
+        if (hash) {
+            const tab = new bootstrap.Tab(document.querySelector(hash + '-tab'));
+            tab.show();
+        }
+    });
+</script>
+{% endblock %}

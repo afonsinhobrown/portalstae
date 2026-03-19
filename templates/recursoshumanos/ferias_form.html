@@ -1,0 +1,97 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Pedir Férias • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-umbrella-beach me-2 text-warning"></i>
+                    Pedido de Férias
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Informação:</strong> Tem direito a 30 dias de férias por ano.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Funcionário</label>
+                            <input type="text" class="form-control" value="{{ funcionario.nome_completo }}" readonly>
+                            <small class="text-muted">Sector: {{ funcionario.sector.nome }}</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data de Início *</label>
+                            {{ form.data_inicio }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data de Fim *</label>
+                            {{ form.data_fim }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Dias Solicitados</label>
+                            <input type="text" class="form-control" id="diasCalculados" readonly>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Observações</label>
+                            {{ form.observacao }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'recursoshumanos:dashboard_rh' %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Submeter Pedido
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dataInicio = document.getElementById('{{ form.data_inicio.id_for_label }}');
+    const dataFim = document.getElementById('{{ form.data_fim.id_for_label }}');
+    const diasCalculados = document.getElementById('diasCalculados');
+    
+    function calcularDias() {
+        if (dataInicio.value && dataFim.value) {
+            const inicio = new Date(dataInicio.value);
+            const fim = new Date(dataFim.value);
+            const diffTime = Math.abs(fim - inicio);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            diasCalculados.value = diffDays + ' dias';
+        } else {
+            diasCalculados.value = '';
+        }
+    }
+    
+    dataInicio.addEventListener('change', calcularDias);
+    dataFim.addEventListener('change', calcularDias);
+});
+</script>
+{% endblock %}

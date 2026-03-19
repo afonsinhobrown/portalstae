@@ -1,0 +1,176 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Progressão Automática • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Progressão Automática de Escalão</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Progressão Automática</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Funcionários Elegíveis para Progressão
+                </h5>
+                <p class="text-muted mb-0 mt-2">
+                    Estes funcionários completaram {{ anos_para_progressao|default:"2" }} anos de serviço e podem progredir para o próximo escalão.
+                </p>
+            </div>
+            <div class="card-body">
+                {% if funcionarios_para_progressao %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Escalão Atual</th>
+                                <th>Anos de Serviço</th>
+                                <th>Novo Escalão</th>
+                                <th>Data de Ingresso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for funcionario in funcionarios_para_progressao %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            {{ funcionario.nome_completo|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">{{ funcionario.nome_completo }}</h6>
+                                            <small class="text-muted">{{ funcionario.funcao }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary fs-6">{{ funcionario.categoria.escala }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ funcionario.tempo_servico }}</span> anos
+                                </td>
+                                <td>
+                                    {% with escalao_atual=funcionario.categoria.escala %}
+                                    {% if escalao_atual == 'A' %}
+                                    <span class="badge bg-success fs-6">B</span>
+                                    {% elif escalao_atual == 'B' %}
+                                    <span class="badge bg-success fs-6">C</span>
+                                    {% elif escalao_atual == 'C' %}
+                                    <span class="badge bg-success fs-6">D</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary fs-6">Máximo</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>{{ funcionario.data_ingresso|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Atenção!</h5>
+                                <p class="mb-0">
+                                    Esta ação irá atualizar automaticamente o escalão de <strong>{{ funcionarios_para_progressao.count }}</strong> funcionários.
+                                    A progressão será registada no histórico de cada funcionário.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'recursoshumanos:dashboard_rh' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Aplicar Progressão Automática
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h4 class="fw-bold mb-3">Nenhum funcionário elegível</h4>
+                    <p class="text-muted mb-4">
+                        Não existem funcionários que tenham completado o tempo necessário para progressão automática.
+                    </p>
+                    <a href="{% url 'recursoshumanos:dashboard_rh' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2 text-info"></i>Informações
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Regras de Progressão:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Tempo mínimo: <strong>2 anos</strong> por escalão
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Escala: <strong>A → B → C → D</strong>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Automática após aprovação
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Estatísticas:</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h3 class="fw-bold text-primary mb-0">{{ funcionarios_para_progressao.count }}</h3>
+                                <small class="text-muted">Elegíveis</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h3 class="fw-bold text-success mb-0">{{ escalao_a }}</h3>
+                                <small class="text-muted">Escalão A</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h6 class="fw-bold mb-2">Histórico de Progressões:</h6>
+                    <a href="{% url 'admin:recursoshumanos_mudancaescalao_changelist' %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-history me-2"></i>Ver Progressões Anteriores
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

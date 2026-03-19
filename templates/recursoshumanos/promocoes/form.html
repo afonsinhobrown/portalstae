@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Promoção - Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-award me-2"></i>Registrar Nova Promoção</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="funcionario" class="form-label">Funcionário</label>
+                        <select name="funcionario" id="funcionario" class="form-select" required>
+                            <option value="">Selecione um funcionário...</option>
+                            {% for func in funcionarios %}
+                            <option value="{{ func.id }}">{{ func.nome_completo }} ({{ func.funcao }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="data_promocao" class="form-label">Data da Promoção</label>
+                            <input type="date" class="form-control" id="data_promocao" name="data_promocao" required>
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4 mb-3 border-bottom pb-2">Detalhes do Cargo</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="cargo_anterior" class="form-label">Cargo Anterior</label>
+                            <input type="text" class="form-control" id="cargo_anterior" name="cargo_anterior" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cargo_atual" class="form-label">Novo Cargo</label>
+                            <input type="text" class="form-control" id="cargo_atual" name="cargo_atual" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nivel_anterior" class="form-label">Nível Anterior</label>
+                            <input type="text" class="form-control" id="nivel_anterior" name="nivel_anterior" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nivel_atual" class="form-label">Novo Nível</label>
+                            <input type="text" class="form-control" id="nivel_atual" name="nivel_atual" required>
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4 mb-3 border-bottom pb-2">Remuneração</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="salario_anterior" class="form-label">Salário Anterior (MZN)</label>
+                            <input type="number" step="0.01" class="form-control" id="salario_anterior" name="salario_anterior" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="salario_atual" class="form-label">Novo Salário (MZN)</label>
+                            <input type="number" step="0.01" class="form-control" id="salario_atual" name="salario_atual" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo / Justificativa</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'recursoshumanos:lista_promocoes' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Registrar Promoção</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script simples para preencher dados anteriores ao selecionar funcionário (simulação)
+    // Em produção seria via AJAX
+    document.getElementById('funcionario').addEventListener('change', function() {
+        // Implementar lógica de fetch se necessário
+    });
+</script>
+{% endblock %}

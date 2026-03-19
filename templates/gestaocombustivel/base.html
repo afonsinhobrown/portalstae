@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-pt" data-bs-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portal STAE • Combustível{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --combustivel-primary: #dc3545;
+            --combustivel-secondary: #28a745;
+            --combustivel-accent: #ffc107;
+        }
+
+        .combustivel-sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, var(--combustivel-primary) 0%, #c82333 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .combustivel-sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.8rem 1rem;
+            margin: 0.2rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .combustivel-sidebar .nav-link:hover,
+        .combustivel-sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .combustivel-sidebar .nav-item.has-submenu .nav-link::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            float: right;
+            transition: transform 0.3s;
+        }
+
+        .combustivel-sidebar .nav-item.has-submenu.show .nav-link::after {
+            transform: rotate(180deg);
+        }
+
+        .combustivel-sidebar .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            margin: 0.5rem 1rem;
+        }
+
+        .combustivel-sidebar .submenu.show {
+            max-height: 300px;
+        }
+
+        .combustivel-sidebar .submenu .nav-link {
+            padding: 0.6rem 1rem 0.6rem 2rem;
+            font-size: 0.9rem;
+            margin: 0.1rem 0;
+        }
+
+        .combustivel-main {
+            margin-left: 280px;
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .combustivel-card {
+            border: none;
+            border-radius: 1rem;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .combustivel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .combustivel-stat-card {
+            background: linear-gradient(135deg, var(--combustivel-primary) 0%, #e74c3c 100%);
+            color: white;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .combustivel-stat-card.success {
+            background: linear-gradient(135deg, var(--combustivel-secondary) 0%, #20c997 100%);
+        }
+
+        .combustivel-stat-card.warning {
+            background: linear-gradient(135deg, var(--combustivel-accent) 0%, #fd7e14 100%);
+        }
+
+        .combustivel-stat-card.info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+
+        .badge-combustivel {
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 992px) {
+            .combustivel-sidebar {
+                width: 0;
+                overflow: hidden;
+                transition: width 0.3s;
+            }
+
+            .combustivel-sidebar.show {
+                width: 280px;
+            }
+
+            .combustivel-main {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block !important;
+            }
+        }
+
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1050;
+            background: var(--combustivel-primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Mobile Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <nav class="combustivel-sidebar" id="sidebar">
+        <div class="sidebar-brand p-4 border-bottom border-white-10">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-gas-pump fa-2x me-3"></i>
+                <div>
+                    <h4 class="mb-0 fw-bold">Gestão Combustível</h4>
+                    <small class="opacity-75">Portal STAE</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-content pt-3">
+            <ul class="nav flex-column">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_combustivel' %}active{% endif %}"
+                        href="{% url 'gestaocombustivel:dashboard_combustivel' %}">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                </li>
+
+                <!-- Viaturas (Submenu) -->
+                <li class="nav-item has-submenu">
+                    <a class="nav-link {% if 'viatura' in request.resolver_match.url_name %}active{% endif %}"
+                        data-bs-toggle="collapse" href="#viaturasSubmenu" role="button">
+                        <i class="fas fa-car me-2"></i> Viaturas
+                        <span class="badge bg-light text-dark float-end mt-1">{{ viaturas_count|default:"0" }}</span>
+                    </a>
+                    <div class="submenu collapse {% if 'viatura' in request.resolver_match.url_name %}show{% endif %}"
+                        id="viaturasSubmenu">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_viaturas' %}">
+                                    <i class="fas fa-list me-2"></i> Todas as Viaturas
+                                </a>
+                            </li>
+                            {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:nova_viatura' %}">
+                                    <i class="fas fa-plus me-2"></i> Nova Viatura
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Combustível (Submenu) -->
+                <li class="nav-item has-submenu">
+                    <a class="nav-link {% if 'pedido' in request.resolver_match.url_name or 'combustivel' in request.resolver_match.url_name %}active{% endif %}"
+                        data-bs-toggle="collapse" href="#combustivelSubmenu" role="button">
+                        <i class="fas fa-gas-pump me-2"></i> Combustível
+                    </a>
+                    <div class="submenu collapse {% if 'pedido' in request.resolver_match.url_name or 'combustivel' in request.resolver_match.url_name %}show{% endif %}"
+                        id="combustivelSubmenu">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:pedir_combustivel' %}">
+                                    <i class="fas fa-plus me-2"></i> Pedir Combustível
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_pedidos' %}">
+                                    <i class="fas fa-list me-2"></i> Todos os Pedidos
+                                </a>
+                            </li>
+                            {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_contratos' %}">
+                                    <i class="fas fa-file-contract me-2"></i> Contratos (Consulta)
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'ugea:lista_fornecedores' %}">
+                                    <i class="fas fa-truck me-2"></i> Fornecedores (UGEA)
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Manutenções (Submenu) -->
+                <li class="nav-item has-submenu">
+                    <a class="nav-link {% if 'manutencao' in request.resolver_match.url_name %}active{% endif %}"
+                        data-bs-toggle="collapse" href="#manutencaoSubmenu" role="button">
+                        <i class="fas fa-tools me-2"></i> Manutenções
+                        <span class="badge bg-warning float-end mt-1">{{ manutencoes_activas_count|default:"0" }}</span>
+                    </a>
+                    <div class="submenu collapse {% if 'manutencao' in request.resolver_match.url_name %}show{% endif %}"
+                        id="manutencaoSubmenu">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:solicitar_manutencao' %}">
+                                    <i class="fas fa-plus me-2"></i> Solicitar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_oficinas' %}">
+                                    <i class="fas fa-tools me-2"></i> Oficinas (Consulta)
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_contratos_manutencao' %}">
+                                    <i class="fas fa-file-contract me-2"></i> Contratos Manutenção
+                                </a>
+                            </li>
+                            {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_oficinas' %}">
+                                    <i class="fas fa-tools me-2"></i> Oficinas Autorizadas
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Rotas (Submenu) -->
+                <li class="nav-item has-submenu">
+                    <a class="nav-link {% if 'rota' in request.resolver_match.url_name %}active{% endif %}"
+                        data-bs-toggle="collapse" href="#rotasSubmenu" role="button">
+                        <i class="fas fa-route me-2"></i> Rotas
+                        <span class="badge bg-success float-end mt-1">{{ rotas_count|default:"0" }}</span>
+                    </a>
+                    <div class="submenu collapse {% if 'rota' in request.resolver_match.url_name %}show{% endif %}"
+                        id="rotasSubmenu">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:lista_rotas' %}">
+                                    <i class="fas fa-list me-2"></i> Todas as Rotas
+                                </a>
+                            </li>
+                            {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:nova_rota' %}">
+                                    <i class="fas fa-plus me-2"></i> Nova Rota
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'gestaocombustivel:registro_diario' %}">
+                                    <i class="fas fa-clipboard-check me-2"></i> Registro Diário
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Seguros -->
+                {% if user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link {% if 'seguro' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'gestaocombustivel:lista_seguros' %}">
+                        <i class="fas fa-shield-alt me-2"></i> Seguros
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Relatórios -->
+                <li class="nav-item">
+                    <a class="nav-link {% if 'relatorio' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'gestaocombustivel:relatorios' %}">
+                        <i class="fas fa-chart-bar me-2"></i> Relatórios
+                    </a>
+                </li>
+
+                <!-- Separação -->
+                <li class="nav-item mt-4 pt-3 border-top border-white-10">
+                    <div class="px-3">
+                        <small class="opacity-75">Administração</small>
+                    </div>
+                </li>
+
+                <!-- Administração (só para staff) -->
+                {% if user.is_staff %}
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="{% url 'admin:index' %}">
+                        <i class="fas fa-cog me-2"></i> Admin Django
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-info" href="{% url 'gestaocombustivel:exportar_relatorio' %}">
+                        <i class="fas fa-download me-2"></i> Exportar Dados
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Logout -->
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="{% url 'logout' %}">
+                        <i class="fas fa-sign-out-alt me-2"></i> Terminar Sessão
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="combustivel-main">
+        <!-- Top Bar -->
+        <nav class="navbar navbar-light bg-white border-bottom mb-4">
+            <div class="container-fluid">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <small class="text-muted">Bem-vindo,</small>
+                        <br>
+                        <strong>{{ user.username }}</strong>
+                        {% if user.is_staff %}
+                        <span class="badge bg-danger ms-2">Admin</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i
+                            class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Content -->
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Toggle sidebar on mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+
+        // Auto-close sidebar on mobile when clicking outside
+        document.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebarToggle');
+
+            if (window.innerWidth <= 992 &&
+                !sidebar.contains(event.target) &&
+                !toggleBtn.contains(event.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Auto-expand active submenus
+        document.addEventListener('DOMContentLoaded', function () {
+            const activeSubmenus = document.querySelectorAll('.nav-link.active');
+            activeSubmenus.forEach(function (link) {
+                const parent = link.closest('.has-submenu');
+                if (parent) {
+                    const submenu = parent.querySelector('.submenu');
+                    if (submenu) {
+                        submenu.classList.add('show');
+                    }
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

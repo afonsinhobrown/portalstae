@@ -1,0 +1,162 @@
+<!-- templates/dfec/emails/notificacao_avaliacao.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .card {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-success { background-color: #198754; color: white; }
+        .badge-warning { background-color: #ffc107; color: black; }
+        .badge-danger { background-color: #dc3545; color: white; }
+        .badge-info { background-color: #0dcaf0; color: black; }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>DFEC - Sistema de Gestão de Educação Cívica</h2>
+        <p>Notificação de Avaliação</p>
+    </div>
+
+    <div class="content">
+        <h3>Olá {{ participante.nome_completo }},</h3>
+
+        <p>Informamos que sua avaliação na formação <strong>{{ formacao.nome }}</strong> foi concluída.</p>
+
+        <div class="card">
+            <h4>Resultados da Avaliação</h4>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;"><strong>Classificação Final:</strong></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <span class="badge badge-{% if avaliacao.classificacao_final >= 10 %}success{% else %}danger{% endif %}">
+                            {{ avaliacao.classificacao_final }}/20
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;"><strong>Status:</strong></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        {% if avaliacao.aprovado %}
+                        <span class="badge badge-success">APROVADO</span>
+                        {% elif avaliacao.suplente %}
+                        <span class="badge badge-warning">SUPLENTE</span>
+                        {% else %}
+                        <span class="badge badge-danger">REPROVADO</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if avaliacao.perfil_sugerido %}
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;"><strong>Perfil Sugerido:</strong></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+                        <span class="badge badge-info">{{ avaliacao.get_perfil_sugerido_display }}</span>
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="padding: 8px;"><strong>Avaliado por:</strong></td>
+                    <td style="padding: 8px;">{{ avaliacao.avaliado_por.get_full_name }}</td>
+                </tr>
+            </table>
+
+            {% if avaliacao.observacoes_formador %}
+            <div style="margin-top: 15px;">
+                <strong>Observações do Formador:</strong>
+                <p>{{ avaliacao.observacoes_formador }}</p>
+            </div>
+            {% endif %}
+
+            {% if avaliacao.pontos_fortes %}
+            <div style="margin-top: 10px;">
+                <strong>Pontos Fortes:</strong>
+                <p>{{ avaliacao.pontos_fortes }}</p>
+            </div>
+            {% endif %}
+
+            {% if avaliacao.pontos_melhorar %}
+            <div style="margin-top: 10px;">
+                <strong>Pontos a Melhorar:</strong>
+                <p>{{ avaliacao.pontos_melhorar }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background-color: #e7f1ff; border-radius: 5px;">
+            <h4>Próximos Passos</h4>
+            {% if avaliacao.aprovado %}
+            <p>Parabéns! Você foi aprovado na formação. Em breve receberá informações sobre:</p>
+            <ul>
+                <li>Atribuição a uma brigada (se aplicável)</li>
+                <li>Datas e locais de atuação</li>
+                <li>Material de apoio</li>
+            </ul>
+            {% elif avaliacao.suplente %}
+            <p>Você foi classificado como suplente. Ficará em lista de espera para substituir eventuais desistências.</p>
+            {% else %}
+            <p>Infelizmente você não atingiu a classificação mínima necessária. Entre em contato para mais informações sobre possíveis recuperações.</p>
+            {% endif %}
+        </div>
+
+        <p style="margin-top: 20px;">
+            <strong>QR Code de Validação:</strong><br>
+            <code style="background-color: #f8f9fa; padding: 5px; border-radius: 3px;">
+                {{ participante.codigo_qr }}
+            </code>
+        </p>
+
+        <p>Para qualquer dúvida, entre em contato com a equipa de formação.</p>
+
+        <p>Atenciosamente,<br>
+        <strong>Equipa DFEC</strong></p>
+    </div>
+
+    <div class="footer">
+        <p>Esta é uma mensagem automática do Sistema DFEC. Por favor, não responda a este email.</p>
+        <p>© {% now "Y" %} DFEC - Direção de Formação e Educação Cívica</p>
+    </div>
+</body>
+</html>

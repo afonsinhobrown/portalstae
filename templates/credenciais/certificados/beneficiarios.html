@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Gerir Beneficiários</h1>
+            <p class="mb-0 text-muted">Projeto: <strong>{{ projeto.nome }}</strong></p>
+        </div>
+        <div>
+            <a href="{% url 'credenciais:cert_editor' projeto.id %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-pencil-alt me-1"></i>Editar Design
+            </a>
+            <a href="{% url 'credenciais:cert_download_lote' projeto.id %}" class="btn btn-success">
+                <i class="fas fa-cloud-download-alt me-1"></i>Baixar Todos (ZIP)
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Coluna Esquerda: Adicionar -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Adicionar Pessoas</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link {% if active_tab == 'manual' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#manual" type="button">Manual</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link {% if active_tab == 'rh' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#rh" type="button">Funcionários</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link {% if active_tab == 'dfec' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#dfec" type="button">Formandos</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="myTabContent">
+                        <!-- Manual -->
+                        <div class="tab-pane fade {% if active_tab == 'manual' %}show active{% endif %}" id="manual">
+                             <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="manual">
+                                <label>Cole a lista de nomes (um por linha):</label>
+                                <textarea name="lista_nomes" class="form-control mb-3" rows="5"></textarea>
+                                <button type="submit" class="btn btn-primary w-100">Adicionar Lista</button>
+                             </form>
+                        </div>
+
+                        <!-- RH / Funcionários -->
+                        <div class="tab-pane fade {% if active_tab == 'rh' %}show active{% endif %}" id="rh">
+                             <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="funcionarios">
+                                <label>Filtrar por Sector:</label>
+                                <select name="sector" class="form-select mb-3">
+                                    <option value="">-- Todos --</option>
+                                    {% for s in sectores %}
+                                        <option value="{{ s.id }}">{{ s.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary w-100">Importar do RH</button>
+                             </form>
+                        </div>
+                        
+                        <!-- DFEC / Cursos -->
+                        <div class="tab-pane fade {% if active_tab == 'dfec' %}show active{% endif %}" id="dfec">
+                             <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="dfec">
+                                <label>Selecionar Curso/Evento:</label>
+                                <select name="evento" class="form-select mb-3" required>
+                                    <option value="">-- Selecione --</option>
+                                    {% for e in eventos %}
+                                        <option value="{{ e.id }}">{{ e.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary w-100">Importar Participantes</button>
+                             </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Lista -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-dark">Lista de Emissão ({{ beneficiarios.count }})</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Detalhe</th>
+                                    <th>Código</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in beneficiarios %}
+                                <tr>
+                                    <td>{{ b.nome_beneficiario }}</td>
+                                    <td>{{ b.detalhe_extra|default:"-" }}</td>
+                                    <td class="font-monospace small">{{ b.codigo_validacao|truncatechars:8 }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'credenciais:cert_download_unico' b.id %}" target="_blank" class="btn btn-sm btn-info" title="Baixar PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        <a href="{% url 'credenciais:cert_remover_beneficiario' b.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Remover?')" title="Remover">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">Nenhum beneficiário adicionado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

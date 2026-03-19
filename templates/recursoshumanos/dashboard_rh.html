@@ -1,0 +1,403 @@
+<!-- templates/recursoshumanos/dashboard_rh.html -->
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Dashboard • Recursos Humanos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">Dashboard - Recursos Humanos</h1>
+            <p class="text-muted mb-0">Gestão completa de funcionários e licenças</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary">{{ hoje|date:"d/m/Y" }}</span>
+            <span class="badge bg-success">{{ hora_atual|date:"H:i"|default:"" }}</span>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas Gerais -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ total_funcionarios }}</h2>
+                            <p class="text-muted mb-0">Funcionários Ativos</p>
+                        </div>
+                        <div class="text-primary">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ funcionarios_novos }} novos este mês</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ total_licencas_pendentes }}</h2>
+                            <p class="text-muted mb-0">Licenças Pendentes</p>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Aguardando análise do RH</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ licencas_aguardando_chefe.count }}</h2>
+                            <p class="text-muted mb-0">Com Chefes</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-user-tie fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Aguardando parecer de chefes</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">{{ licencas_aprovadas_recentes.count }}</h2>
+                            <p class="text-muted mb-0">Aprovadas Hoje</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Concluídas hoje</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Duas Colunas Principais -->
+    <div class="row">
+        <!-- Coluna da Esquerda -->
+        <div class="col-md-8">
+            <!-- Licenças Pendentes Urgentes -->
+            {% if licencas_pendentes_rh %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle text-danger me-2"></i>Licenças Pendentes Urgentes
+                    </h5>
+                    <a href="{% url 'recursoshumanos:lista_licencas_pendentes_rh' %}" class="btn btn-sm btn-outline-primary">
+                        Ver Todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for licenca in licencas_pendentes_rh %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ licenca.funcionario.nome_completo }}</h6>
+                                    <small class="text-muted">
+                                        {{ licenca.get_tipo_display }} •
+                                        {{ licenca.data_inicio|date:"d/m/Y" }} - {{ licenca.data_fim|date:"d/m/Y" }} •
+                                        {{ licenca.dias_utilizados }} dias
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        Setor: {{ licenca.funcionario.sector.codigo }} •
+                                        Solicitado: {{ licenca.data_criacao|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <a href="{% url 'recursoshumanos:analisar_licenca_rh' licenca.id %}"
+                                       class="btn btn-sm btn-primary">
+                                        Analisar
+                                    </a>
+                                    <br>
+                                    <small class="text-danger">
+                                        <i class="fas fa-clock"></i>
+                                        {{ licenca.data_criacao|timesince }} atrás
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Licenças Aguardando Chefes -->
+            {% if licencas_aguardando_chefe %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-tie text-info me-2"></i>Aguardando Parecer de Chefes
+                    </h5>
+                    <span class="badge bg-info">{{ licencas_aguardando_chefe.count }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for licenca in licencas_aguardando_chefe %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ licenca.funcionario.nome_completo }}</h6>
+                                    <small class="text-muted">
+                                        {{ licenca.get_tipo_display }} •
+                                        Setor: {{ licenca.funcionario.sector.codigo }}
+                                    </small>
+                                    {% if licenca.observacoes_rh %}
+                                    <br>
+                                    <small class="text-primary">
+                                        <i class="fas fa-clipboard-check"></i>
+                                        RH: {{ licenca.observacoes_rh|truncatechars:80 }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <small class="text-muted">
+                                        Chefe:
+                                        {% with chefe=licenca.funcionario.sector.funcionario_set.filter|first %}
+                                            {{ chefe.nome_completo|default:"Não definido" }}
+                                        {% endwith %}
+                                    </small>
+                                    <br>
+                                    <small class="text-info">
+                                        Enviado: {{ licenca.data_analise_rh|date:"d/m/Y H:i"|default:"-" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Coluna da Direita -->
+        <div class="col-md-4">
+            <!-- Ações Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'recursoshumanos:lista_licencas_pendentes_rh' %}"
+                           class="btn btn-warning d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-clipboard-list me-2"></i>Analisar Licenças
+                            </span>
+                            {% if total_licencas_pendentes > 0 %}
+                            <span class="badge bg-danger">{{ total_licencas_pendentes }}</span>
+                            {% endif %}
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:lista_funcionarios' %}"
+                           class="btn btn-primary d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-users me-2"></i>Gerir Funcionários
+                            </span>
+                            <span class="badge bg-light text-dark">{{ total_funcionarios }}</span>
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:relatorio_licencas' %}"
+                           class="btn btn-info d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-chart-bar me-2"></i>Relatórios
+                            </span>
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:criar_funcionario' %}"
+                           class="btn btn-success d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-user-plus me-2"></i>Novo Funcionário
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saldos Críticos -->
+            {% if saldos_criticos %}
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Saldos de Férias Críticos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for saldo in saldos_criticos %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ saldo.funcionario.nome_completo }}</h6>
+                                    <small class="text-muted">{{ saldo.funcionario.sector.codigo }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-danger">{{ saldo.dias_saldo }} dias</span>
+                                    <br>
+                                    <small class="text-muted">Saldo {{ saldo.ano }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-file-export me-1"></i> Exportar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Licenças Aprovadas Recentemente -->
+            {% if licencas_aprovadas_recentes %}
+            <div class="card mt-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Aprovadas Hoje
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for licenca in licencas_aprovadas_recentes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ licenca.funcionario.nome_completo }}</h6>
+                                    <small class="text-muted">{{ licenca.get_tipo_display }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-success">
+                                        {{ licenca.dias_utilizados }} dias
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ licenca.data_parecer_diretor|date:"H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Linha Inferior -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <!-- Avaliações Pendentes -->
+            {% if avaliacoes_pendentes %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star text-warning me-2"></i>Avaliações Pendentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for avaliacao in avaliacoes_pendentes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ avaliacao.funcionario.nome_completo }}</h6>
+                                    <small class="text-muted">
+                                        Período: {{ avaliacao.periodo }} •
+                                        Setor: {{ avaliacao.funcionario.sector.codigo }}
+                                    </small>
+                                </div>
+                                <a href="#" class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <!-- Notificações Recentes -->
+            {% if notificacoes_recentes %}
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell me-2"></i>Notificações Recentes
+                    </h5>
+                    {% if notificacoes_nao_lidas > 0 %}
+                    <span class="badge bg-danger">{{ notificacoes_nao_lidas }} não lidas</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for notificacao in notificacoes_recentes %}
+                        <div class="list-group-item {% if not notificacao.lida %}bg-light{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ notificacao.titulo }}</h6>
+                                    <p class="mb-1 small">{{ notificacao.mensagem }}</p>
+                                    <small class="text-muted">{{ notificacao.data_criacao|timesince }} atrás</small>
+                                </div>
+                                {% if notificacao.link_url %}
+                                <a href="{{ notificacao.link_url }}" class="btn btn-sm btn-outline-primary">
+                                    Ver
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'recursoshumanos:minhas_notificacoes' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-list me-1"></i> Ver Todas
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Atualizar notificações
+function updateNotifications() {
+    fetch('{% url "recursoshumanos:api_notificacoes_pendentes" %}')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.badge.bg-danger');
+            if (badge && data.total > 0) {
+                badge.textContent = data.total;
+            }
+        });
+}
+
+// Atualizar a cada 30 segundos
+setInterval(updateNotifications, 30000);
+</script>
+{% endblock %}

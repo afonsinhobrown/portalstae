@@ -1,0 +1,70 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Registar Presença • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-check me-2 text-success"></i>
+                    Registar Presença
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Funcionário *</label>
+                            {{ form.funcionario }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data *</label>
+                            {{ form.data }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Horas Trabalhadas</label>
+                            {{ form.horas_trabalhadas }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.presente }}
+                                <label class="form-check-label fw-bold" for="{{ form.presente.id_for_label }}">
+                                    Presente
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Observações</label>
+                            {{ form.observacao }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'recursoshumanos:dashboard_rh' %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>
+                                    Registar Presença
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

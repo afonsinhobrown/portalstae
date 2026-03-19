@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Caderno de Encargos - {{ concurso.numero }}</title>
+    <style>
+        @page { size: A4; margin: 2.5cm 2cm 2cm 2.5cm; }
+        body { font-family: "Times New Roman", serif; font-size: 11pt; line-height: 1.3; color: #000; text-align: justify; }
+        
+        /* Utilitários */
+        .page-break { page-break-after: always; }
+        .no-print { display: block; }
+        @media print {
+            .no-print { display: none; }
+            a[href]:after { content: none !important; }
+        }
+
+        /* Títulos */
+        h1 { font-size: 14pt; font-weight: bold; text-transform: uppercase; text-align: center; margin-top: 1cm; margin-bottom: 1cm; border: 1px solid #000; padding: 10px; background: #f9f9f9; }
+        h2 { font-size: 12pt; font-weight: bold; text-transform: uppercase; margin-top: 1cm; border-bottom: 2px solid #000; padding-bottom: 2px; }
+        h3 { font-size: 11pt; font-weight: bold; margin-top: 0.5cm; }
+        h4 { font-size: 11pt; font-style: italic; margin-top: 0.3cm; }
+        
+        /* Parágrafos e Listas */
+        p { margin-bottom: 10px; text-indent: 1cm; }
+        ul, ol { margin-bottom: 15px; margin-left: 1cm; }
+        li { margin-bottom: 5px; }
+
+        /* Capa */
+        .cover-page { text-align: center; height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2cm; }
+        .republica { font-size: 14pt; font-weight: bold; text-transform: uppercase; }
+        .entidade { font-size: 16pt; font-weight: bold; margin-bottom: 3cm; text-transform: uppercase; }
+        .doc-type { font-size: 28pt; font-weight: bold; margin-bottom: 1cm; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 20px 0; width: 100%; }
+        .concurso-ref { font-size: 16pt; margin-bottom: 5cm; }
+        
+        /* Tabelas */
+        .dt-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
+        .dt-table th, .dt-table td { border: 1px solid #000; padding: 5px; vertical-align: top; text-align: left; }
+        .dt-table th { background-color: #eee; text-align: center; font-weight: bold; }
+        
+        /* Variáveis do Usuário */
+        .user-content { font-weight: bold; color: #000; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: #999; }
+    </style>
+</head>
+<body>
+
+    <!-- Botoes de Controle -->
+    <div class="no-print" style="position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid #ccc; z-index: 1000; text-align: center;">
+        <button onclick="window.print()" style="background: #003366; color: white; border: none; padding: 12px 24px; cursor: pointer; font-size: 14px; font-weight: bold; margin-bottom: 5px; border-radius: 4px;">
+            <i class="fas fa-print"></i> IMPRIMIR / SALVAR PDF
+        </button>
+        <div style="font-size: 11px; color: #555;">Documento Gerado Automaticamente</div>
+    </div>
+
+    <!-- CAPA -->
+    <div class="cover-page">
+        <br><br>
+        <div class="republica">REPÚBLICA DE MOÇAMBIQUE</div>
+        <div class="entidade">SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</div>
+        <br><br><br>
+        <div class="doc-type">CADERNO DE ENCARGOS</div>
+        <br>
+        <div class="concurso-ref">
+            <strong>CONCURSO PÚBLICO Nº {{ concurso.numero }}</strong><br><br>
+            <span style="font-size: 14pt;">"{{ concurso.titulo }}"</span>
+        </div>
+        <br><br><br><br><br><br><br>
+        <div style="width: 100%; text-align: center; border-top: 1px solid #000; padding-top: 10px;">
+            <strong>Maputo, {% now "Y" %}</strong>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- ÍNDICE (Estático Simulado) -->
+    <h1>ÍNDICE</h1>
+    <ul style="list-style-type: none; padding: 0;">
+        <li><strong>CAPÍTULO I - ANÚNCIO DO CONCURSO</strong> .............................................................. 3</li>
+        <li><strong>CAPÍTULO II - PROGRAMA DO CONCURSO</strong> ........................................................... 4</li>
+        <li style="margin-left: 20px;">Secção I - Da Entidade Contratante ...................................................... 4</li>
+        <li style="margin-left: 20px;">Secção II - Do Objecto do Concurso ....................................................... 5</li>
+        <li style="margin-left: 20px;">Secção III - Dos Concorrentes ................................................................ 6</li>
+        <li style="margin-left: 20px;">Secção IV - Das Propostas ....................................................................... 8</li>
+        <li style="margin-left: 20px;">Secção V - Do Júri e Avaliação .............................................................. 12</li>
+        <li><strong>CAPÍTULO III - CADERNO DE ENCARGOS</strong> ............................................................. 15</li>
+        <li style="margin-left: 20px;">Cláusula 1ª - Definições .......................................................................... 15</li>
+        <li style="margin-left: 20px;">Cláusula 2ª - Objecto ............................................................................... 16</li>
+        <li style="margin-left: 20px;">Cláusula 3ª - Preço e Condições de Pagamento ................................. 17</li>
+        <li style="margin-left: 20px;">Cláusula 4ª - Prazos de Execução ......................................................... 17</li>
+        <li style="margin-left: 20px;">Cláusula 5ª - Obrigações das Partes ..................................................... 18</li>
+        <li><strong>ANEXOS</strong> ................................................................................................................ 24</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- CAPITULO I: ANUNCIO -->
+    <h1>CAPÍTULO I<br>ANÚNCIO DO CONCURSO</h1>
+    
+    <div style="border: 2px solid #000; padding: 1cm; margin: 1cm 0;">
+        <h3 style="text-align: center;">CONCURSO PÚBLICO Nº {{ concurso.numero }}</h3>
+        <p>1. O Secretariado Técnico de Administração Eleitoral (STAE) convida as pessoas singulares ou colectivas, nacionais ou estrangeiras, interessadas e elegíveis a apresentarem propostas fechadas para o fornecimento de: <strong>{{ concurso.titulo }}</strong>.</p>
+        
+        <p>2. O Concurso será regido pelo Regulamento de Contratação de Empreitada de Obras Públicas, Fornecimento de Bens e Prestação de Serviços ao Estado, aprovado pelo Decreto nº 5/2016, de 8 de Março.</p>
+
+        <p>3. Os concorrentes interessados poderão obter mais informações, examinar os Documentos do Concurso ou levantá-los no endereço abaixo indicado, mediante o pagamento de uma taxa não reembolsável de <strong>{{ concurso.preco_caderno }} MT</strong>.</p>
+
+        <p>4. As propostas deverão ser entregues no endereço abaixo indicado até às <strong>{{ concurso.data_encerramento|date:"H:i" }} horas</strong> do dia <strong>{{ concurso.data_encerramento|date:"d de F de Y" }}</strong> e serão abertas em sessão pública na presença dos concorrentes que desejarem assistir.</p>
+
+        <p style="margin-top: 1cm;"><strong>Endereço:</strong><br>{{ concurso.local_entrega }}</p>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- CAPITULO II: PROGRAMA DO CONCURSO -->
+    <h1>CAPÍTULO II<br>PROGRAMA DO CONCURSO</h1>
+
+    <h2>SECÇÃO I - DA ENTIDADE CONTRATANTE</h2>
+    <p><strong>Artigo 1. (Identificação)</strong><br>
+    A Entidade Contratante é o Secretariado Técnico de Administração Eleitoral (STAE), instituição pública dotada de personalidade jurídica e autonomia administrativa.</p>
+
+    <p><strong>Artigo 2. (Regime Jurídico)</strong><br>
+    O presente concurso rege-se pelas normas estabelecidas no Regulamento de Contratação, aprovado pelo Decreto nº 5/2016, de 8 de Março, e demais legislação aplicável na República de Moçambique.</p>
+
+    <h2>SECÇÃO II - DO OBJECTO DO CONCURSO</h2>
+    <p><strong>Artigo 3. (Definição do Objecto)</strong><br>
+    O presente concurso tem por objecto a contratação de: <span class="user-content">{{ caderno.objeto_concurso }}</span>, conforme detalhado nas Especificações Técnicas (Capítulo III).</p>
+
+    <p><strong>Artigo 4. (Lotes)</strong><br>
+    O concurso é indivisível, devendo os concorrentes apresentar propostas para a totalidade do objecto. (Ou especificar se há lotes).</p>
+
+    <h2>SECÇÃO III - DOS CONCORRENTES</h2>
+    <p><strong>Artigo 5. (Elegibilidade)</strong><br>
+    Podem participar no presente concurso todas as pessoas singulares ou colectivas, nacionais ou estrangeiras, que comprovem a sua elegibilidade jurídica, técnica e financeira, e que não se encontrem em nenhuma das situações de impedimento previstas no artigo 23 do Regulamento de Contratação.</p>
+    
+    <p><strong>Artigo 6. (Documentos de Qualificação)</strong><br>
+    A qualificação dos concorrentes será aferida mediante a apresentação dos seguintes documentos:</p>
+    <ol type="a">
+        <li>Certidão de Registo Comercial actualizada;</li>
+        <li>Certidão de Quitação das Finanças;</li>
+        <li>Certidão de Quitação do INSS;</li>
+        <li>Alvará ou Licença válida para o exercício da actividade;</li>
+        <li>Declaração de que não se encontra em situação de falência ou liquidação;</li>
+        <li>Demonstrações Financeiras dos últimos 3 anos.</li>
+    </ol>
+
+    <h2>SECÇÃO IV - DAS PROPOSTAS</h2>
+    <p><strong>Artigo 7. (Conteúdo da Proposta)</strong><br>
+    A proposta deve ser constituída por:</p>
+    <ul>
+        <li>Proposta Técnica: Contendo a descrição detalhada dos bens/serviços, cronograma, metodologia e fichas técnicas.</li>
+        <li>Proposta Financeira: Contendo o preço total e unitário, em Meticais, incluindo o IVA.</li>
+    </ul>
+
+    <p><strong>Artigo 8. (Prazo de Validade)</strong><br>
+    As propostas devem permanecer válidas por um período de <strong>90 (noventa) dias</strong>, contados a partir da data limite para a sua entrega.</p>
+
+    <p><strong>Artigo 9. (Garantia Provisória)</strong><br>
+    {% if caderno.garantia_exigida > 0 %}
+    Para garantir a manutenção da proposta, o concorrente deve prestar uma Garantia Provisória no valor de <strong>{{ caderno.garantia_exigida }} MT</strong>.
+    {% else %}
+    Não é exigida a prestação de Garantia Provisória para este concurso.
+    {% endif %}
+    </p>
+
+    <div class="page-break"></div>
+
+    <!-- CAPITULO III: CADERNO DE ENCARGOS (TÉCNICO) -->
+    <h1>CAPÍTULO III<br>CADERNO DE ENCARGOS</h1>
+
+    <h3>CLÁUSULA 1ª<br>(DEFINIÇÕES)</h3>
+    <p>Para efeitos do presente contrato, entende-se por:<br>
+    a) "Entidade Contratante": O STAE;<br>
+    b) "Contratado": O concorrente vencedor a quem for adjudicado o contrato;<br>
+    c) "Fiscalização": A entidade designada pelo STAE para fiscalizar a execução.</p>
+
+    <h3>CLÁUSULA 2ª<br>(OBJECTO DO CONTRATO)</h3>
+    <p>O Contratado obriga-se a fornecer/executar: <span class="user-content">{{ caderno.objeto_concurso }}</span>, em estrita obediência às Especificações Técnicas abaixo:</p>
+    
+    <!-- INSERÇÃO DINÂMICA DAS ESPECIFICAÇÕES -->
+    <div style="margin: 20px 0; border: 1px solid #ccc; padding: 15px;">
+        <strong>ESPECIFICAÇÕES TÉCNICAS E REQUISITOS:</strong><br><br>
+        {{ caderno.especificacoes_tecnicas|linebreaksbr }}
+    </div>
+
+    <h3>CLÁUSULA 3ª<br>(PREÇO E CONDIÇÕES DE PAGAMENTO)</h3>
+    <p>1. Pelo fornecimento dos bens/serviços objecto do contrato, a Entidade Contratante pagará ao Contratado o valor adjudicado.</p>
+    <p>2. O pagamento será efectuado via transferência bancária, contra a apresentação de factura, guia de remessa assinada e auto de recepção provisória/definitiva.</p>
+
+    <h3>CLÁUSULA 4ª<br>(PRAZO DE EXECUÇÃO)</h3>
+    <p>O prazo de execução do contrato é de <strong>{{ caderno.prazo_execucao_dias }} dias</strong>, contados a partir da data de assinatura do contrato ou emissão da Nota de Encomenda.</p>
+
+    <h3>CLÁUSULA 5ª<br>(GARANTIA DE BOA EXECUÇÃO)</h3>
+    <p>O Contratado deverá prestar uma garantia de boa execução correspondente a 10% do valor do contrato, para assegurar o cumprimento integral das suas obrigações.</p>
+    
+    <h3>CLÁUSULA 6ª<br>(OBRIGAÇÕES DO CONTRATADO)</h3>
+    <p>Constituem obrigações específicas do Contratado:</p>
+    <div style="margin-left: 20px; font-style: italic;">
+        {{ caderno.obrigacoes_contratado|default:"a) Entregar os bens novos e sem defeitos;\nb) Garantir assistência técnica;\nc) Cumprir com as normas de segurança e higiene no trabalho."|linebreaksbr }}
+    </div>
+
+    <h3>CLÁUSULA 7ª<br>(OBRIGAÇÕES DA ENTIDADE CONTRATANTE)</h3>
+    <p>Constituem obrigações da Entidade Contratante:</p>
+    <div style="margin-left: 20px; font-style: italic;">
+        {{ caderno.obrigacoes_contratante|default:"a) Facilitar o acesso aos locais de entrega;\nb) Efectuar os pagamentos nos prazos acordados;\nc) Nomear o gestor do contrato."|linebreaksbr }}
+    </div>
+
+    <h3>CLÁUSULA 8ª<br>(CONDIÇÕES ADMINISTRATIVAS ESPECÍFICAS)</h3>
+    <p>{{ caderno.condicoes_administrativas|linebreaksbr }}</p>
+
+    <h3>CLÁUSULA 9ª<br>(PENALIDADES)</h3>
+    <p>Em caso de incumprimento dos prazos, será aplicada uma multa de 0,1% a 0,5% do valor do contrato por cada dia de atraso, até ao limite de 10%.</p>
+
+    <h3>CLÁUSULA 10ª<br>(RESOLUÇÃO DE LITÍGIOS)</h3>
+    <p>Os litígios serão resolvidos por negociação amigável. Caso esta falhe, as partes elegem o foro do Tribunal Judicial da Cidade de Maputo, com renúncia expressa a qualquer outro.</p>
+
+    <div class="page-break"></div>
+
+    <!-- ANEXOS -->
+    <h1>ANEXOS</h1>
+    
+    <h2>ANEXO I - MODELO DE PROPOSTA FINANCEIRA</h2>
+    <table class="dt-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Descrição</th>
+                <th>Unid.</th>
+                <th>Quant.</th>
+                <th>Preço Unit. (MT)</th>
+                <th>Preço Total (MT)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>(Descrição do Item)</td>
+                <td>UN</td>
+                <td>1</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <!-- Linhas em branco para preenchimento -->
+            <tr><td>2</td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>3</td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr>
+                <td colspan="5" style="text-align: right; font-weight: bold;">SUBTOTAL</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="5" style="text-align: right; font-weight: bold;">IVA (16%)</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="5" style="text-align: right; font-weight: bold;">TOTAL GERAL</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

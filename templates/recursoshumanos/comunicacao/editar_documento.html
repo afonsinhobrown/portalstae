@@ -1,0 +1,152 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Editar Documento • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2"><i class="fas fa-edit me-2"></i>Editar Documento</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:documentos_institucionais' %}">Documentos</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:visualizar_documento' documento.id %}">{{ documento.titulo|truncatechars:20 }}</a></li>
+                    <li class="breadcrumb-item active">Editar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">Título *</label>
+                        <input type="text" name="titulo" class="form-control" 
+                               value="{{ documento.titulo }}" required>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Tipo *</label>
+                        <select name="tipo" class="form-select" required>
+                            {% for tipo_valor, tipo_nome in tipos %}
+                            <option value="{{ tipo_valor }}" {% if documento.tipo == tipo_valor %}selected{% endif %}>
+                                {{ tipo_nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Data do Documento</label>
+                        <input type="date" name="data_documento" class="form-control" 
+                               value="{{ documento.data_documento|date:'Y-m-d' }}">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            {% for status_valor, status_nome in status_list %}
+                            <option value="{{ status_valor }}" {% if documento.status == status_valor %}selected{% endif %}>
+                                {{ status_nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea name="descricao" class="form-control" rows="3">{{ documento.descricao }}</textarea>
+                    </div>
+                    
+                    <div class="col-12 mb-4">
+                        <label class="form-label">Arquivo</label>
+                        <div class="input-group">
+                            <input type="file" name="arquivo" class="form-control">
+                        </div>
+                        <small class="text-muted">
+                            Atual: <a href="{{ documento.arquivo.url }}" target="_blank">{{ documento.arquivo.name|cut:"documentos/" }}</a>
+                            ({{ documento.arquivo.size|filesizeformat }}). Deixe em branco para manter o atual.
+                        </small>
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="publico" id="publico" 
+                                   {% if documento.publico %}checked{% endif %}>
+                            <label class="form-check-label" for="publico">
+                                <strong>Documento público</strong> - Visível para todos os funcionários
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 mb-4" id="destinatariosContainer" 
+                         style="display: {% if not documento.publico %}block{% else %}none{% endif %};">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Selecione os destinatários específicos para este documento
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Setores</label>
+                                <select name="setores" class="form-select" multiple size="5">
+                                    {% for setor in setores %}
+                                    <option value="{{ setor.id }}" 
+                                            {% if setor in documento.setores_destino.all %}selected{% endif %}>
+                                        {{ setor.codigo }} - {{ setor.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Funcionários</label>
+                                <select name="funcionarios" class="form-select" multiple size="5">
+                                    {% for funcionario in funcionarios %}
+                                    <option value="{{ funcionario.id }}"
+                                            {% if funcionario in documento.funcionarios_destino.all %}selected{% endif %}>
+                                        {{ funcionario.nome_completo }} - {{ funcionario.sector.codigo }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'recursoshumanos:visualizar_documento' documento.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'recursoshumanos:visualizar_documento' documento.id %}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-2"></i>Visualizar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mostrar/ocultar destinatários
+    document.getElementById('publico').addEventListener('change', function() {
+        const container = document.getElementById('destinatariosContainer');
+        if (!this.checked) {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

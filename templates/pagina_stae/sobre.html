@@ -1,0 +1,41 @@
+<!-- templates/pagina_stae/sobre.html -->
+{% extends 'pagina_stae/base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8">Sobre o STAE</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Missão, Visão, Valores -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4">Nossa Missão</h2>
+                <p class="text-gray-700">Garantir a organização e transparência dos processos eleitorais em Moçambique.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Departamentos</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for depto in departamentos %}
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <i class="{{ depto.icone }} text-blue-600 mb-2"></i>
+                        <h3 class="font-semibold">{{ depto.nome }}</h3>
+                        <p class="text-sm text-gray-600">{{ depto.descricao|truncatewords:20 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Contactos -->
+        <div class="bg-white rounded-xl shadow-lg p-6 h-fit">
+            <h3 class="text-xl font-bold mb-4">Informações de Contacto</h3>
+            <div class="space-y-3">
+                <p><i class="fas fa-phone text-blue-600 mr-2"></i> {{ config.telefone }}</p>
+                <p><i class="fas fa-envelope text-blue-600 mr-2"></i> {{ config.email }}</p>
+                <p><i class="fas fa-map-marker-alt text-blue-600 mr-2"></i> {{ config.endereco }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

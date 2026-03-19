@@ -1,0 +1,41 @@
+{% extends 'dfec/base.html' %}
+{% block title %}Relatório de Planos - DFEC{% endblock %}
+{% block page_title %}Relatório de Planos de Atividade{% endblock %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Consolidado de Planos</h6>
+        <button class="btn btn-sm btn-success" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> Imprimir PDF
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered datatable">
+                <thead>
+                    <tr>
+                        <th>Cód.</th>
+                        <th>Plano</th>
+                        <th>Nível</th>
+                        <th>Status</th>
+                        <th>Orçamento</th>
+                        <th>Progresso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plano in planos %}
+                    <tr>
+                        <td>{{ plano.codigo }}</td>
+                        <td>{{ plano.nome }}</td>
+                        <td>{{ plano.get_nivel_display }}</td>
+                        <td><span class="badge bg-info">{{ plano.status }}</span></td>
+                        <td>{{ plano.orcamento_planeado }} MT</td>
+                        <td>{{ plano.progresso|default:0 }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

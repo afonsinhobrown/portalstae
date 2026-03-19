@@ -1,0 +1,62 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Gestão de Eleições{% endblock %}
+{% block module_name %}ELEIÇÕES{% endblock %}
+{% block icon %}fas fa-vote-yea{% endblock %}
+{% block dashboard_url %}{% url 'eleicao:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'eleicao:calendario' %}" class="menu-item"><i class="fas fa-calendar-alt"></i> <span>Calendário</span></a>
+<a href="{% url 'eleicao:configuracoes' %}" class="menu-item"><i class="fas fa-cogs"></i> <span>Configurações</span></a>
+<a href="{% url 'eleicao:materiais' %}" class="menu-item"><i class="fas fa-box"></i> <span>Urnas e Materiais</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="card-grid">
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-vote-yea"></i></div>
+        <div class="card-title">Eleições Registadas</div>
+        <div class="card-value">{{ eleicoes.count }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-calendar-check"></i></div>
+        <div class="card-title">Próxima Eleição</div>
+        <div class="card-value" style="font-size: 18px;">{{ proxima_eleicao.data_votacao|date:"d/m/Y"|default:"Nenhuma ativa" }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-plus-circle"></i></div>
+        <div class="card-title">Nova Configuração</div>
+        <a href="{% url 'eleicao:criar_eleicao' %}" class="action-btn">Criar Eleição</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <h3>Histórico de Eleições</h3>
+    <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #ddd;">
+                <th style="padding: 10px;">Ano</th>
+                <th style="padding: 10px;">Eleição</th>
+                <th style="padding: 10px;">Tipo</th>
+                <th style="padding: 10px;">Data Votação</th>
+                <th style="padding: 10px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in eleicoes %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px; font-weight: bold;">{{ e.ano }}</td>
+                <td style="padding: 10px;">{{ e.nome }}</td>
+                <td style="padding: 10px;">{{ e.get_tipo_display }}</td>
+                <td style="padding: 10px;">{{ e.data_votacao|date:"d/m/Y" }}</td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'eleicao:detalhe_eleicao' e.id %}" style="color: var(--primary);"><i class="fas fa-eye"></i> Detalhes</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="padding: 20px; text-align: center;">Nenhuma eleição registada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

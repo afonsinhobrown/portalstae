@@ -1,0 +1,204 @@
+<!-- templates/recursoshumanos/comunicacao/editar_canal.html -->
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Editar Canal • Chat RH{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Editar Canal</h5>
+                        <a href="{% url 'recursoshumanos:canal_chat' canal.id %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar ao Chat
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Informações do Canal -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2">Informações do Canal</h6>
+
+                            <!-- Nome do Canal -->
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome do Canal *</label>
+                                <input type="text" class="form-control" id="nome" name="nome"
+                                       value="{{ canal.nome }}" required>
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="mb-3">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                <textarea class="form-control" id="descricao" name="descricao" rows="3">{{ canal.descricao }}</textarea>
+                            </div>
+
+                            <!-- Tipo (não editável para conversas diretas) -->
+                            <div class="mb-3">
+                                <label for="tipo" class="form-label">Tipo</label>
+                                {% if canal.eh_conversa_direta %}
+                                <input type="text" class="form-control" value="Conversa Direta" readonly>
+                                <input type="hidden" name="tipo" value="direto">
+                                {% else %}
+                                <select class="form-select" id="tipo" name="tipo">
+                                    {% for tipo_val, tipo_nome in tipos_canal %}
+                                    {% if tipo_val != 'direto' or canal.tipo == 'direto' %}
+                                    <option value="{{ tipo_val }}" {% if canal.tipo == tipo_val %}selected{% endif %}>
+                                        {{ tipo_nome }}
+                                    </option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {% endif %}
+                            </div>
+
+                            <!-- Configurações -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="enviar_para_todos"
+                                               name="enviar_para_todos" {% if canal.enviar_para_todos %}checked{% endif %}>
+                                        <label class="form-check-label" for="enviar_para_todos">
+                                            Canal público
+                                        </label>
+                                        <div class="form-text">Todos podem ver e participar</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="arquivado"
+                                               name="arquivado" {% if canal.arquivado %}checked{% endif %}>
+                                        <label class="form-check-label" for="arquivado">
+                                            Canal arquivado
+                                        </label>
+                                        <div class="form-text">Ocultar do chat principal</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Membros (apenas para canais não-diretos) -->
+                        {% if not canal.eh_conversa_direta %}
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2">Membros do Canal</h6>
+                            <div class="border p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                                {% for usuario in usuarios %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="membros"
+                                           value="{{ usuario.id }}"
+                                           id="membro_{{ usuario.id }}"
+                                           {% if usuario in canal.membros.all %}checked{% endif %}>
+                                    <label class="form-check-label" for="membro_{{ usuario.id }}">
+                                        {{ usuario.get_full_name|default:usuario.username }}
+                                        <small class="text-muted">({{ usuario.email|default:"Sem email" }})</small>
+                                    </label>
+                                </div>
+                                {% empty %}
+                                <p class="text-muted mb-0">Nenhum usuário disponível</p>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text mt-2">
+                                Selecione os membros do canal. O criador ({{ canal.criado_por.get_full_name|default:canal.criado_por.username }}) será automaticamente adicionado.
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2">Membros da Conversa</h6>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Esta é uma conversa direta entre:
+                                <ul class="mt-2 mb-0">
+                                    {% for membro in canal.membros.all %}
+                                    <li>{{ membro.get_full_name|default:membro.username }}</li>
+                                    {% endfor %}
+                                </ul>
+                                <small class="d-block mt-2">Os membros não podem ser alterados em conversas diretas.</small>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Informações do Canal -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2">Informações do Canal</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Criado por</label>
+                                        <p class="fw-bold">{{ canal.criado_por.get_full_name|default:canal.criado_por.username }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">Data de criação</label>
+                                        <p class="fw-bold">{{ canal.data_criacao|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if canal.tipo == 'direto' %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Conversas diretas são privadas entre dois usuários. Algumas configurações não podem ser alteradas.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                <a href="{% url 'recursoshumanos:canal_chat' canal.id %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                {% if request.user.is_staff %}
+                                <a href="{% url 'admin:recursoshumanos_canalcomunicacao_change' canal.id %}"
+                                   class="btn btn-outline-warning ms-2" target="_blank">
+                                    <i class="fas fa-cog me-2"></i>Admin
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if not canal.eh_conversa_direta %}
+                                <button type="button" class="btn btn-danger"
+                                        onclick="confirmarExclusao()">
+                                    <i class="fas fa-trash me-2"></i>Excluir Canal
+                                </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary ms-2">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Confirmar exclusão do canal
+    function confirmarExclusao() {
+        if (confirm('Tem certeza que deseja excluir este canal? Todas as mensagens serão perdidas permanentemente.')) {
+            window.location.href = "{% url 'recursoshumanos:excluir_canal' canal.id %}";
+        }
+    }
+
+    // Mostrar/ocultar membros baseado no checkbox "público"
+    document.getElementById('enviar_para_todos').addEventListener('change', function() {
+        const membrosSection = document.getElementById('membros-section');
+        if (membrosSection) {
+            if (this.checked) {
+                membrosSection.style.display = 'none';
+                // Desmarcar todos os checkboxes
+                document.querySelectorAll('input[name="membros"]').forEach(cb => cb.checked = false);
+            } else {
+                membrosSection.style.display = 'block';
+            }
+        }
+    });
+</script>
+{% endblock %}

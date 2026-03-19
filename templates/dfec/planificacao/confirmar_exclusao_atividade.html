@@ -1,0 +1,30 @@
+{% extends 'dfec/base.html' %}
+
+{% block title %}Confirmar Exclusão - {{ atividade.nome }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="m-0">Confirmar Exclusão de Atividade</h5>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <p class="lead">Tem certeza que deseja excluir a atividade:</p>
+                <h4 class="fw-bold">{{ atividade.nome }}</h4>
+                <p class="text-muted">Esta ação não pode ser desfeita.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-block mt-4">
+                        <a href="{% url 'dfec:plano_detalhe' atividade.plano.id %}"
+                            class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

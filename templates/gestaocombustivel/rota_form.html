@@ -1,0 +1,271 @@
+<!-- gestaocombustivel/templates/gestaocombustivel/rota_form.html -->
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • {% if object %}Editar{% else %}Nova{% endif %} Rota{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-route text-primary me-2"></i>
+            {% if object %}Editar Rota{% else %}Nova Rota de Transporte{% endif %}
+        </h1>
+        <a href="{% url 'gestaocombustivel:lista_rotas' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="combustivel-card p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Por favor, corrija os erros abaixo.
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.viatura.id_for_label }}" class="form-label fw-bold">
+                                    Viatura *
+                                </label>
+                                {{ form.viatura }}
+                                {% if form.viatura.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.viatura.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.motorista.id_for_label }}" class="form-label fw-bold">
+                                    Motorista *
+                                </label>
+                                {{ form.motorista }}
+                                {% if form.motorista.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.motorista.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.nome_rota.id_for_label }}" class="form-label fw-bold">
+                            Nome da Rota *
+                        </label>
+                        {{ form.nome_rota }}
+                        {% if form.nome_rota.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.nome_rota.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.hora_partida.id_for_label }}" class="form-label fw-bold">
+                                    Hora de Partida *
+                                </label>
+                                {{ form.hora_partida }}
+                                {% if form.hora_partida.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.hora_partida.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.hora_chegada.id_for_label }}" class="form-label fw-bold">
+                                    Hora de Chegada *
+                                </label>
+                                {{ form.hora_chegada }}
+                                {% if form.hora_chegada.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.hora_chegada.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.dias_semana.id_for_label }}" class="form-label fw-bold">
+                            Dias da Semana *
+                        </label>
+                        {{ form.dias_semana }}
+                        <div class="form-text">Ex: Segunda a Sexta, ou Seg, Qua, Sex</div>
+                        {% if form.dias_semana.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.dias_semana.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.distancia_total.id_for_label }}" class="form-label fw-bold">
+                                    Distância Total (km)
+                                </label>
+                                {{ form.distancia_total }}
+                                {% if form.distancia_total.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.distancia_total.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.combustivel_estimado.id_for_label }}" class="form-label fw-bold">
+                                    Combustível Estimado (L)
+                                </label>
+                                {{ form.combustivel_estimado }}
+                                {% if form.combustivel_estimado.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.combustivel_estimado.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.descricao.id_for_label }}" class="form-label fw-bold">
+                            Descrição
+                        </label>
+                        {{ form.descricao }}
+                        {% if form.descricao.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.descricao.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        {% if object %}
+                        <a href="{% url 'gestaocombustivel:detalhe_rota' object.id %}"
+                            class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                        {% else %}
+                        <a href="{% url 'gestaocombustivel:lista_rotas' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>
+                            {% if object %}Atualizar Rota{% else %}Criar Rota{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="combustivel-card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-info-circle text-primary me-2"></i>
+                    Informações Importantes
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Campos marcados com * são obrigatórios
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-car me-2 text-info"></i>
+                        Apenas viaturas activas e disponíveis
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-user me-2 text-info"></i>
+                        Apenas motoristas activos
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clock me-2 text-info"></i>
+                        Horas no formato 24h (HH:MM)
+                    </li>
+                </ul>
+            </div>
+
+            {% if object %}
+            <div class="combustivel-card p-4 mt-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-history me-2"></i>
+                    Informações da Rota
+                </h5>
+                <ul class="list-unstyled">
+                    {% if object.criado_por %}
+                    <li class="mb-2">
+                        <strong>Criada por:</strong><br>
+                        {{ object.criado_por.get_full_name|default:object.criado_por.username }}
+                    </li>
+                    {% endif %}
+                    <li class="mb-2">
+                        <strong>Data criação:</strong><br>
+                        {{ object.data_criacao|date:"d/m/Y H:i" }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>Status:</strong><br>
+                        {% if object.activa %}
+                        <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativa</span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Adicionar classes Bootstrap automaticamente
+    document.addEventListener('DOMContentLoaded', function () {
+        // Formatar selects
+        const selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+            select.classList.add('form-select');
+        });
+
+        // Formatar inputs de texto
+        const textInputs = document.querySelectorAll('input[type="text"]');
+        textInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+
+        // Formatar inputs numéricos
+        const numberInputs = document.querySelectorAll('input[type="number"]');
+        numberInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+
+        // Formatar inputs de tempo
+        const timeInputs = document.querySelectorAll('input[type="time"]');
+        timeInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+
+        // Formatar textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.classList.add('form-control');
+        });
+    });
+</script>
+{% endblock %}

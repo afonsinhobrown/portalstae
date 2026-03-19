@@ -1,0 +1,160 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Manuais e Normas - DFEC{% endblock %}
+
+{% block page_title %}Biblioteca de Manuais{% endblock %}
+{% block page_subtitle %}Gestão e Consulta de Manuais de Educação Cívica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .manual-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .manual-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .manual-icon {
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        font-size: 3rem;
+        color: #6c757d;
+    }
+
+    .manual-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form action="" method="get" class="d-flex gap-2">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por título ou código..."
+                value="{{ request.GET.q }}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+            </button>
+            {% if request.GET.q %}
+            <a href="{% url 'dfec:manuais_lista' %}" class="btn btn-outline-secondary">Limpar</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.dfec.add_manual %}
+        <a href="{% url 'dfec:manual_criar' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Novo Manual
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if manuais %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for manual in manuais %}
+    <div class="col">
+        <div class="card h-100 manual-card shadow-sm">
+            <span
+                class="badge manual-status {% if manual.status == 'PUBLICADO' %}bg-success{% elif manual.status == 'RASCUNHO' %}bg-warning text-dark{% elif manual.status == 'REVISAO' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                {{ manual.get_status_display|default:manual.status }}
+            </span>
+
+            <div class="manual-icon">
+                {% if manual.tipo == 'procedimento' %}
+                <i class="fas fa-cogs text-primary"></i>
+                {% elif manual.tipo == 'formacao' %}
+                <i class="fas fa-graduation-cap text-success"></i>
+                {% else %}
+                <i class="fas fa-book text-secondary"></i>
+                {% endif %}
+            </div>
+
+            <div class="card-body">
+                <h5 class="card-title text-truncate" title="{{ manual.titulo }}">{{ manual.titulo }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ manual.codigo }} <small>v{{ manual.versao }}</small></h6>
+                <p class="card-text small text-muted text-truncate">{{ manual.descricao|default:"Sem descrição." }}</p>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <small class="text-muted">
+                        <i class="far fa-calendar-alt me-1"></i>{{ manual.data_atualizacao|date:"d/m/Y" }}
+                    </small>
+                    <a href="{% url 'dfec:manual_detalhe' manual.pk %}" class="btn btn-sm btn-outline-primary">
+                        Detalhes
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex align-items-center small text-muted">
+                    <i class="fas fa-user-circle me-1"></i>
+                    {% if manual.criado_por %}
+                    {{ manual.criado_por.get_full_name|default:manual.criado_por.username }}
+                    {% else %}
+                    Sistema
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginação -->
+{% if is_paginated %}
+<nav aria-label="Navegação de páginas" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Anterior</span>
+        </li>
+        {% endif %}
+
+        {% for i in paginator.page_range %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
+        </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Próxima</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Próxima</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <div class="display-1 text-muted mb-3"><i class="fas fa-folder-open"></i></div>
+    <h3>Nenhum manual encontrado</h3>
+    <p class="text-muted">Comece criando um novo manual ou ajuste sua busca.</p>
+    {% if perms.dfec.add_manual %}
+    <a href="{% url 'dfec:manual_criar' %}" class="btn btn-primary mt-3">
+        <i class="fas fa-plus me-2"></i>Criar Primeiro Manual
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

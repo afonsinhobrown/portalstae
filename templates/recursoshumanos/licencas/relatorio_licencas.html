@@ -1,0 +1,413 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Relatório de Licenças • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Relatório de Licenças</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Relatórios</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="exportToExcel()">
+            <i class="fas fa-file-excel me-2"></i>Exportar Excel
+        </button>
+        <button class="btn btn-danger" onclick="exportToPDF()">
+            <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+        </button>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Ano</label>
+                <select name="ano" class="form-select">
+                    {% for ano_item in anos_disponiveis %}
+                    <option value="{{ ano_item }}" {% if ano_item == ano %}selected{% endif %}>
+                        {{ ano_item }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Setor</label>
+                <select name="setor" class="form-select">
+                    <option value="">Todos os Setores</option>
+                    {% for sector in sectores %}
+                    <option value="{{ sector.id }}" {% if sector.id|stringformat:"i" == setor_filter %}selected{% endif %}>
+                        {{ sector.codigo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tipo</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos os Tipos</option>
+                    <option value="ferias" {% if tipo_filter == 'ferias' %}selected{% endif %}>Férias</option>
+                    <option value="licenca_medica" {% if tipo_filter == 'licenca_medica' %}selected{% endif %}>Licença Médica</option>
+                    <option value="licenca_maternidade" {% if tipo_filter == 'licenca_maternidade' %}selected{% endif %}>Licença Maternidade</option>
+                    <option value="outro" {% if tipo_filter == 'outro' %}selected{% endif %}>Outro</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="pendente" {% if status_filter == 'pendente' %}selected{% endif %}>Pendente</option>
+                    <option value="aprovado" {% if status_filter == 'aprovado' %}selected{% endif %}>Aprovado</option>
+                    <option value="rejeitado" {% if status_filter == 'rejeitado' %}selected{% endif %}>Rejeitado</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-2"></i>Aplicar Filtros
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="text-primary">{{ total_licencas }}</h2>
+                <p class="text-muted mb-0">Total de Licenças</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="text-success">{{ licencas_aprovadas }}</h2>
+                <p class="text-muted mb-0">Licenças Aprovadas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="text-info">{{ total_dias }}</h2>
+                <p class="text-muted mb-0">Dias Totais</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos (simples) -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Licenças por Setor</h6>
+            </div>
+            <div class="card-body">
+                <div id="chartSetor" style="height: 250px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Licenças por Tipo</h6>
+            </div>
+            <div class="card-body">
+                <div id="chartTipo" style="height: 250px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Licenças -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lista de Licenças</h5>
+        <small class="text-muted">{{ licencas.count }} registros</small>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="licencasTable">
+                <thead>
+                    <tr>
+                        <th>Funcionário</th>
+                        <th>Setor</th>
+                        <th>Tipo</th>
+                        <th>Período</th>
+                        <th>Dias</th>
+                        <th>Status</th>
+                        <th>Solicitado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for licenca in licencas %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if licenca.funcionario.foto %}
+                                <img src="{{ licenca.funcionario.foto.url }}" alt="{{ licenca.funcionario.nome_completo }}" 
+                                     class="rounded-circle me-2" width="32" height="32">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
+                                     style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    {{ licenca.funcionario.nome_completo|slice:":1"|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ licenca.funcionario.nome_completo }}</strong><br>
+                                    <small class="text-muted">{{ licenca.funcionario.numero_identificacao }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ licenca.funcionario.sector.codigo }}
+                            </span>
+                        </td>
+                        <td>{{ licenca.get_tipo_display }}</td>
+                        <td>
+                            <small>
+                                {{ licenca.data_inicio|date:"d/m/Y" }}<br>
+                                {{ licenca.data_fim|date:"d/m/Y" }}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ licenca.dias_utilizados }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ licenca.status }}">
+                                {{ licenca.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ licenca.data_solicitacao|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'admin:recursoshumanos_licenca_change' licenca.id %}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if licenca.documento_ferias %}
+                                <a href="{{ licenca.documento_ferias.url }}" 
+                                   class="btn btn-outline-success" title="Documento" target="_blank">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="fas fa-calendar-alt fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhuma licença encontrada</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo Estatístico -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Distribuição por Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <td>Aprovadas</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {% widthratio licencas_aprovadas total_licencas 100 %}%">
+                                        {{ licencas_aprovadas }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Pendentes</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-warning" 
+                                         style="width: {% widthratio licencas_pendentes total_licencas 100 %}%">
+                                        {{ licencas_pendentes }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Rejeitadas</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-danger" 
+                                         style="width: {% widthratio licencas_rejeitadas total_licencas 100 %}%">
+                                        {{ licencas_rejeitadas }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>Distribuição Mensal
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="chartMensal" style="height: 200px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress-bar {
+        font-size: 0.8rem;
+        line-height: 20px;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        border-top: none;
+    }
+</style>
+
+<script>
+    // Simple chart using CSS
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart for Setor
+        const setorData = {
+            'TI': 15,
+            'RH': 8,
+            'Financeiro': 12,
+            'Operações': 20,
+            'Comercial': 5
+        };
+        
+        const setorChart = document.getElementById('chartSetor');
+        let setorHtml = '';
+        let maxSetor = Math.max(...Object.values(setorData));
+        
+        for (const [setor, valor] of Object.entries(setorData)) {
+            const width = (valor / maxSetor) * 100;
+            setorHtml += `
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>${setor}</small>
+                        <small>${valor}</small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" style="width: ${width}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+        setorChart.innerHTML = setorHtml;
+        
+        // Chart for Tipo
+        const tipoData = {
+            'Férias': 35,
+            'Licença Médica': 15,
+            'Licença Maternidade': 8,
+            'Outro': 2
+        };
+        
+        const tipoChart = document.getElementById('chartTipo');
+        let tipoHtml = '';
+        const colors = ['#28a745', '#17a2b8', '#ffc107', '#6c757d'];
+        let i = 0;
+        
+        for (const [tipo, valor] of Object.entries(tipoData)) {
+            tipoHtml += `
+                <div class="d-flex align-items-center mb-2">
+                    <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: ${colors[i]}"></div>
+                    <div class="flex-grow-1">
+                        <small>${tipo}</small>
+                    </div>
+                    <small class="fw-bold">${valor}</small>
+                </div>
+            `;
+            i++;
+        }
+        tipoChart.innerHTML = tipoHtml;
+        
+        // Monthly chart
+        const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const mensalData = [5, 8, 12, 7, 10, 15, 20, 18, 12, 9, 6, 4];
+        const mensalChart = document.getElementById('chartMensal');
+        
+        let mensalHtml = '<div class="d-flex align-items-end" style="height: 150px;">';
+        const maxMensal = Math.max(...mensalData);
+        
+        mensalData.forEach((valor, index) => {
+            const height = (valor / maxMensal) * 100;
+            mensalHtml += `
+                <div class="flex-fill text-center mx-1">
+                    <div class="bg-primary rounded-top" style="height: ${height}%;"></div>
+                    <small class="d-block mt-1">${meses[index]}</small>
+                </div>
+            `;
+        });
+        mensalHtml += '</div>';
+        mensalChart.innerHTML = mensalHtml;
+    });
+    
+    // Export functions
+    function exportToExcel() {
+        alert('Exportando para Excel...');
+        // Implementação real usando uma biblioteca como SheetJS
+    }
+    
+    function exportToPDF() {
+        alert('Exportando para PDF...');
+        // Implementação real usando jsPDF ou backend
+    }
+    
+    // Sort table
+    function sortTable(columnIndex) {
+        const table = document.getElementById('licencasTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        rows.sort((a, b) => {
+            const aText = a.cells[columnIndex].textContent.trim();
+            const bText = b.cells[columnIndex].textContent.trim();
+            
+            if (columnIndex === 4 || columnIndex === 6) {
+                // For numbers
+                return parseInt(aText) - parseInt(bText);
+            } else {
+                // For text
+                return aText.localeCompare(bText);
+            }
+        });
+        
+        // Reorder rows
+        rows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-clipboard-list{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: span 2;">{{ form.titulo.label_tag }}{{ form.titulo }}</div>
+            
+            <div class="form-group">{{ form.numero.label_tag }}{{ form.numero }}</div>
+            <div class="form-group">{{ form.tipo.label_tag }}{{ form.tipo }}</div>
+            
+            <div class="form-group">{{ form.valor_estimado.label_tag }}{{ form.valor_estimado }}</div>
+            <div class="form-group">{{ form.status.label_tag }}{{ form.status }}</div>
+            
+            <div class="form-group">{{ form.data_abertura.label_tag }}{{ form.data_abertura }}</div>
+            <div class="form-group">{{ form.data_encerramento.label_tag }}{{ form.data_encerramento }}</div>
+            
+            <div class="form-group" style="grid-column: span 2;">{{ form.descricao.label_tag }}{{ form.descricao }}</div>
+            
+            <div class="form-group" style="grid-column: span 2; background: #f9f9f9; padding: 10px; border: 1px dashed #ccc;">
+                <label>Documento do Anúncio (PDF)</label>
+                {{ form.documento_anuncio }}
+            </div>
+        </div>
+        <button type="submit" class="action-btn" style="margin-top:20px;">Salvar Processo</button>
+    </form>
+</div>
+<style>.form-control{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;margin-top:5px;}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}</style>
+{% endblock %}

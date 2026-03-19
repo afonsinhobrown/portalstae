@@ -1,0 +1,367 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{{ plano.nome }} - DFEC{% endblock %}
+{% block page_title %}{{ plano.nome }}{% endblock %}
+{% block page_subtitle %}Detalhes do Plano de Atividade{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'dfec:plano_formadores' plano.pk %}" class="btn btn-info text-white">
+        <i class="fas fa-users me-2"></i>Gerir Formadores
+    </a>
+    <a href="{% url 'dfec:plano_editar' plano.pk %}" class="btn btn-primary">
+        <i class="fas fa-edit me-2"></i>Editar
+    </a>
+    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+        <span class="visually-hidden">Menu</span>
+    </button>
+    <ul class="dropdown-menu">
+        {% if plano.status != 'executado' %}
+        <li>
+            <form method="post" action="{% url 'dfec:plano_executar' plano.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item">
+                    <i class="fas fa-play me-2"></i>Executar
+                </button>
+            </form>
+        </li>
+        {% endif %}
+
+        {% if plano.status == 'planejado' %}
+        <li>
+            <form method="post" action="{% url 'dfec:plano_aprovar' plano.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item">
+                    <i class="fas fa-check me-2"></i>Aprovar
+                </button>
+            </form>
+        </li>
+        {% endif %}
+
+        <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Gerar PDF</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li>
+            <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmDelete">
+                <i class="fas fa-trash me-2"></i>Excluir
+            </a>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 mb-4">
+
+        <ul class="nav nav-tabs mb-4" id="planoTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info"
+                    type="button"><i class="fas fa-info-circle me-2"></i>Informações</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="atividades-tab" data-bs-toggle="tab" data-bs-target="#atividades"
+                    type="button"><i class="fas fa-tasks me-2"></i>Atividades</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="calendario-tab" data-bs-toggle="tab" data-bs-target="#calendario"
+                    type="button"><i class="fas fa-calendar-alt me-2"></i>Calendário</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="planoTabsContent">
+
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 fw-bold text-primary">Dados do Plano</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>Código:</strong><br>
+                                            <span class="badge bg-secondary">{{ plano.codigo }}</span>
+                                        </p>
+                                        <p><strong>Nível:</strong><br>{{ plano.get_nivel_display }}</p>
+                                        {% if plano.nivel == 'PROVINCIAL' %}
+                                        <p><strong>Província:</strong><br>{{ plano.get_provincia_display }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Status:</strong><br>
+                                            <span class="badge bg-{% if plano.status == 'planejado' %}info{% elif plano.status == 'aprovado' %}success{% elif plano.status == 'executado' %}warning{% else %}secondary{% endif %}">
+                                                {{ plano.get_status_display|default:plano.status|upper }}
+                                            </span>
+                                        </p>
+                                        <p><strong>Período:</strong><br>
+                                            {{ plano.data_inicio_planeada|date:"d/m/Y"|default:"Não definido" }}
+                                            a
+                                            {{ plano.data_fim_planeada|date:"d/m/Y"|default:"Não definido" }}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>Orçamento:</strong><br>
+                                            <span class="fw-bold text-success">{{ plano.orcamento_planeado|default:0 }} MT</span>
+                                        </p>
+                                        <p><strong>Responsável:</strong><br>
+                                            {{ plano.responsavel_principal.get_full_name|default:plano.responsavel_principal.username }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {% if plano.descricao %}
+                                <hr>
+                                <h6>Descrição</h6>
+                                <p class="text-muted">{{ plano.descricao|linebreaks }}</p>
+                                {% endif %}
+
+                                {% if plano.objetivos_especificos %}
+                                <hr>
+                                <h6>Objetivos Específicos</h6>
+                                <p class="text-muted">{{ plano.objetivos_especificos|linebreaks }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 fw-bold text-primary">Progresso</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="progress mx-auto" style="height: 30px; width: 100%;">
+                                    {% with progresso=plano.progresso|default:0 %}
+                                    <div class="progress-bar {% if progresso >= 80 %}bg-success{% elif progresso >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                        role="progressbar" style="width: {{ progresso }}%;"
+                                        aria-valuenow="{{ progresso }}" aria-valuemin="0" aria-valuemax="100">
+                                        <strong>{{ progresso }}%</strong>
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                                <p class="mt-2 mb-0 text-muted">
+                                    {{ plano.atividades.count }} atividade{{ plano.atividades.count|pluralize }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="atividades" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold text-primary">Lista de Atividades</h6>
+                        <a href="{% url 'dfec:atividade_criar' plano.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>Nova Atividade
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Período</th>
+                                        <th>Responsável</th>
+                                        <th>Status</th>
+                                        <th style="width: 100px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for atividade in plano.atividades.all %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ atividade.nome }}</strong>
+                                            {% if atividade.descricao %}
+                                            <br><small class="text-muted">{{ atividade.descricao|truncatechars:50 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if atividade.data_inicio %}
+                                            {{ atividade.data_inicio|date:"d/m/Y" }}
+                                            {% else %}
+                                            <span class="text-muted">Não definido</span>
+                                            {% endif %}
+                                            {% if atividade.data_fim %}
+                                            <br><small>até {{ atividade.data_fim|date:"d/m/Y" }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if atividade.responsavel %}
+                                            {{ atividade.responsavel.get_full_name|default:atividade.responsavel.username }}
+                                            {% else %}
+                                            <span class="text-muted">Não definido</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% with status=atividade.status %}
+                                            <span class="badge bg-{% if status == 'concluido' %}success{% elif status == 'em_andamento' %}warning{% elif status == 'atrasado' %}danger{% elif status == 'cancelado' %}secondary{% else %}info{% endif %}">
+                                                {{ atividade.get_status_display|default:status }}
+                                            </span>
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'dfec:atividade_editar' atividade.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="confirmarExclusaoAtividade({{ atividade.id }}, '{{ atividade.nome }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-tasks fa-2x mb-2"></i><br>
+                                            Nenhuma atividade cadastrada.
+                                            <p class="mt-2">
+                                                <a href="{% url 'dfec:atividade_criar' plano.pk %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-plus me-1"></i>Criar primeira atividade
+                                                </a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="calendario" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Este calendário exibe exclusivamente as atividades do plano <strong>{{ plano.nome }}</strong>.
+                            Para ver todos os planos, acesse o <a href="{% url 'dfec:planos_lista' %}" class="alert-link">Diretório de Planos</a>.
+                        </div>
+                        <div id="calendar" style="height: 600px;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação de exclusão -->
+<div class="modal fade" id="confirmDelete" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este plano?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita. Todas as atividades associadas também serão excluídas.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'dfec:plano_excluir' plano.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulário oculto para exclusão de atividade -->
+<form id="formExcluirAtividade" method="post" style="display: none;">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+    // Função para confirmar exclusão de atividade
+    function confirmarExclusaoAtividade(atividadeId, atividadeNome) {
+        if (confirm(`Tem certeza que deseja excluir a atividade "${atividadeNome}"?`)) {
+            const form = document.getElementById('formExcluirAtividade');
+            form.action = `/dfec/atividades/${atividadeId}/excluir/`;
+            form.submit();
+        }
+    }
+
+    // Inicializar calendário
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+
+        // Configurar calendário
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt',
+            firstDay: 1, // Segunda-feira
+            buttonText: {
+                today: 'Hoje',
+                month: 'Mês',
+                week: 'Semana',
+                day: 'Dia',
+                list: 'Lista'
+            },
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek,listWeek'
+            },
+            navLinks: true,
+            editable: false,
+            dayMaxEvents: true,
+            events: {
+                url: "{% url 'dfec:api_eventos_calendario' %}?plano_id={{ plano.id }}",
+                method: 'GET',
+                failure: function (error) {
+                    console.error('Erro ao carregar eventos:', error);
+                    // Mostrar mensagem de erro no calendário
+                    calendar.addEvent({
+                        title: 'Erro ao carregar atividades',
+                        start: new Date(),
+                        allDay: true,
+                        backgroundColor: '#e74c3c',
+                        textColor: '#ffffff'
+                    });
+                }
+            },
+            eventClick: function (info) {
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                }
+            },
+            eventDidMount: function (info) {
+                // Adicionar tooltip com informações extras
+                if (info.event.extendedProps.responsavel) {
+                    info.el.title = `Responsável: ${info.event.extendedProps.responsavel}\nPlano: ${info.event.extendedProps.plano || 'Não definido'}`;
+                }
+            },
+            loading: function (isLoading) {
+                // Opcional: mostrar/ocultar indicador de carregamento
+            }
+        });
+
+        // Renderizar calendário
+        calendar.render();
+
+        // Quando a aba de calendário for mostrada, atualizar o tamanho
+        var tabEl = document.querySelector('button[data-bs-target="#calendario"]');
+        if (tabEl) {
+            tabEl.addEventListener('shown.bs.tab', function (event) {
+                setTimeout(function () {
+                    calendar.updateSize();
+                    calendar.refetchEvents(); // Recarregar eventos
+                }, 100);
+            });
+        }
+    });
+</script>
+{% endblock %}

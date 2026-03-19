@@ -1,0 +1,342 @@
+<!-- gestaocombustivel/templates/gestaocombustivel/seguros_list.html -->
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • Seguros de Viaturas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-shield-alt text-primary me-2"></i>
+                Seguros de Viaturas
+            </h1>
+            <small class="text-muted">Gestão de apólices e renovação de seguros</small>
+        </div>
+        <div>
+            <a href="{% url 'ugea:lista_contratos' %}" class="btn btn-outline-primary" target="_blank">
+                <i class="fas fa-external-link-alt me-2"></i>Gerir na UGEA
+            </a>
+            <a href="#" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="fas fa-filter me-2"></i>Filtros
+            </a>
+        </div>
+    </div>
+
+    <!-- Alertas de Seguros -->
+    {% if seguros_vencidos or seguros_a_vencer %}
+    <div class="row mb-4">
+        {% if seguros_vencidos %}
+        <div class="col-md-6">
+            <div class="alert alert-danger">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h5 class="mb-1">{{ seguros_vencidos|length }} Seguro(s) Vencido(s)</h5>
+                        <p class="mb-0">Renove urgentemente para evitar problemas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if seguros_a_vencer %}
+        <div class="col-md-6">
+            <div class="alert alert-warning">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clock fa-2x me-3"></i>
+                    <div>
+                        <h5 class="mb-1">{{ seguros_a_vencer|length }} Seguro(s) a Vencer</h5>
+                        <p class="mb-0">Renove nos próximos 30 dias</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Lista de Seguros -->
+    <div class="combustivel-card p-4">
+        {% if seguros %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Viatura</th>
+                        <th>Apólice</th>
+                        <th>Companhia</th>
+                        <th>Validade</th>
+                        <th>Prêmio</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seguro in seguros %}
+                    <tr class="{% if seguro.dias_para_vencimento <= 0 %}table-danger{% elif seguro.dias_para_vencimento <= 30 %}table-warning{% endif %}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle bg-primary text-white me-3">
+                                    {{ seguro.viatura.matricula|slice:":2" }}
+                                </div>
+                                <div>
+                                    <strong>{{ seguro.viatura.matricula }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ seguro.viatura.marca }} {{ seguro.viatura.modelo }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <code>{{ seguro.numero_apolice|truncatechars:15 }}</code>
+                            <br>
+                            <small class="text-muted">{{ seguro.get_tipo_seguro_display }}</small>
+                        </td>
+                        <td>
+                            {{ seguro.companhia_seguros|truncatechars:20 }}
+                            {% if seguro.agente_seguros %}
+                            <br><small class="text-muted">{{ seguro.agente_seguros|truncatechars:15 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="{% if seguro.dias_para_vencimento <= 0 %}text-danger{% elif seguro.dias_para_vencimento <= 30 %}text-warning{% endif %}">
+                                    <strong>{{ seguro.data_fim|date:"d/m/Y" }}</strong>
+                                </span>
+                                <small>
+                                    {% if seguro.dias_para_vencimento > 0 %}
+                                    <span class="badge {% if seguro.dias_para_vencimento <= 7 %}bg-danger{% elif seguro.dias_para_vencimento <= 30 %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ seguro.dias_para_vencimento }} dias
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger">
+                                        {% with dias_vencido=seguro.dias_para_vencimento|stringformat:"s" %}
+                                            Vencido há {{ dias_vencido|slice:"1:" }} dias
+                                        {% endwith %}
+                                    </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ seguro.premio_seguro|floatformat:2 }} MT</strong>
+                            {% if seguro.valor_segurado %}
+                            <br><small class="text-muted">Valor: {{ seguro.valor_segurado|floatformat:2 }} MT</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if seguro.activo %}
+                                {% if seguro.dias_para_vencimento > 0 %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Ativo
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Vencido
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-ban me-1"></i>Inativo
+                            </span>
+                            {% endif %}
+                            {% if seguro.renovacao_automatica %}
+                            <br><small class="text-muted"><i class="fas fa-sync-alt me-1"></i>Renovação automática</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="#" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if seguros.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if seguros.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ seguros.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for i in seguros.paginator.page_range %}
+                    {% if seguros.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if seguros.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ seguros.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-shield-alt fa-4x text-muted mb-3"></i>
+            <h5>Gestão de Seguros na UGEA</h5>
+            <p class="text-muted">Todos os seguros são geridos de forma centralizada.</p>
+            <a href="{% url 'ugea:lista_contratos' %}" class="btn btn-primary" target="_blank">
+                <i class="fas fa-external-link-alt me-2"></i>Ir para UGEA
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ total_seguros }}</h5>
+                        <small>Total Seguros</small>
+                    </div>
+                    <i class="fas fa-shield-alt fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ seguros_ativos }}</h5>
+                        <small>Seguros Ativos</small>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ seguros_a_vencer_count }}</h5>
+                        <small>A Vencer (30 dias)</small>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ seguros_vencidos_count }}</h5>
+                        <small>Seguros Vencidos</small>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Filtros -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-filter me-2"></i>
+                    Filtrar Seguros
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="get">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Viatura</label>
+                        <select name="viatura" class="form-select">
+                            <option value="">Todas as Viaturas</option>
+                            {% for viatura in viaturas %}
+                            <option value="{{ viatura.id }}"
+                                    {% if request.GET.viatura == viatura.id|stringformat:"i" %}selected{% endif %}>
+                                {{ viatura.matricula }} - {{ viatura.marca }} {{ viatura.modelo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="ativo" {% if request.GET.status == 'ativo' %}selected{% endif %}>Ativos</option>
+                            <option value="vencido" {% if request.GET.status == 'vencido' %}selected{% endif %}>Vencidos</option>
+                            <option value="a_vencer" {% if request.GET.status == 'a_vencer' %}selected{% endif %}>A Vencer</option>
+                            <option value="inativo" {% if request.GET.status == 'inativo' %}selected{% endif %}>Inativos</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tipo de Seguro</label>
+                        <select name="tipo" class="form-select">
+                            <option value="">Todos os Tipos</option>
+                            <option value="obrigatorio" {% if request.GET.tipo == 'obrigatorio' %}selected{% endif %}>Obrigatório</option>
+                            <option value="compreensivo" {% if request.GET.tipo == 'compreensivo' %}selected{% endif %}>Compreensivo</option>
+                            <option value="terceiros" {% if request.GET.tipo == 'terceiros' %}selected{% endif %}>Terceiros</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Data Início</label>
+                                <input type="date" name="data_inicio" class="form-control"
+                                       value="{{ request.GET.data_inicio }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Data Fim</label>
+                                <input type="date" name="data_fim" class="form-control"
+                                       value="{{ request.GET.data_fim }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}

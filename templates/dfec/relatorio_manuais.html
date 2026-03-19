@@ -1,0 +1,39 @@
+{% extends 'dfec/base.html' %}
+{% block title %}Relatório de Manuais - DFEC{% endblock %}
+{% block page_title %}Status dos Manuais de Instrução{% endblock %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Diretório de Manuais Técnicos</h6>
+        <button class="btn btn-sm btn-success" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> Gerar Relatório
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered datatable">
+                <thead>
+                    <tr>
+                        <th>Cód.</th>
+                        <th>Título</th>
+                        <th>Versão</th>
+                        <th>Status</th>
+                        <th>Autor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for manual in manuais %}
+                    <tr>
+                        <td>{{ manual.codigo }}</td>
+                        <td>{{ manual.titulo }}</td>
+                        <td>{{ manual.versao }}</td>
+                        <td><span class="badge bg-primary">{{ manual.get_status_display }}</span></td>
+                        <td>{{ manual.autor_principal.get_full_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

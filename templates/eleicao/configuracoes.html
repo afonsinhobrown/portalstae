@@ -1,0 +1,61 @@
+{% extends 'base_apps.html' %}
+{% block title %}Configurações de Eleição{% endblock %}
+{% block module_name %}ELEIÇÕES{% endblock %}
+{% block icon %}fas fa-cogs{% endblock %}
+{% block dashboard_url %}{% url 'eleicao:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3>Definições do Sistema Eleitoral</h3>
+    <p style="color: #666; font-size: 14px; margin-bottom: 25px;">
+        Gestão de parâmetros técnicos e limites legais para a eleição ativa.
+    </p>
+
+    {% if eleicao %}
+    <form method="post" action="{% url 'eleicao:editar_eleicao' eleicao.id %}" style="max-width: 600px;">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Eleição em Foco</label>
+            <input type="text" value="{{ eleicao.nome }}" disabled style="width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #f8f9fa;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Limite de Candidatos</label>
+                <input type="number" name="limite_candidatos" value="{{ eleicao.limite_candidatos }}" style="width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Vagas em Assembleia</label>
+                <input type="number" name="vagas_assembleia" value="{{ eleicao.vagas_assembleia }}" style="width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Percentagem para Apuramento (%)</label>
+            <input type="number" step="0.01" name="percentual_apuramento" value="{{ eleicao.percentual_apuramento|stringformat:'.2f' }}" style="width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Observações Legais / Lei Eleitoral</label>
+            <textarea name="obs_legais" style="width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 4px; height: 100px;">{{ eleicao.obs_legais }}</textarea>
+        </div>
+
+        <button type="submit" class="action-btn">Guardar Configurações</button>
+    </form>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #777;">
+        <i class="fas fa-exclamation-circle" style="font-size: 40px; margin-bottom: 15px;"></i>
+        <p>Ative uma eleição para gerir as suas configurações.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top: 30px; border-left: 4px solid #003366;">
+    <h4>Para que servem estas configurações?</h4>
+    <p style="margin-top: 10px; color: #555; line-height: 1.6;">
+        Este módulo permite definir as <strong>regras do jogo</strong>. 
+        Aqui configura os limites de candidatos por círculo, o número de mandatos em disputa, e os parâmetros 
+        técnicos que o sistema usará para as validações de candidaturas e apuramento.
+    </p>
+</div>
+{% endblock %}

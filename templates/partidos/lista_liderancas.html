@@ -1,0 +1,118 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Diretório de Lideranças{% endblock %}
+{% block module_name %}PARTIDOS{% endblock %}
+{% block icon %}fas fa-flag{% endblock %}
+{% block dashboard_url %}{% url 'partidos:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'partidos:lista_partidos' %}" class="menu-item"><i class="fas fa-list-ul"></i> <span>Lista de Partidos</span></a>
+<a href="{% url 'partidos:lista_liderancas' %}" class="menu-item active"><i class="fas fa-user-tie"></i> <span>Lideranças</span></a>
+<a href="{% url 'partidos:lista_documentos' %}" class="menu-item"><i class="fas fa-file-pdf"></i> <span>Documentação</span></a>
+<a href="#" class="menu-item"><i class="fas fa-history"></i> <span>Histórico</span></a>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div>
+        <h2 style="margin: 0; color: #1a202c; font-weight: 800;">Diretório de Mandatários e Lideranças</h2>
+        <p style="color: #718096; margin-top: 5px;">Acompanhamento dos representantes oficiais dos partidos políticos.</p>
+    </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden; border-radius: 15px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #edf2f7;">
+                <th style="padding: 15px 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Líder / Mandatário</th>
+                <th style="padding: 15px 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Cargo / Função</th>
+                <th style="padding: 15px 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Partido Político</th>
+                <th style="padding: 15px 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Período</th>
+                <th style="padding: 15px 25px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lider in liderancas %}
+            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='white'">
+                <td style="padding: 18px 25px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: #ebf4ff; color: #3182ce; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            {{ lider.nome|slice:":1" }}
+                        </div>
+                        <div style="font-weight: 700; color: #2d3748;">{{ lider.nome }}</div>
+                    </div>
+                </td>
+                <td style="padding: 18px 25px;">
+                    <span style="background: #fefcbf; color: #744210; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">{{ lider.get_cargo_display|default:lider.cargo }}</span>
+                </td>
+                <td style="padding: 18px 25px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 800; color: var(--primary);">{{ lider.partido.sigla }}</span>
+                        <span style="font-size: 0.8rem; color: #718096;">{{ lider.partido.nome_completo|truncatechars:40 }}</span>
+                    </div>
+                </td>
+                <td style="padding: 18px 25px; font-size: 0.85rem; color: #4a5568;">
+                    {{ lider.data_inicio|date:"M Y" }} - {% if lider.ativo %}Presente{% else %}{{ lider.data_fim|date:"M Y" }}{% endif %}
+                </td>
+                <td style="padding: 18px 25px;">
+                    {% if lider.ativo %}
+                    <span style="display: inline-flex; align-items: center; gap: 5px; color: #38a169; font-weight: 700; font-size: 0.8rem;">
+                        <span style="width: 8px; height: 8px; background: #38a169; border-radius: 50%;"></span> Em Exercício
+                    </span>
+                    {% else %}
+                    <span style="display: inline-flex; align-items: center; gap: 5px; color: #a0aec0; font-weight: 700; font-size: 0.8rem;">
+                         Anterior
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 50px; text-align: center; color: #a0aec0;">
+                    Nenhum histórico de liderança registado no sistema.
+                </td>
+            </tr>
+            {% endfor %}
+            
+            {% comment %} Adicionar também os presidentes atuais definidos no modelo Partido {% endcomment %}
+            {% for partido in partidos_com_presidente %}
+            <tr style="border-bottom: 1px solid #f1f5f9; background: #fdfdfd;">
+                <td style="padding: 18px 25px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: #edf2f7; color: #4a5568; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            {{ partido.presidente|slice:":1" }}
+                        </div>
+                        <div style="font-weight: 700; color: #2d3748;">{{ partido.presidente }}</div>
+                    </div>
+                </td>
+                <td style="padding: 18px 25px;">
+                    <span style="background: #ebf4ff; color: #2c5282; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">PRESIDENTE</span>
+                </td>
+                <td style="padding: 18px 25px;">
+                    <span style="font-weight: 800; color: var(--primary);">{{ partido.sigla }}</span>
+                </td>
+                <td style="padding: 18px 25px; font-size: 0.85rem; color: #a0aec0;">
+                    Informação Geral
+                </td>
+                <td style="padding: 18px 25px;">
+                    <span style="color: #38a169; font-weight: 700; font-size: 0.8rem;">● Actual</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card" style="margin-top: 30px; background: #fffaf0; border: 1px solid #feebc8; padding: 20px;">
+    <div style="display: flex; gap: 15px; align-items: flex-start;">
+        <i class="fas fa-info-circle" style="color: #dd6b20; font-size: 1.25rem;"></i>
+        <div>
+            <h4 style="margin: 0; color: #744210;">Nota sobre Liderança</h4>
+            <p style="margin: 5px 0 0; color: #975a16; font-size: 0.9rem;">
+                As lideranças listadas aqui são as oficiais comunicadas ao MJCR e STAE. 
+                Para alterar o representante oficial, é necessário anexar a acta de eleição em sede de congresso nacional.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAE Moçambique - Sistema Integrado de Gestão Eleitoral</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --dark: #1a252f;
+            --light: #ecf0f1;
+            --dfec-color: #9b59b6;
+            /* Nova cor para DFEC */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 3px solid var(--primary);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo-text .subtitle {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-dfec {
+            background: var(--dfec-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect fill="%23667eea" width="1200" height="800"/><path fill="%23764ba2" d="M0 0L1200 800H0V0Z"/></svg>');
+            background-size: cover;
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h2 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .hero-note {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Services Grid */
+        .services {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .service-card:nth-child(1)::before {
+            background: var(--primary);
+        }
+
+        .service-card:nth-child(2)::before {
+            background: var(--secondary);
+        }
+
+        .service-card:nth-child(3)::before {
+            background: var(--success);
+        }
+
+        .service-card:nth-child(4)::before {
+            background: var(--warning);
+        }
+
+        .service-card:nth-child(5)::before {
+            background: #e74c3c;
+        }
+
+        .service-card:nth-child(6)::before {
+            background: #1abc9c;
+        }
+
+        .service-card:nth-child(7)::before {
+            background: var(--dfec-color);
+        }
+
+        .service-card:nth-child(8)::before {
+            background: #34495e;
+        }
+
+        .service-card:nth-child(9)::before {
+            background: #e67e22;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .service-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+        }
+
+        .features li:before {
+            content: '✓';
+            color: var(--success);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* Stats Section */
+        .stats {
+            background: var(--primary);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-item h3 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero h2 {
+                font-size: 2.5rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .auth-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <img src="/media/stae/stae.png" alt="STAE Moçambique">
+                <div class="logo-text">
+                    <h1>STAE Moçambique</h1>
+                    <div class="subtitle">Secretariado Técnico de Administração Eleitoral</div>
+                </div>
+            </div>
+            <div class="auth-buttons">
+                <a href="/rh/accounts/login/" class="btn btn-success">
+                    <i class="fas fa-users"></i>Funcionários
+                </a>
+                <a href="/admin/" class="btn btn-primary">
+                    <i class="fas fa-cogs"></i>Administração
+                </a>
+                <a href="/portal-admin/" class="btn btn-secondary">
+                    <i class="fas fa-chart-bar"></i>Portal Admin
+                </a>
+                <a href="/dfec/" class="btn btn-dfec">
+                    <i class="fas fa-graduation-cap"></i>DFEC
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Plataforma Integrada de Gestão Eleitoral</h2>
+            <p>Sistema completo para administração, recursos humanos, equipamentos, combustível e credenciais do STAE
+                Moçambique</p>
+
+            <div class="hero-buttons">
+                <a href="#services" class="btn" style="background: white; color: var(--primary);">
+                    <i class="fas fa-search"></i>Explorar Serviços
+                </a>
+                <a href="/admin/" class="btn btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i>Aceder ao Sistema
+                </a>
+                <a href="/rh/accounts/login/" class="btn btn-success">
+                    <i class="fas fa-user-tie"></i>Área do Funcionário
+                </a>
+                <a href="/dfec/" class="btn btn-dfec">
+                    <i class="fas fa-graduation-cap"></i>Documentação e Formações
+                </a>
+            </div>
+
+            <p class="hero-note">
+                <strong>Funcionários:</strong> Aceda à sua área pessoal para férias, presenças e informações
+            </p>
+        </div>
+    </section>
+
+    <!-- Services Grid -->
+    <section class="services" id="services">
+        <div class="services-grid">
+            <!-- Administração -->
+            <div class="service-card">
+                <div class="service-icon">⚙️</div>
+                <h3>Sistema de Administração</h3>
+                <p>Gestão completa do sistema, utilizadores, permissões e configurações globais</p>
+                <ul class="features">
+                    <li>Gestão de Utilizadores e Permissões</li>
+                    <li>Configurações do Sistema</li>
+                    <li>Backups Automáticos</li>
+                    <li>Logs de Auditoria</li>
+                    <li>Monitorização do Sistema</li>
+                </ul>
+                <a href="/admin/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Portal Admin -->
+            <div class="service-card">
+                <div class="service-icon">📊</div>
+                <h3>Portal Administrativo</h3>
+                <p>Dashboard avançado com relatórios, estatísticas e ferramentas de gestão</p>
+                <ul class="features">
+                    <li>Dashboard Interativo</li>
+                    <li>Relatórios Avançados</li>
+                    <li>Importação de Dados</li>
+                    <li>Gestão de Templates</li>
+                    <li>Análise Estatística</li>
+                </ul>
+                <a href="/portal-admin/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Recursos Humanos -->
+            <div class="service-card">
+                <div class="service-icon">👥</div>
+                <h3>Recursos Humanos</h3>
+                <p>Gestão centralizada do capital humano, vida administrativa e ausências</p>
+                <ul class="features">
+                    <li>Cadastro Digital Único</li>
+                    <li>Estrutura Organizacional</li>
+                    <li>Gestão de Férias e Licenças</li>
+                    <li>Diretório de Contactos</li>
+                    <li>Histórico de Documentos</li>
+                </ul>
+                <a href="/rh/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Gestão de Equipamentos -->
+            <div class="service-card">
+                <div class="service-icon">💻</div>
+                <h3>Gestão de Equipamentos</h3>
+                <p>Inventário, rastreio de ativos e movimentação de bens institucionais</p>
+                <ul class="features">
+                    <li>Inventário Permanente</li>
+                    <li>Movimentação entre Setores</li>
+                    <li>Gestão de Armazéns</li>
+                    <li>Atribuição de Responsabilidade</li>
+                    <li>Rastreio de Ativos Fixos</li>
+                </ul>
+                <a href="/equipamentos/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Gestão de Combustível -->
+            <div class="service-card">
+                <div class="service-icon">⛽</div>
+                <h3>Gestão de Combustível</h3>
+                <p>Controlo de abastecimentos, gestão de contratos e manutenção da frota</p>
+                <ul class="features">
+                    <li>Requisição de Combustível</li>
+                    <li>Gestão de Contratos de Abastecimento</li>
+                    <li>Controlo de Frota e Viaturas</li>
+                    <li>Manutenção e Seguros</li>
+                    <li>Histórico de Abastecimentos</li>
+                </ul>
+                <a href="/combustivel/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Credenciais -->
+            <div class="service-card">
+                <div class="service-icon">🪪</div>
+                <h3>Sistema de Credenciais</h3>
+                <p>Emissão de identificação para observadores, imprensa e técnicos</p>
+                <ul class="features">
+                    <li>Pedidos Remotos de Credenciais</li>
+                    <li>Emissão com Modelos Adaptáveis</li>
+                    <li>Verificação por QR Code</li>
+                    <li>Rastreio de Pedidos</li>
+                    <li>Gestão de Solicitantes</li>
+                </ul>
+                <a href="/credenciais/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- DFEC - Documentação, Formações, Eleições e Censos -->
+            <div class="service-card">
+                <div class="service-icon">📚</div>
+                <h3>DFEC - Documentação e Formações</h3>
+                <p>Gestão técnica de manuais, capacitação massiva e análise eleitoral</p>
+                <ul class="features">
+                    <li>Biblioteca Digital de Manuais</li>
+                    <li>Gestão de Cursos e Formações</li>
+                    <li>Análise de Dados Eleitorais</li>
+                    <li>Gestão de Brigadas de Terreno</li>
+                    <li>Relatórios de Educação Cívica</li>
+                    <li>Estatísticas de Capacitação</li>
+                </ul>
+                <a href="/dfec/" class="btn" style="background: var(--dfec-color); color: white;">Aceder ao DFEC</a>
+            </div>
+
+            <!-- Portal STAE Público -->
+            <div class="service-card">
+                <div class="service-icon">🌐</div>
+                <h3>Portal STAE Público</h3>
+                <p>Site institucional com notícias, resultados eleitorais e informações ao cidadão</p>
+                <ul class="features">
+                    <li>Notícias e Actualizações</li>
+                    <li>Resultados Eleitorais em Tempo Real</li>
+                    <li>Informações ao Cidadão</li>
+                    <li>Galerias de Imagens</li>
+                    <li>Documentos Públicos</li>
+                </ul>
+                <a href="/site/" class="btn btn-primary">Acessar Portal</a>
+            </div>
+
+            <!-- Chatbot -->
+            <div class="service-card">
+                <div class="service-icon">🤖</div>
+                <h3>Chatbot de Suporte</h3>
+                <p>Assistente virtual para dúvidas sobre processos eleitorais e serviços</p>
+                <ul class="features">
+                    <li>Atendimento 24/7</li>
+                    <li>Dúvidas sobre Eleições</li>
+                    <li>Informações de Serviços</li>
+                    <li>Suporte Automatizado</li>
+                    <li>Multiplataforma</li>
+                </ul>
+                <a href="/chatbot/" class="btn btn-primary">Falar com Bot</a>
+            </div>
+
+            <!-- UGEA -->
+            <div class="service-card">
+                <div class="service-icon">📋</div>
+                <h3>UGEA - Concursos Públicos</h3>
+                <p>Gestão completa de licitações e procurement institucional</p>
+                <ul class="features">
+                    <li>Anúncios de Concursos</li>
+                    <li>Caderno de Encargos</li>
+                    <li>Avaliação de Propostas</li>
+                    <li>Gestão de Júris</li>
+                    <li>Acompanhamento de Execução</li>
+                </ul>
+                <a href="/ugea/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Partidos -->
+            <div class="service-card">
+                <div class="service-icon">🎯</div>
+                <h3>Partidos Políticos</h3>
+                <p>Cadastro e gestão de partidos políticos</p>
+                <ul class="features">
+                    <li>Cadastro de Partidos</li>
+                    <li>Símbolos e Identidade Visual</li>
+                    <li>Liderança e Estrutura</li>
+                    <li>Documentação Legal</li>
+                    <li>Histórico de Atividades</li>
+                </ul>
+                <a href="/partidos/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Círculos Eleitorais -->
+            <div class="service-card">
+                <div class="service-icon">🗺️</div>
+                <h3>Círculos Eleitorais</h3>
+                <p>Gestão de círculos, postos e mesas de votação</p>
+                <ul class="features">
+                    <li>Cadastro de Círculos</li>
+                    <li>Postos de Votação</li>
+                    <li>Mesas Eleitorais</li>
+                    <li>Número de Eleitores</li>
+                    <li>Estatísticas por Círculo</li>
+                </ul>
+                <a href="/circulos/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Eleições -->
+            <div class="service-card">
+                <div class="service-icon">🗳️</div>
+                <h3>Gestão de Eleições</h3>
+                <p>Configuração e gestão de processos eleitorais</p>
+                <ul class="features">
+                    <li>Tipos de Eleição</li>
+                    <li>Configurações Específicas</li>
+                    <li>Calendário Eleitoral</li>
+                    <li>Parâmetros de Votação</li>
+                    <li>Gestão de Eventos</li>
+                </ul>
+                <a href="/eleicao/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Candidaturas -->
+            <div class="service-card">
+                <div class="service-icon">📝</div>
+                <h3>Candidaturas</h3>
+                <p>Inscrições de partidos e gestão de listas</p>
+                <ul class="features">
+                    <li>Inscrição de Partidos</li>
+                    <li>Listas de Candidatos</li>
+                    <li>Titulares e Suplentes</li>
+                    <li>Validação de Documentos</li>
+                    <li>Relatórios Estatísticos</li>
+                </ul>
+                <a href="/candidaturas/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- RS - Logística -->
+            <div class="service-card">
+                <div class="service-icon">📦</div>
+                <h3>RS - Recenseamento & Logística</h3>
+                <p>Planejamento completo do processo eleitoral</p>
+                <ul class="features">
+                    <li>Dados de Recenseamento</li>
+                    <li>Planos Logísticos</li>
+                    <li>Gestão de Orçamentos</li>
+                    <li>Documentos Eleitorais</li>
+                    <li>Produção de Materiais</li>
+                </ul>
+                <a href="/rs/" class="btn btn-primary">Aceder</a>
+            </div>
+
+            <!-- Apuramento -->
+            <div class="service-card">
+                <div class="service-icon">📊</div>
+                <h3>Apuramento de Resultados</h3>
+                <p>Gestão e publicação de resultados eleitorais</p>
+                <ul class="features">
+                    <li>Resultados por Mesa</li>
+                    <li>Resumos Distritais</li>
+                    <li>Resultados Nacionais</li>
+                    <li>Publicação em Tempo Real</li>
+                    <li>Atas de Apuramento</li>
+                </ul>
+                <a href="/apuramento/" class="btn btn-primary">Aceder</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>16</h3>
+                <p>Módulos Integrados</p>
+            </div>
+            <div class="stat-item">
+                <h3>100%</h3>
+                <p>Cobertura de Processos</p>
+            </div>
+            <div class="stat-item">
+                <h3>24/7</h3>
+                <p>Disponibilidade</p>
+            </div>
+            <div class="stat-item">
+                <h3>SSL</h3>
+                <p>Segurança Máxima</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <h3>STAE Moçambique - Secretariado Técnico de Administração Eleitoral</h3>
+            <p>Sistema desenvolvido para garantir transparência e eficiência nos processos eleitorais de Moçambique</p>
+            <div style="margin: 2rem 0;">
+                <h4>Módulos do Sistema</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                    <span
+                        style="background: var(--primary); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Administração</span>
+                    <span
+                        style="background: var(--secondary); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Portal
+                        Admin</span>
+                    <span
+                        style="background: var(--success); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Recursos
+                        Humanos</span>
+                    <span
+                        style="background: var(--warning); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Equipamentos</span>
+                    <span
+                        style="background: #e74c3c; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Combustível</span>
+                    <span
+                        style="background: #1abc9c; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Credenciais</span>
+                    <span
+                        style="background: var(--dfec-color); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">DFEC</span>
+                    <span
+                        style="background: #34495e; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Portal
+                        Público</span>
+                    <span
+                        style="background: #e67e22; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">Chatbot</span>
+                </div>
+            </div>
+            <p style="margin-top: 2rem; opacity: 0.8;">&copy; {% now "Y" %} STAE Moçambique - Todos os direitos
+                reservados</p>
+        </div>
+    </footer>
+</body>
+
+</html>

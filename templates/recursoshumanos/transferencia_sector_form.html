@@ -1,0 +1,242 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Transferência de Setor • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Transferência de Setor</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_funcionarios' %}">Funcionários</a></li>
+                <li class="breadcrumb-item active">Transferir Setor</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-building me-2 text-primary"></i>Transferir Funcionário de Setor
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Informações do Funcionário -->
+                <div class="mb-4 p-3 bg-light rounded">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                {{ funcionario.nome_completo|slice:":1" }}
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h5 class="fw-bold">{{ funcionario.nome_completo }}</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Nº Identificação</small>
+                                    <p class="fw-bold">{{ funcionario.numero_identificacao }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Setor Atual</small>
+                                    <p class="fw-bold">{{ funcionario.sector.nome }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Código</small>
+                                    <p class="fw-bold">{{ funcionario.sector.codigo }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Setor de Origem</label>
+                                <div class="p-3 bg-light rounded">
+                                    <h5 class="fw-bold text-primary">{{ funcionario.sector.nome }}</h5>
+                                    <p class="mb-0 text-muted">
+                                        {{ funcionario.sector.get_tipo_display }} • 
+                                        {{ funcionario.sector.provincia|default:"Nacional" }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Novo Setor *</label>
+                                <select name="sector_destino" class="form-select" required>
+                                    <option value="">Selecione o novo setor...</option>
+                                    {% for sector in sectores %}
+                                    <option value="{{ sector.id }}">
+                                        {{ sector.codigo }} - {{ sector.nome }} 
+                                        ({{ sector.get_tipo_display }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Data Efetiva da Transferência *</label>
+                                <input type="date" name="data_efectiva" class="form-control" 
+                                       value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tipo de Transferência</label>
+                                <select class="form-select" disabled>
+                                    <option>Definitiva</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Motivo da Transferência *</label>
+                        <textarea name="motivo" class="form-control" rows="4" 
+                                  placeholder="Descreva o motivo da transferência de setor..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Observações Adicionais (opcional)</label>
+                        <textarea name="observacoes" class="form-control" rows="3" 
+                                  placeholder="Adicione observações relevantes..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Informação</h5>
+                                <p class="mb-0">
+                                    Esta transferência será aplicada imediatamente após aprovação.
+                                    O funcionário será movido para o novo setor na data especificada.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{% url 'recursoshumanos:lista_funcionarios' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Tem certeza que deseja transferir este funcionário de setor?')">
+                            <i class="fas fa-save me-2"></i>Registar Transferência
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Histórico de Transferências -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history me-2 text-info"></i>Histórico de Transferências
+                </h5>
+            </div>
+            <div class="card-body">
+                {% with historico=funcionario.transferencias.all|slice:":3" %}
+                {% if historico %}
+                <div class="list-group list-group-flush">
+                    {% for transferencia in historico %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-{% if transferencia.status == 'aprovada' %}success{% else %}warning{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">{{ transferencia.sector_origem.codigo }} → {{ transferencia.sector_destino.codigo }}</h6>
+                                <small class="text-muted">{{ transferencia.data_efectiva|date:"d/m/Y" }}</small>
+                                <p class="mb-0 text-muted small">{{ transferencia.motivo|truncatechars:50 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-exchange-alt fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Sem transferências anteriores</p>
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'recursoshumanos:historico_funcionario' funcionario.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>Ver Histórico Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Setor Atual -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2 text-success"></i>Setor Atual
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold">{{ funcionario.sector.nome }}</h6>
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-code me-1"></i> {{ funcionario.sector.codigo }}
+                    </p>
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-tag me-1"></i> {{ funcionario.sector.get_tipo_display }}
+                    </p>
+                    {% if funcionario.sector.provincia %}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-map-marker-alt me-1"></i> {{ funcionario.sector.provincia }}
+                    </p>
+                    {% endif %}
+                    {% if funcionario.sector.parent %}
+                    <p class="text-muted small">
+                        <i class="fas fa-level-up-alt me-1"></i> Subordinado a: {{ funcionario.sector.parent.nome }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'recursoshumanos:criar_mudanca_categoria' funcionario.id %}" class="btn btn-outline-info">
+                        <i class="fas fa-exchange-alt me-2"></i>Alterar Categoria
+                    </a>
+                    <a href="{% url 'recursoshumanos:avaliar_desempenho' funcionario.id %}" class="btn btn-outline-warning">
+                        <i class="fas fa-star me-2"></i>Avaliar Desempenho
+                    </a>
+                    <a href="{% url 'admin:recursoshumanos_funcionario_change' funcionario.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog me-2"></i>Editar Funcionário
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

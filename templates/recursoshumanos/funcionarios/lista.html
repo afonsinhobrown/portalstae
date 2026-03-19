@@ -1,0 +1,171 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Funcionários • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Funcionários</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Funcionários</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'recursoshumanos:criar_funcionario' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Novo Funcionário
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Setor</label>
+                <select name="setor" class="form-select">
+                    <option value="">Todos os Setores</option>
+                    {% for sector in sectores %}
+                    <option value="{{ sector.id }}" {% if sector.id|stringformat:"i" == setor_filter %}selected{% endif %}>
+                        {{ sector.codigo }} - {{ sector.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="ativos" {% if status_filter == 'ativos' %}selected{% endif %}>Ativos</option>
+                    <option value="inativos" {% if status_filter == 'inativos' %}selected{% endif %}>Inativos</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela de Funcionários -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Identificação</th>
+                        <th>Setor</th>
+                        <th>Função</th>
+                        <th>Admissão</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for funcionario in funcionarios %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if funcionario.foto %}
+                                <img src="{{ funcionario.foto.url }}" alt="{{ funcionario.nome_completo }}" 
+                                     class="rounded-circle me-3" width="40" height="40">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    {{ funcionario.nome_completo|slice:":1"|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ funcionario.nome_completo }}</strong><br>
+                                    <small class="text-muted">{{ funcionario.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ funcionario.numero_identificacao }}</td>
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ funcionario.sector.nome }}
+                            </span>
+                        </td>
+                        <td>{{ funcionario.get_funcao_display }}</td>
+                        <td>{{ funcionario.data_admissao|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if funcionario.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'recursoshumanos:detalhes_funcionario' funcionario.id %}" 
+                                   class="btn btn-outline-primary" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'recursoshumanos:avaliar_funcionario' funcionario.id %}" 
+                                   class="btn btn-outline-warning" title="Avaliar">
+                                    <i class="fas fa-star"></i>
+                                </a>
+                               <a href="{% url 'recursoshumanos:gerar_cartao_html_pdf' funcionario.id %}"
+   class="btn btn-outline-info" title="Cartão">
+    <i class="fas fa-id-card"></i>
+</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Nenhum funcionário encontrado</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        {% if funcionarios.has_other_pages %}
+        <nav aria-label="Paginação" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if funcionarios.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ funcionarios.previous_page_number }}{% if setor_filter %}&setor={{ setor_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Anterior
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for i in funcionarios.paginator.page_range %}
+                {% if funcionarios.number == i %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if setor_filter %}&setor={{ setor_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        {{ i }}
+                    </a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if funcionarios.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ funcionarios.next_page_number }}{% if setor_filter %}&setor={{ setor_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Próxima
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

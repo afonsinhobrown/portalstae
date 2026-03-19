@@ -1,0 +1,91 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{% if brigada %}Editar{% else %}Nova{% endif %} Brigada - DFEC{% endblock %}
+{% block page_title %}{% if brigada %}Editar Brigada #{{ brigada.codigo }}{% else %}Criar Nova Brigada{% endif %}{%
+endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-light">
+                <h6 class="m-0 font-weight-bold text-primary">Formulário de Registo de Brigada</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" class="row">
+                    {% csrf_token %}
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Código da Brigada</label>
+                        {{ form.codigo }}
+                        {% if form.codigo.errors %}<div class="text-danger small">{{ form.codigo.errors }}</div>{% endif
+                        %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Formação Associada</label>
+                        {{ form.formacao }}
+                        {% if form.formacao.errors %}<div class="text-danger small">{{ form.formacao.errors }}</div>{%
+                        endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Província</label>
+                        {{ form.provincia }}
+                        {% if form.provincia.errors %}<div class="text-danger small">{{ form.provincia.errors }}</div>{%
+                        endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Distrito</label>
+                        {{ form.distrito }}
+                        {% if form.distrito.errors %}<div class="text-danger small">{{ form.distrito.errors }}</div>{%
+                        endif %}
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">Localidade / Posto (Opcional)</label>
+                        {{ form.localidade }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold font-sm">Supervisor</label>
+                        {{ form.supervisor }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold font-sm">Digitador</label>
+                        {{ form.digitador }}
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-bold font-sm">Entrevistador</label>
+                        {{ form.entrevistador }}
+                    </div>
+
+                    <div class="col-12 mt-4 d-flex justify-content-between">
+                        <a href="{% url 'dfec:brigada_lista' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="fas fa-save me-2"></i>{% if brigada %}Atualizar Brigada{% else %}Criar Brigada{%
+                            endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+    }
+
+    .font-sm {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}

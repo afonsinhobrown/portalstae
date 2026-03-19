@@ -1,0 +1,48 @@
+{% extends 'base_apps.html' %}
+{% block title %}Editor - Anúncio de Concurso{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-bullhorn{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #2196f3;">
+        <h3 style="margin:0;">Gerador de Anúncio</h3>
+        <p style="margin:5px 0 0 0; color: #666;">Configure os dados para gerar o anúncio oficial para publicação no Jornal ou Web.</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="grid-2">
+            <div>
+                <label>Preço do Caderno (MT)</label>
+                {{ form.preco_caderno }}
+            </div>
+            <div>
+                <label>Local de Entrega</label>
+                {{ form.local_entrega }}
+            </div>
+        </div>
+        
+        <div style="margin-top:20px;">
+            <label>Texto do Anúncio (Editável)</label>
+            {{ form.texto_anuncio }}
+        </div>
+
+        <div class="action-bar">
+            <a href="{% url 'ugea:detalhe_concurso' concurso.id %}" class="btn-cancel">Cancelar</a>
+            <button type="submit" class="action-btn">Salvar Alterações</button>
+            <a href="{% url 'ugea:imprimir_anuncio' concurso.id %}" target="_blank" class="action-btn secondary"><i class="fas fa-print"></i> Visualizar/Imprimir</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .action-bar { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .btn-cancel { padding: 10px 20px; color: #666; text-decoration: none; border: 1px solid #ddd; border-radius: 5px; }
+    .action-btn { padding: 12px 25px; cursor: pointer; border: none; background: var(--primary); color: white; border-radius: 5px; text-decoration: none; display: inline-block;}
+    .secondary { background: #6c757d; }
+</style>
+{% endblock %}

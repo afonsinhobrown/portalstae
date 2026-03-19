@@ -1,0 +1,80 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • Adicionar Funcionário à Rota{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="combustivel-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-user-plus text-primary me-2"></i>
+                        Adicionar Funcionário à Rota: {{ rota.nome_rota }}
+                    </h1>
+                    <a href="{% url 'gestaocombustivel:detalhe_rota' rota.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar à Rota
+                    </a>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Funcionário *</label>
+                                <select name="funcionario" class="form-select" required>
+                                    <option value="">Selecione um funcionário...</option>
+                                    {% for funcionario in funcionarios %}
+                                    <option value="{{ funcionario.id }}">
+                                        {{ funcionario.nome_completo }} ({{ funcionario.numero_agente|default:"N/A" }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Apenas funcionários ativos não adicionados à rota</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Ponto de Embarque *</label>
+                                <select name="ponto_embarque" class="form-select" required>
+                                    <option value="">Selecione um ponto...</option>
+                                    {% for ponto in pontos %}
+                                    <option value="{{ ponto.id }}" 
+                                        {% if ponto_id and ponto.id|stringformat:"s" == ponto_id|stringformat:"s" %}
+                                            selected
+                                        {% endif %}>
+                                        {{ ponto.nome_ponto }} ({{ ponto.get_tipo_ponto_display }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Ponto onde o funcionário embarca</div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Nota:</strong> O funcionário será adicionado à rota para os próximos dias.
+                                Para remover, edite a rota posteriormente.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <a href="{% url 'gestaocombustivel:detalhe_rota' rota.id %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Adicionar à Rota
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

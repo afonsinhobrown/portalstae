@@ -1,0 +1,40 @@
+{% extends 'dfec/base.html' %}
+{% block title %}Relatório de Atividades - DFEC{% endblock %}
+{% block page_title %}Atividades Executadas e Concluídas{% endblock %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Histórico de Execução</h6>
+        <button class="btn btn-sm btn-success" onclick="window.print()">
+            <i class="fas fa-file-excel me-1"></i> Exportar Histórico
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered datatable">
+                <thead>
+                    <tr>
+                        <th>Cód. Plano</th>
+                        <th>Plano</th>
+                        <th>Datas</th>
+                        <th>Orçamento Final</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plano in planos %}
+                    <tr>
+                        <td>{{ plano.codigo }}</td>
+                        <td>{{ plano.nome }}</td>
+                        <td>{{ plano.data_inicio_planeada|date:"d/m/Y" }} - {{ plano.data_fim_planeada|date:"d/m/Y" }}
+                        </td>
+                        <td>{{ plano.orcamento_planeado }} MT</td>
+                        <td><span class="badge bg-dark">{{ plano.status|upper }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

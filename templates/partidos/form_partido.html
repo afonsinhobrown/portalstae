@@ -1,0 +1,219 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}PARTIDOS{% endblock %}
+{% block icon %}fas fa-flag{% endblock %}
+{% block dashboard_url %}{% url 'partidos:dashboard' %}{% endblock %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<style>
+    .premium-form-container {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .form-section-title {
+        color: #1a202c;
+        font-weight: 700;
+        font-size: 1.25rem;
+        margin-bottom: 25px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    .premium-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.2s;
+        background: #f8fafc;
+    }
+    .premium-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+    }
+    .help-text {
+        color: #718096;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="premium-form-container">
+    <div style="margin-bottom: 30px;">
+        <h2 style="margin: 0; color: var(--primary);">{{ titulo }}</h2>
+        <p style="color: #718096; margin-top: 5px;">Preencha os dados oficiais do partido político.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div style="background: #fff5f5; color: #c53030; padding: 20px; border-radius: 12px; margin-bottom: 30px; border-left: 5px solid #fc8181;">
+            <p><strong><i class="fas fa-exclamation-circle me-2"></i> Por favor corrija os erros abaixo:</strong></p>
+            <ul style="margin-bottom: 0; padding-left: 20px;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
+            <!-- Identificação -->
+            <div style="grid-column: span 2;">
+                <div class="form-section-title">
+                    <i class="fas fa-id-card text-primary"></i> Identificação e Registo
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Sigla do Partido</label>
+                {{ form.sigla }}
+                <div class="help-text">Ex: FRELIMO, RENAMO, MDM</div>
+            </div>
+            <div class="form-group">
+                <label>Número de Registo (MJCR)</label>
+                {{ form.numero_registo }}
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Nome Completo da Agremiação Político</label>
+                {{ form.nome_completo }}
+            </div>
+
+            <div class="form-group">
+                <label>Data de Fundação</label>
+                {{ form.data_fundacao }}
+            </div>
+            <div class="form-group">
+                <label>Data de Registo Oficial</label>
+                {{ form.data_registo }}
+            </div>
+
+            <!-- Liderança -->
+            <div style="grid-column: span 2; margin-top: 15px;">
+                <div class="form-section-title">
+                    <i class="fas fa-user-tie text-primary"></i> Liderança Actual
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Presidente do Partido</label>
+                {{ form.presidente }}
+            </div>
+            <div class="form-group">
+                <label>Secretário-Geral</label>
+                {{ form.secretario_geral }}
+            </div>
+
+            <!-- Identidade Visual -->
+            <div style="grid-column: span 2; margin-top: 15px;">
+                <div class="form-section-title">
+                    <i class="fas fa-palette text-primary"></i> Identidade Visual
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Cor Primária</label>
+                {{ form.cor_primaria }}
+            </div>
+            <div class="form-group">
+                <label>Cor Secundária</label>
+                {{ form.cor_secundaria }}
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Símbolo / Bandeira (Upload)</label>
+                <div style="background: #f8fafc; border: 2px dashed #e2e8f0; padding: 20px; border-radius: 12px; text-align: center;">
+                    {{ form.simbolo }}
+                    <div class="help-text mt-2"><i class="fas fa-cloud-upload-alt me-1"></i> Formatos aceites: PNG, JPG (Max 2MB)</div>
+                </div>
+            </div>
+
+            <!-- Sede e Contactos -->
+            <div style="grid-column: span 2; margin-top: 15px;">
+                <div class="form-section-title">
+                    <i class="fas fa-map-marker-alt text-primary"></i> Sede e Contactos
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email Oficial</label>
+                {{ form.email }}
+            </div>
+            <div class="form-group">
+                <label>Telefone de Contacto</label>
+                {{ form.telefone }}
+            </div>
+            <div class="form-group">
+                <label>Website / Redes Sociais</label>
+                {{ form.website }}
+            </div>
+            <div class="form-group">
+                <label>Província da Sede</label>
+                {{ form.provincia_sede }}
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Endereço Físico Detalhado</label>
+                {{ form.endereco_sede }}
+            </div>
+
+            <!-- Documentação -->
+            <div style="grid-column: span 2; margin-top: 15px;">
+                <div class="form-section-title">
+                    <i class="fas fa-file-invoice text-primary"></i> Documentação e Notas
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Estatutos em PDF</label>
+                {{ form.estatutos }}
+            </div>
+            <div class="form-group">
+                <label>Manifesto Eleitoral / Programa</label>
+                {{ form.manifesto }}
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Notas Internas e Observações</label>
+                {{ form.notas }}
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; display: flex; gap: 15px; border-top: 1px solid #edf2f7; pt-4; padding-top: 25px;">
+            <button type="submit" class="action-btn" style="border: none; cursor: pointer; padding: 12px 30px; font-weight: 700;">
+                <i class="fas fa-save me-2"></i> REGISTAR PARTIDO
+            </button>
+            <a href="{% url 'partidos:dashboard' %}" class="action-btn" style="background: #a0aec0; padding: 12px 30px;">
+                CANCELAR
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Aplicar classes premium dinamicamente
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        if (!el.classList.contains('form-control-color')) {
+            el.classList.add('premium-input');
+        }
+    });
+</script>
+{% endblock %}

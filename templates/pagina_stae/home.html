@@ -1,0 +1,168 @@
+<!-- templates/pagina_stae/home.html -->
+{% extends 'pagina_stae/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <section class="gradient-bg rounded-2xl text-white p-8 mb-12 shadow-2xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+                <h1 class="text-4xl lg:text-5xl font-bold mb-6">STAE Moçambique</h1>
+                <p class="text-xl text-blue-100 mb-8">Transparência e Democracia nos Processos Eleitorais</p>
+
+                <div class="flex flex-wrap gap-4">
+                    <a href="{% url 'pagina_stae:noticias' %}"
+                       class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                        <i class="fas fa-newspaper mr-2"></i>Últimas Notícias
+                    </a>
+                    <a href="{% url 'pagina_stae:servicos' %}"
+                       class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition">
+                        <i class="fas fa-briefcase mr-2"></i>Nossos Serviços
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <i class="fas fa-vote-yea text-8xl text-white/80"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notícias em Destaque -->
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800">Notícias em Destaque</h2>
+            <a href="{% url 'pagina_stae:noticias' %}" class="text-blue-600 hover:text-blue-700 font-semibold">
+                Ver Todas <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for noticia in noticias_destaque %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                {% if noticia.imagem_destaque %}
+                <img src="{{ noticia.imagem_destaque.url }}" alt="{{ noticia.titulo }}"
+                     class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-newspaper text-4xl text-gray-400"></i>
+                </div>
+                {% endif %}
+
+                <div class="p-6">
+                    {% if noticia.categoria %}
+                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full mb-3"
+                          style="background-color: {{ noticia.categoria.cor }}; color: white;">
+                        {{ noticia.categoria.nome }}
+                    </span>
+                    {% endif %}
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 line-clamp-2">
+                        <a href="{{ noticia.get_absolute_url }}" class="hover:text-blue-600 transition">
+                            {{ noticia.titulo }}
+                        </a>
+                    </h3>
+
+                    <p class="text-gray-600 mb-4 line-clamp-3">{{ noticia.resumo }}</p>
+
+                    <div class="flex justify-between items-center text-sm text-gray-500">
+                        <span><i class="far fa-calendar mr-1"></i> {{ noticia.data_publicacao|date:"d/m/Y" }}</span>
+                        <span><i class="far fa-eye mr-1"></i> {{ noticia.visualizacoes }}</span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-3 text-center py-12 text-gray-500">
+                <i class="fas fa-newspaper text-4xl mb-4"></i>
+                <p class="text-lg">Nenhuma notícia em destaque no momento</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Galerias Recentes -->
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800">Galerias Recentes</h2>
+            <a href="{% url 'pagina_stae:galerias' %}" class="text-blue-600 hover:text-blue-700 font-semibold">
+                Ver Todas <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for galeria in galerias_recentes %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                <a href="{{ galeria.get_absolute_url }}">
+                    {% if galeria.capa %}
+                    <img src="{{ galeria.capa.url }}" alt="{{ galeria.titulo }}"
+                         class="w-full h-48 object-cover">
+                    {% else %}
+                    <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-images text-4xl text-gray-400"></i>
+                    </div>
+                    {% endif %}
+                </a>
+
+                <div class="p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">
+                        <a href="{{ galeria.get_absolute_url }}" class="hover:text-blue-600 transition">
+                            {{ galeria.titulo }}
+                        </a>
+                    </h3>
+                    <p class="text-gray-600 text-sm line-clamp-2">{{ galeria.descricao }}</p>
+                    <div class="mt-3 text-sm text-gray-500">
+                        <i class="far fa-images mr-1"></i> {{ galeria.imagens.count }} imagens
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-4 text-center py-12 text-gray-500">
+                <i class="fas fa-images text-4xl mb-4"></i>
+                <p class="text-lg">Nenhuma galeria disponível</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Departamentos -->
+    <section class="mb-16">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8">Nossos Departamentos</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for departamento in departamentos %}
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition">
+                <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="{{ departamento.icone|default:'fas fa-building' }} text-2xl text-blue-600"></i>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-800 mb-2">{{ departamento.nome }}</h3>
+                {% if departamento.sigla %}
+                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-semibold mb-3">
+                    {{ departamento.sigla }}
+                </span>
+                {% endif %}
+
+                <p class="text-gray-600 mb-4 line-clamp-3">{{ departamento.descricao }}</p>
+
+                {% if departamento.responsavel %}
+                <div class="text-sm text-gray-500 mb-3">
+                    <i class="fas fa-user mr-1"></i> {{ departamento.responsavel }}
+                </div>
+                {% endif %}
+
+                <a href="{% url 'pagina_stae:servicos' %}"
+                   class="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm">
+                    Ver Serviços <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-span-3 text-center py-12 text-gray-500">
+                <i class="fas fa-building text-4xl mb-4"></i>
+                <p class="text-lg">Nenhum departamento cadastrado</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

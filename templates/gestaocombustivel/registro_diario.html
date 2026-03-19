@@ -1,0 +1,72 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Registro Diário • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-check me-2 text-success"></i>
+                    Registro Diário de Rota
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Rota *</label>
+                            {{ form.rota }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data *</label>
+                            {{ form.data }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Motorista *</label>
+                            {{ form.motorista }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Hora de Partida Real</label>
+                            {{ form.hora_partida_real }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Hora de Chegada Real</label>
+                            {{ form.hora_chegada_real }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Observações</label>
+                            {{ form.observacoes }}
+                            <small class="form-text text-muted">Registe qualquer observação sobre o percurso</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'gestaocombustivel:dashboard_combustivel' %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>
+                                    Guardar Registro
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

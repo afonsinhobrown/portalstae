@@ -1,0 +1,379 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Emitir Credencial • STAE{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-id-card me-2"></i>
+                            Emitir Credencial
+                        </h4>
+                        <span class="badge bg-light text-dark fs-6">
+                            {{ pedido.numero_pedido }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Mensagens -->
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Informações do Pedido -->
+                    <div class="card border-success mb-4">
+                        <div class="card-header bg-light-success">
+                            <h5 class="fw-bold mb-0">Informações do Pedido</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="40%">Solicitante:</th>
+                                            <td>{{ pedido.solicitante.nome_completo }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>BI/Número:</th>
+                                            <td>{{ pedido.solicitante.numero_bi|default:"Não informado" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td>{{ pedido.solicitante.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Telefone:</th>
+                                            <td>{{ pedido.solicitante.telefone }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th width="40%">Tipo Credencial:</th>
+                                            <td>
+                                                <span class="badge"
+                                                    style="background-color: {{ pedido.tipo_credencial.cor|default:'#007bff' }}">
+                                                    {{ pedido.tipo_credencial.nome }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Evento:</th>
+                                            <td>{{ pedido.evento.nome|default:"Não especificado" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Período:</th>
+                                            <td>
+                                                {{ pedido.data_inicio|date:"d/m/Y" }}
+                                                a
+                                                {{ pedido.data_fim|date:"d/m/Y" }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Data Pedido:</th>
+                                            <td>{{ pedido.data_pedido|date:"d/m/Y H:i" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <h6>Motivo do Pedido:</h6>
+                                <div class="alert alert-light border">
+                                    {{ pedido.motivo|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Emissão -->
+                    <form method="post" id="form-emissao">
+                        {% csrf_token %}
+
+                        <!-- Seção 1: Modelo (OBRIGATÓRIO) -->
+                        <div class="card border-danger mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-palette me-2"></i>
+                                    1. Selecione o Modelo da Credencial *OBRIGATÓRIO*
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if modelos_disponiveis %}
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Importante:</strong> O modelo define o tamanho e layout do cartão que será
+                                    impresso.
+                                    Escolha o modelo adequado antes de emitir.
+                                </div>
+                                <div class="row">
+                                    {% for modelo in modelos_disponiveis %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="form-check card-modelo">
+                                            <input class="form-check-input" type="radio" name="modelo"
+                                                id="modelo{{ modelo.id }}" value="{{ modelo.id }}" {% if forloop.first
+                                                %}checked{% endif %} required>
+                                            <label class="form-check-label w-100" for="modelo{{ modelo.id }}">
+                                                <div class="card border h-100">
+                                                    <div class="card-body text-center">
+                                                        <i class="fas fa-id-card fa-3x mb-2"
+                                                            style="color: {{ modelo.cor_texto|default:'#000000' }};"></i>
+                                                        <h6 class="fw-bold">{{ modelo.nome }}</h6>
+                                                        {% if modelo.descricao %}
+                                                        <p class="small text-muted mb-2">{{
+                                                            modelo.descricao|truncatechars:60 }}</p>
+                                                        {% endif %}
+                                                        <span class="badge bg-primary">
+                                                            {{ modelo.tamanho|default:"85x54" }} mm
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <div class="d-flex">
+                                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                                        <div>
+                                            <h5 class="alert-heading">Nenhum Modelo Disponível</h5>
+                                            <p class="mb-2">Não há modelos de credencial configurados. Um modelo padrão
+                                                será criado automaticamente.</p>
+                                            <a href="{% url 'credenciais:lista_tipos_credencial' %}"
+                                                class="btn btn-sm btn-primary">
+                                                <i class="fas fa-cog me-1"></i> Configurar Modelos
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="modelo" value="">
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="card border-info mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comment me-2"></i>
+                                    2. Observações (opcional)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <label for="observacoes" class="form-label fw-bold">
+                                    <i class="fas fa-comment me-1"></i>
+                                    Adicione observações sobre esta emissão
+                                </label>
+                                <textarea name="observacoes" id="observacoes" class="form-control" rows="3"
+                                    placeholder="Ex: Credencial emitida em caráter de urgência..."></textarea>
+
+                                <!-- Aviso -->
+                                <div class="alert alert-danger mt-3 mb-0">
+                                    <div class="d-flex">
+                                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">ATENÇÃO</h6>
+                                            <p class="mb-0">
+                                                Após emissão, esta ação não pode ser desfeita.
+                                                A credencial será registrada com número único no sistema e você será
+                                                redirecionado para a página de impressão.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden field for action -->
+                        <input type="hidden" name="acao_pdf" value="salvar">
+
+                        <!-- Botões -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="{% url 'credenciais:lista_pedidos' %}"
+                                            class="btn btn-outline-secondary btn-lg">
+                                            <i class="fas fa-arrow-left me-2"></i>
+                                            Voltar
+                                        </a>
+
+                                        <button type="button" class="btn btn-info btn-lg ms-2" data-bs-toggle="modal"
+                                            data-bs-target="#modalPreview">
+                                            <i class="fas fa-eye me-2"></i>
+                                            Pré-visualizar
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <button type="submit" class="btn btn-success btn-lg px-5"
+                                            onclick="return confirmEmissao()">
+                                            <i class="fas fa-print me-2"></i>
+                                            Emitir Credencial
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>
+                                Operador: {{ request.user.get_full_name|default:request.user.username }}
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ pedido.data_pedido|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Pré-visualização -->
+<div class="modal fade" id="modalPreview" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-id-card me-2"></i>
+                    Pré-visualização da Credencial
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <!-- Cartão de exemplo -->
+                    <div class="card mx-auto shadow" style="width: 85mm; border: 2px solid #0d6efd;">
+                        <div class="card-header bg-primary text-white text-center py-2">
+                            <h5 class="mb-0">CREDENCIAL STAE</h5>
+                        </div>
+                        <div class="card-body p-3">
+                            <!-- Foto/Ícone -->
+                            <div class="mb-3">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center"
+                                    style="width: 80px; height: 80px;">
+                                    <i class="fas fa-user fa-3x text-primary"></i>
+                                </div>
+                            </div>
+
+                            <!-- Nome -->
+                            <h5 class="fw-bold mb-2">{{ pedido.solicitante.nome_completo|truncatechars:30 }}</h5>
+
+                            <!-- Tipo -->
+                            <p class="mb-3">
+                                <span class="badge bg-success fs-6">{{ pedido.tipo_credencial.nome }}</span>
+                            </p>
+
+                            <!-- Informações -->
+                            <div class="row text-start">
+                                <div class="col-6">
+                                    <p class="mb-2">
+                                        <strong>BI:</strong><br>
+                                        <small>{{ pedido.solicitante.numero_bi|default:"N/A" }}</small>
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Evento:</strong><br>
+                                        <small>{{ pedido.evento.nome|default:"GERAL"|truncatechars:15 }}</small>
+                                    </p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-2">
+                                        <strong>Validade:</strong><br>
+                                        <small>{{ pedido.data_fim|date:"d/m/Y" }}</small>
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Número:</strong><br>
+                                        <small>STAE######</small>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- QR Code Placeholder -->
+                            <div class="mt-3">
+                                <div class="bg-light p-2 rounded d-inline-block">
+                                    <i class="fas fa-qrcode fa-2x text-muted me-2"></i>
+                                    <small class="text-muted">QR CODE DE VERIFICAÇÃO</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-center py-2">
+                            <small class="text-muted">Sistema de Credenciais • STAE</small>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Esta é uma pré-visualização. O design final pode variar.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+    function confirmEmissao() {
+        return confirm('Tem certeza que deseja emitir esta credencial?\n\nEsta ação não pode ser desfeita.');
+    }
+
+    // Validação simples
+    document.getElementById('form-emissao').addEventListener('submit', function (e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processando...';
+        submitBtn.disabled = true;
+    });
+</script>
+
+<!-- CSS -->
+<style>
+    .card-modelo .form-check-input:checked+label .card {
+        border: 3px solid #0d6efd !important;
+        box-shadow: 0 0 15px rgba(13, 110, 253, 0.3);
+    }
+
+    .form-check-label {
+        cursor: pointer;
+    }
+
+    .form-check-input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 2rem;
+    }
+</style>
+{% endblock %}

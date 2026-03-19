@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Recursos Humanos • STAE{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #1a4a72;
+            --secondary-color: #2c7da0;
+            --success-color: #2e8b57;
+            --warning-color: #ff9800;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .sidebar {
+            background-color: var(--primary-color);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, .8);
+            padding: 12px 20px;
+            margin: 2px 0;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, .1);
+            border-left-color: var(--secondary-color);
+        }
+
+        .sidebar .nav-link i {
+            width: 24px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #153a5e;
+            border-color: #153a5e;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        .status-aprovado {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-pendente {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-rejeitado {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .notification-badge {
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar d-md-block">
+                <div class="text-center mb-4">
+                    <h4 class="text-white mb-0">STAE RH</h4>
+                    <small class="text-white-50">Sistema de Recursos Humanos</small>
+                </div>
+
+                <nav class="nav flex-column">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                        href="{% url 'recursoshumanos:dashboard' %}">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+
+                    <!-- Menu Funcionários (apenas RH) -->
+                    {% if user.is_staff or user.groups.filter.name == 'rh_staff' %}
+                    <a class="nav-link {% if 'funcionarios' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:lista_funcionarios' %}">
+                        <i class="fas fa-users"></i> Funcionários
+                    </a>
+                    {% endif %}
+
+                    <!-- Licenças -->
+                    <a class="nav-link {% if 'licenca' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:minhas_licencas' %}">
+                        <i class="fas fa-calendar-alt"></i> Licenças
+                        {% if licencas_pendentes_count %}
+                        <span class="notification-badge ms-2">{{ licencas_pendentes_count }}</span>
+                        {% endif %}
+                    </a>
+
+                    <!-- Avaliações -->
+                    <a class="nav-link {% if 'avaliacao' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:minhas_avaliacoes' %}">
+                        <i class="fas fa-star"></i> Avaliações
+                    </a>
+
+                    <!-- Comunicação -->
+                    <a class="nav-link {% if 'comunicacao' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:chat_principal' %}">
+                        <i class="fas fa-comments"></i> Comunicação
+                        {% if notificacoes_nao_lidas %}
+                        <span class="notification-badge ms-2">{{ notificacoes_nao_lidas }}</span>
+                        {% endif %}
+                    </a>
+
+                    <!-- Documentos -->
+                    <a class="nav-link {% if 'documentos' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:documentos_institucionais' %}">
+                        <i class="fas fa-file-alt"></i> Documentos
+                    </a>
+
+                    <!-- Relatórios (apenas RH) -->
+                    {% if user.is_staff or user.groups.filter.name == 'rh_staff' %}
+                    <a class="nav-link {% if 'relatorios' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:relatorio_licencas' %}">
+                        <i class="fas fa-chart-bar"></i> Relatórios
+                    </a>
+                    {% endif %}
+
+                    <!-- Notificações -->
+                    <a class="nav-link {% if 'notificacoes' in request.resolver_match.url_name %}active{% endif %}"
+                        href="{% url 'recursoshumanos:minhas_notificacoes' %}">
+                        <i class="fas fa-bell"></i> Notificações
+                        {% if notificacoes_nao_lidas %}
+                        <span class="notification-badge ms-2">{{ notificacoes_nao_lidas }}</span>
+                        {% endif %}
+                    </a>
+
+
+
+
+                    <div class="mt-auto pt-4">
+                        <hr class="border-white-50">
+                        <div class="px-3">
+                            <small class="text-white-50">Logado como:</small>
+                            <p class="text-white mb-0">{{ user.get_full_name|default:user.username }}</p>
+                            <!-- Substitua SEU link por este formulário -->
+                            <form method="post" action="{% url 'recursoshumanos:logout' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-light w-100 mt-2">
+                                    <i class="fas fa-sign-out-alt"></i> Sair
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Messages -->
+                {% if messages %}
+                <div class="messages-container mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Mark notification as read
+        function markNotificationAsRead(notificationId) {
+            fetch(`{% url "recursoshumanos:api_marcar_notificacao_lida" 0 %}`.replace('0', notificationId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            });
+        }
+    </script>
+
+    <!-- Custom Scripts -->
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

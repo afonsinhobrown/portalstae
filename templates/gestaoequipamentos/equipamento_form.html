@@ -1,0 +1,172 @@
+{% extends 'gestaoequipamentos/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">{{ titulo }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'gestaoequipamentos:dashboard_equipamentos' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'gestaoequipamentos:lista_equipamentos' %}">Equipamentos</a></li>
+                <li class="breadcrumb-item active">{{ titulo }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Tipo de Equipamento -->
+                    <div class="mb-3">
+                        <label for="id_tipo" class="form-label">Tipo de Equipamento *</label>
+                        <select name="tipo" id="id_tipo" class="form-select" required>
+                            <option value="">Selecione o tipo...</option>
+                            {% for tipo in tipos %}
+                            <option value="{{ tipo.id }}"
+                                    {% if form.tipo.value == tipo.id %}selected{% endif %}>
+                                {{ tipo.categoria.nome }} - {{ tipo.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.tipo.errors %}
+                        <div class="text-danger small mt-1">{{ form.tipo.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_marca" class="form-label">Marca *</label>
+                            <input type="text" name="marca" id="id_marca" class="form-control"
+                                   value="{{ form.marca.value|default:'' }}" required>
+                            {% if form.marca.errors %}
+                            <div class="text-danger small mt-1">{{ form.marca.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_modelo" class="form-label">Modelo *</label>
+                            <input type="text" name="modelo" id="id_modelo" class="form-control"
+                                   value="{{ form.modelo.value|default:'' }}" required>
+                            {% if form.modelo.errors %}
+                            <div class="text-danger small mt-1">{{ form.modelo.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_numero_serie" class="form-label">Número de Série</label>
+                            <input type="text" name="numero_serie" id="id_numero_serie" class="form-control"
+                                   value="{{ form.numero_serie.value|default:'' }}">
+                            {% if form.numero_serie.errors %}
+                            <div class="text-danger small mt-1">{{ form.numero_serie.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_matricula" class="form-label">Matrícula</label>
+                            <input type="text" name="matricula" id="id_matricula" class="form-control"
+                                   value="{{ form.matricula.value|default:'' }}">
+                            {% if form.matricula.errors %}
+                            <div class="text-danger small mt-1">{{ form.matricula.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_ano_aquisicao" class="form-label">Ano de Aquisição *</label>
+                            <input type="number" name="ano_aquisicao" id="id_ano_aquisicao" class="form-control"
+                                   value="{{ form.ano_aquisicao.value|default:'' }}" min="2000" max="2030" required>
+                            {% if form.ano_aquisicao.errors %}
+                            <div class="text-danger small mt-1">{{ form.ano_aquisicao.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_fornecedor" class="form-label">Fornecedor *</label>
+                            <input type="text" name="fornecedor" id="id_fornecedor" class="form-control"
+                                   value="{{ form.fornecedor.value|default:'' }}" required>
+                            {% if form.fornecedor.errors %}
+                            <div class="text-danger small mt-1">{{ form.fornecedor.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_estado" class="form-label">Estado *</label>
+                            <select name="estado" id="id_estado" class="form-select" required>
+                                <option value="">Selecione o estado...</option>
+                                <option value="excelente" {% if form.estado.value == "excelente" %}selected{% endif %}>Excelente</option>
+                                <option value="bom" {% if form.estado.value == "bom" %}selected{% endif %}>Bom</option>
+                                <option value="regular" {% if form.estado.value == "regular" %}selected{% endif %}>Regular</option>
+                                <option value="precisa_manutencao" {% if form.estado.value == "precisa_manutencao" %}selected{% endif %}>Precisa Manutenção</option>
+                                <option value="inutilizado" {% if form.estado.value == "inutilizado" %}selected{% endif %}>Inutilizado</option>
+                            </select>
+                            {% if form.estado.errors %}
+                            <div class="text-danger small mt-1">{{ form.estado.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="id_sector_atual" class="form-label">Sector Actual *</label>
+                            <select name="sector_atual" id="id_sector_atual" class="form-select" required>
+                                <option value="">Selecione o sector...</option>
+                                {% for sector in sectores %}
+                                <option value="{{ sector.id }}"
+                                        {% if form.sector_atual.value == sector.id %}selected{% endif %}>
+                                    {{ sector.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.sector_atual.errors %}
+                            <div class="text-danger small mt-1">{{ form.sector_atual.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_funcionario_responsavel" class="form-label">Responsável</label>
+                        <select name="funcionario_responsavel" id="id_funcionario_responsavel" class="form-select">
+                            <option value="">Não atribuído</option>
+                            {% for funcionario in funcionarios %}
+                            <option value="{{ funcionario.id }}"
+                                    {% if form.funcionario_responsavel.value == funcionario.id %}selected{% endif %}>
+                                {{ funcionario.nome_completo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.funcionario_responsavel.errors %}
+                        <div class="text-danger small mt-1">{{ form.funcionario_responsavel.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_atributos_especificos" class="form-label">Atributos Específicos (JSON)</label>
+                        <textarea name="atributos_especificos" id="id_atributos_especificos" class="form-control"
+                                  rows="3" placeholder='Exemplo: {"ram": "16GB", "processador": "i7", "armazenamento": "512GB SSD"}'>{{ form.atributos_especificos.value|default:'' }}</textarea>
+                        {% if form.atributos_especificos.errors %}
+                        <div class="text-danger small mt-1">{{ form.atributos_especificos.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a href="{% url 'gestaoequipamentos:lista_equipamentos' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Equipamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

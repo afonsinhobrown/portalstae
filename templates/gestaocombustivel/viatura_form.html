@@ -1,0 +1,607 @@
+<!-- gestaocombustivel/templates/gestaocombustivel/viatura_form.html -->
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • {% if object %}Editar{% else %}Nova{% endif %} Viatura{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-{% if object %}edit{% else %}plus-circle{% endif %} text-primary me-2"></i>
+            {% if object %}Editar Viatura{% else %}Registar Nova Viatura{% endif %}
+        </h1>
+        <a href="{% url 'gestaocombustivel:lista_viaturas' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="combustivel-card p-4">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Mensagens de erro -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Por favor, corrija os erros abaixo.
+                        <ul class="mb-0 mt-2">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Abas -->
+                    <ul class="nav nav-tabs mb-4" id="viaturaTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="basico-tab" data-bs-toggle="tab"
+                                    data-bs-target="#basico" type="button" role="tab">
+                                <i class="fas fa-car me-1"></i> Básico
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="documentos-tab" data-bs-toggle="tab"
+                                    data-bs-target="#documentos" type="button" role="tab">
+                                <i class="fas fa-file-alt me-1"></i> Documentos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tecnico-tab" data-bs-toggle="tab"
+                                    data-bs-target="#tecnico" type="button" role="tab">
+                                <i class="fas fa-cogs me-1"></i> Técnico
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="custos-tab" data-bs-toggle="tab"
+                                    data-bs-target="#custos" type="button" role="tab">
+                                <i class="fas fa-dollar-sign me-1"></i> Custos
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="viaturaTabsContent">
+                        <!-- Aba Básico -->
+                        <div class="tab-pane fade show active" id="basico" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.matricula.id_for_label }}" class="form-label fw-bold">
+                                            Matrícula *
+                                        </label>
+                                        {{ form.matricula }}
+                                        {% if form.matricula.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.matricula.errors }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Ex: AB-123-CD ou AB123CD</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.marca.id_for_label }}" class="form-label fw-bold">
+                                            Marca *
+                                        </label>
+                                        {{ form.marca }}
+                                        {% if form.marca.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.marca.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.modelo.id_for_label }}" class="form-label fw-bold">
+                                            Modelo *
+                                        </label>
+                                        {{ form.modelo }}
+                                        {% if form.modelo.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.modelo.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="{{ form.ano_fabrico.id_for_label }}" class="form-label fw-bold">
+                                            Ano Fabrico
+                                        </label>
+                                        {{ form.ano_fabrico }}
+                                        {% if form.ano_fabrico.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.ano_fabrico.errors }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="{{ form.cor.id_for_label }}" class="form-label fw-bold">
+                                            Cor
+                                        </label>
+                                        {{ form.cor }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.tipo_viatura.id_for_label }}" class="form-label fw-bold">
+                                            Tipo de Viatura
+                                        </label>
+                                        {{ form.tipo_viatura }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.estado.id_for_label }}" class="form-label fw-bold">
+                                            Estado
+                                        </label>
+                                        {{ form.estado }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.tipo_combustivel.id_for_label }}" class="form-label fw-bold">
+                                            Tipo Combustível
+                                        </label>
+                                        {{ form.tipo_combustivel }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold d-block">Ativa</label>
+                                        <div class="form-check form-switch">
+                                            {{ form.activa }}
+                                            <label class="form-check-label" for="{{ form.activa.id_for_label }}">
+                                                Viatura ativa
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold d-block">Disponível</label>
+                                        <div class="form-check form-switch">
+                                            {{ form.disponivel }}
+                                            <label class="form-check-label" for="{{ form.disponivel.id_for_label }}">
+                                                Disponível para uso
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aba Documentos -->
+                        <div class="tab-pane fade" id="documentos" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.numero_chassi.id_for_label }}" class="form-label fw-bold">
+                                            Número do Chassi
+                                        </label>
+                                        {{ form.numero_chassi }}
+                                        {% if form.numero_chassi.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.numero_chassi.errors }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">17 caracteres (Opcional)</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.numero_motor.id_for_label }}" class="form-label fw-bold">
+                                            Número do Motor
+                                        </label>
+                                        {{ form.numero_motor }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.data_ultimo_seguro.id_for_label }}" class="form-label fw-bold">
+                                            Data Último Seguro
+                                        </label>
+                                        {{ form.data_ultimo_seguro }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.data_proximo_seguro.id_for_label }}" class="form-label fw-bold">
+                                            Data Próximo Seguro
+                                        </label>
+                                        {{ form.data_proximo_seguro }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.data_ultima_inspecao.id_for_label }}" class="form-label fw-bold">
+                                            Data Última Inspeção
+                                        </label>
+                                        {{ form.data_ultima_inspecao }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.data_proxima_inspecao.id_for_label }}" class="form-label fw-bold">
+                                            Data Próxima Inspeção
+                                        </label>
+                                        {{ form.data_proxima_inspecao }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fotografia da Viatura</label>
+                                <input type="file" name="fotografia" class="form-control" id="id_fotografia" accept="image/*">
+                                {% if object.fotografia %}
+                                <div class="mt-2">
+                                    <img src="{{ object.fotografia.url }}" alt="{{ object.matricula }}"
+                                         class="img-thumbnail" style="max-height: 150px;">
+                                    <div class="form-text">Foto atual</div>
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Opcional - Formatos: JPG, PNG</div>
+                            </div>
+                        </div>
+
+                        <!-- Aba Técnico -->
+                        <div class="tab-pane fade" id="tecnico" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.cilindrada.id_for_label }}" class="form-label fw-bold">
+                                            Cilindrada
+                                        </label>
+                                        {{ form.cilindrada }}
+                                        <div class="form-text">Ex: 2000cc ou 2.0L (Opcional)</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.capacidade_tanque.id_for_label }}" class="form-label fw-bold">
+                                            Capacidade Tanque (L)
+                                        </label>
+                                        {{ form.capacidade_tanque }}
+                                        {% if form.capacidade_tanque.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.capacidade_tanque.errors }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.kilometragem_actual.id_for_label }}" class="form-label fw-bold">
+                                            Quilometragem Atual
+                                        </label>
+                                        {{ form.kilometragem_actual }}
+                                        {% if form.kilometragem_actual.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.kilometragem_actual.errors }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.proxima_manutencao_km.id_for_label }}" class="form-label fw-bold">
+                                            Próxima Manutenção (km)
+                                        </label>
+                                        {{ form.proxima_manutencao_km }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.transmissao.id_for_label }}" class="form-label fw-bold">
+                                            Transmissão
+                                        </label>
+                                        <select name="transmissao" class="form-control" id="id_transmissao">
+                                            <option value="">---------</option>
+                                            <option value="manual" {% if object.transmissao == 'manual' %}selected{% endif %}>Manual</option>
+                                            <option value="automatico" {% if object.transmissao == 'automatico' %}selected{% endif %}>Automático</option>
+                                        </select>
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.traccao.id_for_label }}" class="form-label fw-bold">
+                                            Tração
+                                        </label>
+                                        <select name="traccao" class="form-control" id="id_traccao">
+                                            <option value="">---------</option>
+                                            <option value="dianteira" {% if object.traccao == 'dianteira' %}selected{% endif %}>Dianteira</option>
+                                            <option value="traseira" {% if object.traccao == 'traseira' %}selected{% endif %}>Traseira</option>
+                                            <option value="integral" {% if object.traccao == 'integral' %}selected{% endif %}>Integral</option>
+                                        </select>
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.numero_portas.id_for_label }}" class="form-label fw-bold">
+                                            Nº Portas
+                                        </label>
+                                        <input type="number" name="numero_portas" value="{{ object.numero_portas|default:'' }}"
+                                               class="form-control" id="id_numero_portas" min="0">
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.numero_lugares.id_for_label }}" class="form-label fw-bold">
+                                            Nº Lugares
+                                        </label>
+                                        <input type="number" name="numero_lugares" value="{{ object.numero_lugares|default:'' }}"
+                                               class="form-control" id="id_numero_lugares" min="0">
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.peso_bruto.id_for_label }}" class="form-label fw-bold">
+                                            Peso Bruto (kg)
+                                        </label>
+                                        <input type="number" name="peso_bruto" value="{{ object.peso_bruto|default:'' }}"
+                                               class="form-control" id="id_peso_bruto" step="0.01" min="0">
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Aba Custos -->
+                        <div class="tab-pane fade" id="custos" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.custo_aquisicao.id_for_label }}" class="form-label fw-bold">
+                                            Custo de Aquisição
+                                        </label>
+                                        {{ form.custo_aquisicao }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.valor_actual_mercado.id_for_label }}" class="form-label fw-bold">
+                                            Valor Atual de Mercado
+                                        </label>
+                                        {{ form.valor_actual_mercado }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.depreciacao_anual.id_for_label }}" class="form-label fw-bold">
+                                            Depreciação Anual (%)
+                                        </label>
+                                        {{ form.depreciacao_anual }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.funcionario_afecto.id_for_label }}" class="form-label fw-bold">
+                                            Funcionário Afeto
+                                        </label>
+                                        {{ form.funcionario_afecto }}
+                                        <div class="form-text">Opcional</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.motoristas_autorizados.id_for_label }}" class="form-label fw-bold">
+                                    Motoristas Autorizados
+                                </label>
+                                {{ form.motoristas_autorizados }}
+                                <div class="form-text">Opcional - Pressione Ctrl para selecionar múltiplos</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.observacoes.id_for_label }}" class="form-label fw-bold">
+                                    Observações
+                                </label>
+                                {{ form.observacoes }}
+                                <div class="form-text">Opcional</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <div>
+                            {% if object %}
+                            <a href="{% url 'gestaocombustivel:detalhe_viatura' object.id %}"
+                               class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                            {% else %}
+                            <a href="{% url 'gestaocombustivel:lista_viaturas' %}"
+                               class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Atualizar Viatura{% else %}Registar Viatura{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar com informações -->
+        <div class="col-lg-4">
+            <div class="combustivel-card p-4 mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-info-circle text-primary me-2"></i>
+                    Informações Importantes
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Campos marcados com * são obrigatórios
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Apenas matrícula, marca e modelo são obrigatórios
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar-alt text-info me-2"></i>
+                        As datas devem estar no formato DD/MM/AAAA
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Os campos com "(Opcional)" podem ficar em branco
+                    </li>
+                    {% if object %}
+                    <li class="mb-2">
+                        <i class="fas fa-history me-2"></i>
+                        Criada em: {{ object.data_criacao|date:"d/m/Y H:i" }}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Alertas (se edição) -->
+            {% if object %}
+            <div class="combustivel-card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-bell text-warning me-2"></i>
+                    Alertas Ativos
+                </h5>
+                {% with alertas=object.obter_alertas %}
+                    {% if alertas %}
+                    <div class="alertas">
+                        {% for alerta in alertas %}
+                        <div class="alert {% if alerta.prioridade == 'critica' %}alert-danger{% elif alerta.prioridade == 'alta' %}alert-warning{% else %}alert-info{% endif %} mb-2">
+                            <i class="fas {% if alerta.tipo == 'seguro' %}fa-shield-alt{% elif alerta.tipo == 'inspecao' %}fa-clipboard-check{% else %}fa-tools{% endif %} me-2"></i>
+                            {{ alerta.mensagem }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <p class="mb-0">Sem alertas ativos</p>
+                    </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar máscara para matrícula
+        const matriculaField = document.getElementById('{{ form.matricula.id_for_label }}');
+        if (matriculaField) {
+            matriculaField.addEventListener('input', function(e) {
+                let value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+                e.target.value = value;
+            });
+        }
+
+        // Marcar campos obrigatórios
+        const requiredFields = ['id_matricula', 'id_marca', 'id_modelo'];
+        requiredFields.forEach(id => {
+            const field = document.getElementById(id);
+            if (field) {
+                field.required = true;
+            }
+        });
+
+        // Configurar placeholders para campos opcionais
+        const optionalFields = document.querySelectorAll('input[type="text"], input[type="number"], select, textarea');
+        optionalFields.forEach(field => {
+            if (!field.required && !field.placeholder) {
+                field.placeholder = "Opcional";
+            }
+        });
+
+        // Remover asterisco dos labels de campos opcionais
+        document.querySelectorAll('.form-label').forEach(label => {
+            if (!label.innerHTML.includes('*')) {
+                const fieldId = label.getAttribute('for');
+                if (fieldId) {
+                    const field = document.getElementById(fieldId);
+                    if (field && !field.required) {
+                        label.innerHTML = label.innerHTML.replace(' *', '');
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

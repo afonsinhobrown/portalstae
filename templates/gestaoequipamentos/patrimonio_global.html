@@ -1,0 +1,153 @@
+{% extends 'base_apps.html' %}
+{% block title %}Património Global STAE{% endblock %}
+{% block module_name %}EQUIPAMENTOS{% endblock %}
+{% block icon %}fas fa-globe-africa{% endblock %}
+{% block dashboard_url %}{% url 'gestaoequipamentos:dashboard_equipamentos' %}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px;">
+    <h2><i class="fas fa-university"></i> Visão Global de Património e Activos</h2>
+    <p class="text-muted">Consolidação de requisitos e alocação de equipamentos para RS (Eleitoral) e DFEC (Formação).</p>
+</div>
+
+<!-- 1. RESUMO -->
+<div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+    <div class="card" style="border-left: 5px solid #003366;">
+        <div class="card-icon"><i class="fas fa-laptop"></i></div>
+        <div class="card-title">Equipamentos Gerais</div>
+        <div class="card-value">{{ equipamentos.count }}</div>
+        <small>Gestão Sede e Geral</small>
+    </div>
+    <div class="card" style="border-left: 5px solid #d97706;">
+        <div class="card-icon"><i class="fas fa-vote-yea"></i></div>
+        <div class="card-title">Requisitos RS</div>
+        <div class="card-value">{{ materiais_eleitorais.count }}</div>
+        <small>Definido no Módulo RS</small>
+    </div>
+    <div class="card" style="border-left: 5px solid #2e7d32;">
+        <div class="card-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="card-title">Requisitos DFEC</div>
+        <div class="card-value">{{ materiais_formacao.count }}</div>
+        <small>Definido no Módulo DFEC</small>
+    </div>
+</div>
+
+<!-- 2. TABELAS DETALHADAS -->
+<div class="card" style="margin-top: 30px;">
+    <ul class="nav nav-tabs" id="patrimonioTabs" role="tablist" style="border-bottom: 2px solid #eee; margin-bottom: 20px;">
+        <li class="nav-item">
+            <button class="nav-link active" id="geral-tab" data-bs-toggle="tab" data-bs-target="#geral" type="button" style="padding: 10px 20px; border: none; background: transparent; cursor: pointer;">Inventário Geral</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="eleitoral-tab" data-bs-toggle="tab" data-bs-target="#eleitoral" type="button" style="padding: 10px 20px; border: none; background: transparent; cursor: pointer;">Necessidades RS (Eleitoral)</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="formacao-tab" data-bs-toggle="tab" data-bs-target="#formacao" type="button" style="padding: 10px 20px; border: none; background: transparent; cursor: pointer;">Necessidades DFEC (Formação)</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- TABELA GERAL -->
+        <div class="tab-pane fade show active" id="geral">
+            <div class="d-flex justify-content-between">
+                <h4>Património Registado</h4>
+                <a href="{% url 'gestaoequipamentos:novo_equipamento' %}" class="btn btn-sm btn-primary">Registar Novo Equipamento</a>
+            </div>
+            <table class="table-custom">
+                <thead><tr><th>Património #</th><th>Tipo</th><th>Modelo</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for eq in equipamentos %}
+                    <tr>
+                        <td>{{ eq.numero_serie|default:eq.id }}</td>
+                        <td>{{ eq.tipo.nome }}</td>
+                        <td>{{ eq.marca }} {{ eq.modelo }}</td>
+                        <td><span class="badge state-{{ eq.estado }}">{{ eq.get_estado_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">Sem equipamentos registados no património geral.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TABELA ELEITORAL (RS) -->
+        <div class="tab-pane fade" id="eleitoral">
+            <h4>Requisitos de Material Eleitoral (Definidos no RS)</h4>
+            <p class="text-muted"><i class="fas fa-info-circle"></i> Estas necessidades são definidas pelos coordenadores de logística. O Inventário deve vincular equipamentos reais a estas necessidades.</p>
+            <table class="table-custom">
+                <thead><tr><th>Necessidade</th><th>Tipo</th><th>Qtd Planeada</th><th>Qtd Alocada</th><th>Ação</th></tr></thead>
+                <tbody>
+                    {% for m in materiais_eleitorais %}
+                    <tr>
+                        <td><strong>{{ m.item }}</strong></td>
+                        <td>{{ m.get_tipo_display }}</td>
+                        <td>{{ m.quantidade_planeada }}</td>
+                        <td>
+                            <span class="badge {% if m.quantidade_alocada < m.quantidade_planeada %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ m.quantidade_alocada }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary"><i class="fas fa-link"></i> Alocar Items</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Nenhum requisito de material eleitoral pendente.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TABELA FORMAÇÃO (DFEC) -->
+        <div class="tab-pane fade" id="formacao">
+            <h4>Requisitos de Material de Formação (Definidos no DFEC)</h4>
+            <p class="text-muted"><i class="fas fa-info-circle"></i> Lista de materiais solicitados para ações de formação e educação cívica.</p>
+            <table class="table-custom">
+                <thead><tr><th>Material</th><th>Tipo</th><th>Qtd Necessária</th><th>Qtd Alocada</th><th>Ação</th></tr></thead>
+                <tbody>
+                    {% for f in materiais_formacao %}
+                    <tr>
+                        <td><strong>{{ f.item }}</strong></td>
+                        <td>{{ f.get_tipo_display }}</td>
+                        <td>{{ f.quantidade_necessaria }}</td>
+                        <td>
+                            <span class="badge {% if f.total_vinculado < f.quantidade_necessaria %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ f.total_vinculado }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-primary"><i class="fas fa-link"></i> Alocar Items</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Nenhum requisito de formação pendente.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-custom { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .table-custom th { text-align: left; padding: 12px; background: #f8f9fa; border-bottom: 2px solid #eee; }
+    .table-custom td { padding: 12px; border-bottom: 1px solid #eee; }
+    .nav-tabs .nav-link.active { border-bottom: 3px solid var(--primary) !important; font-weight: bold; color: var(--primary); }
+    .state-excelente { color: #2e7d32; font-weight: bold; }
+    .state-precisa_manutencao { color: #ef4444; font-weight: bold; }
+    .bg-success { background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; }
+    .bg-warning { background-color: #ffc107; color: black; padding: 4px 8px; border-radius: 4px; }
+</style>
+
+<script>
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.getAttribute('data-bs-target').substring(1);
+            document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('show', 'active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(targetId).classList.add('show', 'active');
+            button.classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

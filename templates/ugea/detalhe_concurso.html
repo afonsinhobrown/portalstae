@@ -1,0 +1,641 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ concurso.numero }} - Detalhes{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-file-contract{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Processo: {{ concurso.numero }}{% endblock %}
+
+{% block content %}
+<!-- TIMELINE DO PROCESSO -->
+<div class="timeline-container">
+    <div class="step active">
+        <div class="step-icon"><i class="fas fa-file-signature"></i></div>
+        <div class="step-label">Registo</div>
+    </div>
+    <div class="step {% if caderno %}active{% endif %}">
+        <div class="step-icon"><i class="fas fa-book"></i></div>
+        <div class="step-label">Caderno</div>
+    </div>
+    <div class="step {% if concurso.texto_anuncio %}active{% endif %}">
+        <div class="step-icon"><i class="fas fa-bullhorn"></i></div>
+        <div class="step-label">Anúncio</div>
+    </div>
+    <div class="step {% if concurso.juri_set.exists %}active{% endif %}">
+        <div class="step-icon"><i class="fas fa-users-cog"></i></div>
+        <div class="step-label">Júri</div>
+    </div>
+    <div class="step {% if concurso.inscricoes.exists %}active{% endif %}">
+        <div class="step-icon"><i class="fas fa-store"></i></div>
+        <div class="step-label">Inscrições</div>
+    </div>
+    <div class="step {% if concurso.propostas.exists %}active{% endif %}">
+        <div class="step-icon"><i class="fas fa-envelope-open-text"></i></div>
+        <div class="step-label">Propostas</div>
+    </div>
+    <div class="step {% if concurso.status == 'adjudicado' %}active{% endif %}">
+        <div class="step-icon"><i class="fas fa-gavel"></i></div>
+        <div class="step-label">Adjudicação</div>
+    </div>
+    <div class="step">
+        <div class="step-icon"><i class="fas fa-hard-hat"></i></div>
+        <div class="step-label">Execução</div>
+    </div>
+</div>
+<style>
+    .timeline-container { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
+    .timeline-container::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 4px; background: #e9ecef; z-index: 1; }
+    .step { position: relative; z-index: 2; text-align: center; width: 100%; }
+    .step-icon { width: 40px; height: 40px; background: #e9ecef; border-radius: 50%; margin: 0 auto; line-height: 40px; color: #666; font-weight: bold; border: 4px solid #fff; }
+    .step.active .step-icon { background: var(--primary); color: white; }
+    .step-label { font-size: 12px; margin-top: 5px; color: #666; font-weight: bold; }
+    .step.active .step-label { color: var(--primary); }
+</style>
+
+<div class="header-split">
+    <div>
+        <h2>CP {{ concurso.numero }}</h2>
+        <span class="badge {{ concurso.status }}">{{ concurso.get_status_display }}</span>
+    </div>
+    <div style="text-align:right;">
+        <div style="font-size:12px; color:#aaa;">VALOR ESTIMADO</div>
+        <div style="font-size:24px; font-weight:bold;">{{ concurso.valor_estimado|default:"Não definido" }} MT</div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="openTab(event, 'Geral')"><i class="fas fa-info-circle"></i> Visão Geral</button>
+    <button class="tab-btn" onclick="openTab(event, 'Planeamento')"><i class="fas fa-cogs"></i> Júri & Caderno</button>
+    <button class="tab-btn" onclick="openTab(event, 'Propostas')"><i class="fas fa-inbox"></i> Propostas ({{ propostas.count }})</button>
+    <button class="tab-btn" onclick="openTab(event, 'Avaliacao')"><i class="fas fa-balance-scale"></i> Mesa de Avaliação</button>
+</div>
+
+<!-- TAB 1: GERAL -->
+<div id="Geral" class="tab-content active">
+    <div class="card-grid">
+        <div class="card">
+            <h3>Dados do Concurso</h3>
+            <p><strong>Tipo:</strong> {{ concurso.tipo }}</p>
+            <p><strong>Abertura:</strong> {{ concurso.data_abertura|date:"d/m/Y" }}</p>
+            <p><strong>Encerramento:</strong> {{ concurso.data_encerramento|date:"d/m/Y" }}</p>
+            <hr>
+            <p><strong>Critério de Avaliação:</strong> <span class="badge" style="background:var(--primary);">{{ concurso.get_criterio_avaliacao_display }}</span></p>
+            {% if concurso.criterio_avaliacao == 'tecnico_preco' %}
+                <p style="font-size:13px; color:#666;"><i class="fas fa-balance-scale"></i> Pesos: Técnico ({{ concurso.peso_tecnico }}%) | Financeiro ({{ concurso.peso_financeiro }}%)</p>
+            {% endif %}
+            <hr>
+            <p>{{ concurso.descricao|linebreaks }}</p>
+            {% if concurso.documento_anuncio %}
+            <a href="{{ concurso.documento_anuncio.url }}" class="action-btn small"><i class="fas fa-download"></i> Baixar Anúncio</a>
+            {% endif %}
+        </div>
+        <div class="card">
+            <h3>Status do Processo</h3>
+            <div class="timeline">
+                <div class="step {% if concurso.status != 'cancelado' %}active{% endif %}">Planeamento</div>
+                <div class="step {% if concurso.status == 'aberto' or concurso.status == 'avaliacao' or concurso.status == 'adjudicado' %}active{% endif %}">Aberto</div>
+                <div class="step {% if concurso.status == 'avaliacao' or concurso.status == 'adjudicado' %}active{% endif %}">Avaliação</div>
+                <div class="step {% if concurso.status == 'adjudicado' %}active{% endif %}">Adjudicação</div>
+            </div>
+            
+            {% if concurso.contrato_ativo %}
+            <div style="margin-top:25px; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px;">
+                <h4 style="margin:0; color:#166534;"><i class="fas fa-trophy"></i> Vencedor Seleccionado</h4>
+                <p style="margin:5px 0; font-size:14px;"><strong>{{ concurso.contrato_ativo.proposta_vencedora.fornecedor }}</strong></p>
+                <a href="{% url 'ugea:detalhe_contrato' concurso.contrato_ativo.id %}" class="btn-xs" style="background:#166534; color:white; text-decoration:none;">Ver Contrato Oficial</a>
+            </div>
+            {% endif %}
+
+            <div style="margin-top:20px;">
+                <a href="{% url 'ugea:editar_concurso' concurso.id %}" class="action-btn secondary">Editar Dados</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 2: PLANEAMENTO -->
+<div id="Planeamento" class="tab-content">
+    <div class="grid-2">
+        <!-- JURI CONFIG -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Composição do Júri</h3>
+            </div>
+            {% if juri %}
+                <table class="detail-table">
+                    <tr><th>Presidente:</th><td>{{ juri.presidente }}</td></tr>
+                    <tr><th>Vogal:</th><td>{{ juri.vogal_1 }}</td></tr>
+                    <tr><th>Secretário:</th><td>{{ juri.secretario|default:"-" }}</td></tr>
+                    <tr><th>Nomeação:</th><td>{{ juri.data_nomeacao|date:"d/m/Y" }}</td></tr>
+                </table>
+                <div style="margin-top:10px;">
+                    <!-- Botão para editar se necessário (não implementado ainda, mas placeholder) -->
+                    <button onclick="document.getElementById('formJuriEdit').style.display='block'" class="btn-text">Alterar Composição</button>
+                    <div id="formJuriEdit" style="display:none; margin-top:10px;">
+                        <p style="color:red; font-size:12px;">A alteração do Júri deve ser justificada em acta.</p>
+                    </div>
+                </div>
+            {% else %}
+                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px; border-left: 5px solid #ffc107;">
+                    <h4 style="margin-top:0;"><i class="fas fa-exclamation-triangle"></i> Pendente de Nomeação</h4>
+                    <p style="margin-bottom:0; font-size:13px;">Arraste os funcionários da lista para definir os cargos do Júri.</p>
+                </div>
+
+                <div class="drag-interface">
+                    <!-- Coluna Esquerda: Lista de Funcionários -->
+                    <div class="drag-column source">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchFunc" onkeyup="filterFuncionarios()" placeholder="Pesquisar funcionário...">
+                        </div>
+                        <div id="funcionariosPool" class="pool-container">
+                            {% for f in funcionarios %}
+                                <div class="draggable-item" draggable="true" ondragstart="drag(event)" data-name="{{ f.nome_completo }}">
+                                    <div class="avatar"><i class="fas fa-user"></i></div>
+                                    <div class="info">
+                                        <strong>{{ f.nome_completo }}</strong>
+                                        <small>{{ f.get_funcao_display|default:f.funcao }}</small>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <p style="padding:10px; color:#666;">Nenhum funcionário encontrado no RH.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Coluna Direita: Slots de Destino -->
+                    <div class="drag-column target">
+                        <form method="post" id="formJuriDrag">
+                            {% csrf_token %}
+                            
+                            <div class="drop-slot">
+                                <label><i class="fas fa-gavel"></i> Presidente</label>
+                                <div class="drop-zone" id="zone_presidente" ondrop="drop(event, 'presidente')" ondragover="allowDrop(event)">
+                                    <span class="placeholder">Arraste aqui...</span>
+                                </div>
+                                <input type="hidden" name="presidente" id="input_presidente" required>
+                                <button type="button" class="clear-btn" onclick="clearSlot('presidente')">&times;</button>
+                            </div>
+
+                            <div class="drop-slot">
+                                <label><i class="fas fa-user-friends"></i> Vogal</label>
+                                <div class="drop-zone" id="zone_vogal_1" ondrop="drop(event, 'vogal_1')" ondragover="allowDrop(event)">
+                                    <span class="placeholder">Arraste aqui...</span>
+                                </div>
+                                <input type="hidden" name="vogal_1" id="input_vogal_1" required>
+                                <button type="button" class="clear-btn" onclick="clearSlot('vogal_1')">&times;</button>
+                            </div>
+
+                            <div class="drop-slot">
+                                <label><i class="fas fa-edit"></i> Secretário</label>
+                                <div class="drop-zone" id="zone_secretario" ondrop="drop(event, 'secretario')" ondragover="allowDrop(event)">
+                                    <span class="placeholder">Arraste aqui...</span>
+                                </div>
+                                <input type="hidden" name="secretario" id="input_secretario" required>
+                                <button type="button" class="clear-btn" onclick="clearSlot('secretario')">&times;</button>
+                            </div>
+                            
+                            <div style="margin-top:20px;">
+                                <label>Data de Nomeação</label>
+                                <input type="date" name="data_nomeacao" class="form-control" required value="{% now 'Y-m-d' %}">
+                            </div>
+
+                            <button type="submit" name="submit_juri" class="action-btn" style="width:100%; margin-top:15px;">Salvar Composição</button>
+                        </form>
+                    </div>
+                </div>
+
+                <style>
+                    .drag-interface { display: flex; gap: 20px; height: 400px; }
+                    .drag-column { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa; display: flex; flex-direction: column; }
+                    .drag-column.source { background: white; }
+                    
+                    .search-box { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 20px; padding: 5px 10px; margin-bottom: 10px; }
+                    .search-box input { border: none; outline: none; flex: 1; padding: 5px; }
+                    
+                    .pool-container { flex: 1; overflow-y: auto; }
+                    .draggable-item { background: white; border: 1px solid #eee; padding: 8px; margin-bottom: 5px; border-radius: 4px; cursor: move; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+                    .draggable-item:hover { background: #e3f2fd; border-color: #2196f3; }
+                    .draggable-item .avatar { width: 30px; height: 30px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #666; }
+                    
+                    .drop-slot { position: relative; margin-bottom: 15px; }
+                    .drop-zone { background: white; border: 2px dashed #ccc; padding: 10px; border-radius: 6px; min-height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #999; }
+                    .drop-zone.filled { border-style: solid; border-color: #28a745; background: #e8f5e9; color: #155724; }
+                    
+                    .clear-btn { position: absolute; right: 5px; top: 30px; background: none; border: none; color: #dc3545; cursor: pointer; display: none; font-size: 18px; }
+                    .drop-slot:hover .clear-btn { display: block; }
+
+                    .action-btn { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+                </style>
+
+                <script>
+                    function allowDrop(ev) {
+                        ev.preventDefault();
+                    }
+
+                    function drag(ev) {
+                        ev.dataTransfer.setData("text", ev.currentTarget.getAttribute('data-name'));
+                    }
+
+                    function drop(ev, role) {
+                        ev.preventDefault();
+                        var data = ev.dataTransfer.getData("text");
+                        
+                        // Atualiza Visual
+                        var zone = document.getElementById("zone_" + role);
+                        zone.innerHTML = '<i class="fas fa-check"></i> ' + data;
+                        zone.classList.add("filled");
+                        
+                        // Atualiza Input Hidden
+                        document.getElementById("input_" + role).value = data;
+                    }
+                    
+                    function clearSlot(role) {
+                        var zone = document.getElementById("zone_" + role);
+                        zone.innerHTML = '<span class="placeholder">Arraste aqui...</span>';
+                        zone.classList.remove("filled");
+                        document.getElementById("input_" + role).value = "";
+                    }
+
+                    function filterFuncionarios() {
+                        var input = document.getElementById('searchFunc');
+                        var filter = input.value.toLowerCase();
+                        var nodes = document.getElementsByClassName('draggable-item');
+                        
+                        for (i = 0; i < nodes.length; i++) {
+                            if (nodes[i].innerText.toLowerCase().includes(filter)) {
+                                nodes[i].style.display = "flex";
+                            } else {
+                                nodes[i].style.display = "none";
+                            }
+                        }
+                    }
+                </script>
+            {% endif %}
+        </div>
+
+        <!-- CADERNO ENCARGOS -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Caderno de Encargos</h3>
+                <a href="{% url 'ugea:editar_caderno' concurso.id %}" class="btn-text">{% if caderno %}Editar Especificações{% else %}Criar Caderno{% endif %}</a>
+            </div>
+            {% if caderno %}
+                <p><strong>Prazo Execução:</strong> {{ caderno.prazo_execucao_dias }} dias | <strong>Garantia:</strong> {{ caderno.garantia_exigida }} MT</p>
+                <hr>
+                
+                <!-- LISTA DE SERVIÇOS DO CADERNO -->
+                <div style="margin-bottom: 15px;">
+                    <small style="text-transform: uppercase; font-weight: bold; color: #777; font-size: 11px; display: block; margin-bottom: 5px;">
+                        <i class="fas fa-list-ol me-1"></i> Serviços e Itens Solicitados:
+                    </small>
+                    <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 6px; padding: 10px;">
+                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #444;">
+                            {% for item in caderno.itens.all %}
+                            <li style="margin-bottom: 4px;">
+                                <strong>{{ item.descricao }}</strong> 
+                                {% if item.quantidade_estimada %}
+                                    <span class="badge bg-light text-dark border ms-2" style="font-size: 10px; padding: 2px 6px;">
+                                        {{ item.quantidade_estimada }} {{ item.unidade }}
+                                    </span>
+                                {% endif %}
+                            </li>
+                            {% empty %}
+                            <li class="text-muted italic">Nenhum item itemizado.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <p><strong>Objeto:</strong> {{ caderno.objeto_concurso|truncatewords:20 }}</p>
+                <small style="text-transform: uppercase; font-weight: bold; color: #777; font-size: 11px;">ESPECIFICAÇÕES TÉCNICAS (Resumo)</small>
+                <div class="scroll-box" style="height:100px;">{{ caderno.especificacoes_tecnicas|linebreaks }}</div>
+                
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <a href="{% url 'ugea:editar_caderno' concurso.id %}" class="action-btn secondary small"><i class="fas fa-edit"></i> Editar</a>
+                    <a href="{% url 'ugea:imprimir_caderno' concurso.id %}" target="_blank" class="action-btn small" style="background:#003366;"><i class="fas fa-file-pdf"></i> Visualizar Documento Oficial (PDF)</a>
+                    {% if caderno.documento_pdf %}
+                    <a href="{{ caderno.documento_pdf.url }}" class="action-btn small" style="background:#dc3545;"><i class="fas fa-file-pdf"></i> Ver PDF Uploaded</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="alert warning">
+                    <i class="fas fa-exclamation-circle"></i> O Caderno de Encargos ainda não foi definido.
+                    <br><br>
+                    <a href="{% url 'ugea:editar_caderno' concurso.id %}" class="action-btn small">Criar Caderno Agora</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- NOVO: Cartão de Anúncio -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-bullhorn"></i> Anúncio Público</h3>
+            </div>
+            {% if concurso.texto_anuncio %}
+                <p style="color:green;"><i class="fas fa-check-circle"></i> Anúncio Gerado</p>
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <a href="{% url 'ugea:editar_anuncio' concurso.id %}" class="action-btn secondary small">Editar Texto</a>
+                    <a href="{% url 'ugea:imprimir_anuncio' concurso.id %}" target="_blank" class="action-btn small">Ver Oficial</a>
+                </div>
+            {% else %}
+                <p style="color:#666;">O anúncio ainda não foi gerado.</p>
+                <a href="{% url 'ugea:editar_anuncio' concurso.id %}" class="action-btn small">Gerar Anúncio</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- TAB 3: PROPOSTAS -->
+<div id="Propostas" class="tab-content">
+    
+    <!-- Painel de Inscrições/Vendas -->
+    <div class="card" style="margin-bottom: 20px; border-left: 5px solid #17a2b8;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin:0;">Gestão de Concorrentes</h3>
+                <p style="margin:5px 0 0 0; color: #666;">Empresas que compraram o Caderno de Encargos: <strong>{{ concurso.inscricoes.count }}</strong></p>
+            </div>
+            <a href="{% url 'ugea:gestao_vendas' concurso.id %}" class="action-btn" style="background: #17a2b8;">Gerir Inscrições & Vendas</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Propostas Recebidas</h3>
+            <button onclick="toggleForm('formProposta')" class="action-btn">Registar Nova Proposta</button>
+        </div>
+        
+        <div id="formProposta" class="hidden-form" 
+             style="background:#f9f9f9; padding:15px; margin-bottom:15px; border:1px solid #ddd; 
+             {% if form_proposta.errors %}display: block;{% endif %}">
+            <h4>Lançamento de Proposta</h4>
+            
+            {% if form_proposta.errors %}
+                <div style="background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                    <strong>Erro na submissão:</strong>
+                    <ul style="margin: 5px 0 0 0;">
+                        {% for field, errors in form_proposta.errors.items %}
+                            <li>{{ field }}: {{ errors|join:", " }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ form_proposta.inscricao.label_tag }}
+                        {{ form_proposta.inscricao }}
+                    </div>
+                    <div class="form-group">
+                        <label>Digitalização da Proposta (Imagens)</label>
+                        <input type="file" name="arquivos_imagem" multiple class="form-control" accept="image/*" required>
+                        <small class="text-muted">Pode seleccionar várias fotos PNG/JPG de uma só vez.</small>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button type="submit" name="submit_proposta" class="action-btn">Submeter Proposta</button>
+                    <button type="button" onclick="toggleForm('formProposta')" class="action-btn secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fornecedor</th>
+                    <th>Valor Proposto</th>
+                    <th>Prazo</th>
+                    <th>Evidência / IA</th>
+                    <th style="width: 50px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in propostas %}
+                <tr style="border-bottom: 2px solid #eee;">
+                    <td>
+                        <div style="font-weight:bold; color:var(--primary);">{{ p.fornecedor }}</div>
+                        <small class="text-muted">NUIT: {{ p.nuit }}</small>
+                    </td>
+                    <td><strong>{{ p.valor_proposto|default:"--" }} MT</strong></td>
+                    <td>{{ p.prazo_entrega_dias }} dias</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="background:#e3f2fd; color:#0d47a1; padding:5px 10px; border-radius:4px; font-size:12px; font-weight:bold;">
+                                <i class="fas fa-images"></i> {{ p.imagens.count }} Fotos
+                            </div>
+                            {% if p.resumo_automatico %}
+                                <div style="background:#e8f5e9; color:#1b5e20; padding:5px 10px; border-radius:4px; font-size:12px; font-weight:bold;">
+                                    <i class="fas fa-robot"></i> IA OK
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                         <button onclick="toggleForm('resumo_{{ p.id }}')" class="btn-xs" style="background:#6c757d;">Ver Resumo</button>
+                    </td>
+                </tr>
+                <tr id="resumo_{{ p.id }}" class="hidden-form" style="background:#fcfcfc;">
+                    <td colspan="5" style="padding:20px;">
+                        <div style="display:grid; grid-template-columns: 300px 1fr; gap:25px;">
+                            <!-- Galeria -->
+                            <div>
+                                <h5 style="margin-top:0;"><i class="fas fa-camera"></i> Documentos Digitalizados</h5>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    {% for img in p.imagens.all %}
+                                        <a href="{{ img.imagem.url }}" target="_blank">
+                                            <img src="{{ img.imagem.url }}" style="width:100%; height:80px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                                <div style="margin-top:15px;">
+                                    <a href="{% url 'ugea:processar_ocr' p.id %}" class="btn-xs" style="background:#003366; color:white; width:100%; text-align:center; display:block; padding:10px;">
+                                        <i class="fas fa-sync"></i> Refazer Análise OCR
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- Ficha de Digitalização e Transcrição -->
+                            <div style="border-left: 2px solid #ccc; padding-left:25px;">
+                                <h5 style="margin-top:0; color:#003366;"><i class="fas fa-file-import"></i> Ficha de Digitalização (Dados Extraídos)</h5>
+                                <p style="font-size:12px; color:#666; margin-bottom:15px;">
+                                    Estes dados foram extraídos via OCR das imagens submetidas. Corrija qualquer erro de leitura para que o sistema espelhe fielmente o documento físico.
+                                </p>
+                                
+                                <form action="{% url 'ugea:editar_resumo' p.id %}" method="post">
+                                    {% csrf_token %}
+                                    
+                                    <div class="scope-container" style="display: flex; flex-direction: column; gap: 15px;">
+                                        
+                                        <!-- Escopo 1: Administrativo -->
+                                        <div class="scope-card" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #d1d5db;">
+                                            <h6 style="margin:0 0 10px 0; color:#1f2937; font-size:12px; text-transform:uppercase;"><i class="fas fa-id-card"></i> 1. Dados Administrativos (Lidos)</h6>
+                                            <textarea name="admin_data" placeholder="Transcrição de dados administrativos..." style="width:100%; height:80px; padding:10px; border:1px solid #e5e7eb; border-radius:4px; font-family:monospace; font-size:12px;">{{ p.resumo_admin }}</textarea>
+                                        </div>
+
+                                        <!-- Escopo 2: Técnico -->
+                                        <div class="scope-card" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #d1d5db;">
+                                            <h6 style="margin:0 0 10px 0; color:#1f2937; font-size:12px; text-transform:uppercase;"><i class="fas fa-microchip"></i> 2. Características Técnicas Submetidas</h6>
+                                            <textarea name="tech_data" placeholder="Transcrição de especificações..." style="width:100%; height:80px; padding:10px; border:1px solid #e5e7eb; border-radius:4px; font-family:monospace; font-size:12px;">{{ p.resumo_tecnico }}</textarea>
+                                        </div>
+
+                                        <!-- Escopo 3: Financeiro (BLOQUEADO - ANTI-FRAUDE) -->
+                                        <div class="scope-card" style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #d1d5db; opacity: 0.9;">
+                                            <h6 style="margin:0 0 10px 0; color:#1f2937; font-size:12px; text-transform:uppercase;"><i class="fas fa-lock"></i> 3. Dados Financeiros e Prazos (Inalterável)</h6>
+                                            <textarea name="fin_data" readonly style="width:100%; height:80px; padding:10px; border:1px solid #e5e7eb; border-radius:4px; font-family:monospace; font-size:12px; background:#f3f4f6; cursor: not-allowed;">{{ p.resumo_financeiro }}</textarea>
+                                            <p style="font-size:10px; color:#ef4444; margin-top:5px;"><i class="fas fa-info-circle"></i> Os valores financeiros não podem ser alterados manualmente. Se houver erro de leitura, reinicie a digitalização.</p>
+                                        </div>
+
+                                    </div>
+
+                                    <div style="margin-top:20px; display:flex; justify-content: space-between; align-items: center;">
+                                        <button type="submit" class="btn-xs" style="background:#003366; color:white; border:none; padding:8px 20px; cursor:pointer; border-radius:4px; font-weight:bold;">
+                                            <i class="fas fa-check-double"></i> Confirmar Transcrição Digital
+                                        </button>
+                                        
+                                        <a href="{% url 'ugea:eliminar_proposta' p.id %}" 
+                                           onclick="return confirm('Apagar registo digital e tentar novamente?')"
+                                           class="btn-xs" style="background:#f3f4f6; color:#4b5563; text-decoration:none; padding:8px 15px; border-radius:4px; border:1px solid #d1d5db;">
+                                            <i class="fas fa-undo"></i> Reiniciar Digitalização
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center; padding:20px;">Aguardando submissão de imagens da proposta...</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TAB 4: AVALIACAO -->
+<div id="Avaliacao" class="tab-content">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>Mesa de Avaliação (Júri)</h3>
+            {% with sugestao=concurso.sugerir_vencedor %}
+            {% if sugestao %}
+            <div style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px 15px; border-radius: 8px; max-width: 400px;">
+                <h4 style="margin:0; color:#3730a3; font-size: 14px;"><i class="fas fa-robot"></i> Recomendação da IA (Anti-Fraude)</h4>
+                <p style="margin:5px 0 0; font-size: 12px; color:#4338ca;">
+                    Sugestão: <strong>{{ sugestao.fornecedor }}</strong><br>
+                    Motivo: Melhor rácio de conformidade técnica e valor financeiro identificado via OCR.
+                </p>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Classif.</th>
+                    <th>Concorrente</th>
+                    <th>Valor</th>
+                    <th>Pont. Técnica</th>
+                    <th>Pont. Financeira</th>
+                    <th>Score Final</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in propostas %}
+                <tr>
+                    <td>{% if p.classificacao %}#{{ p.classificacao }}{% else %}-{% endif %}</td>
+                    <td>{{ p.fornecedor }}</td>
+                    <td>{{ p.valor_proposto }}</td>
+                    <td>{{ p.pontuacao_tecnica|default:"-" }}</td>
+                    <td>{{ p.pontuacao_financeira|default:"-" }}</td>
+                    <td style="font-weight:bold; color:var(--primary);">{{ p.pontuacao_final|default:"-" }}</td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <a href="{% url 'ugea:avaliar_proposta' p.id %}" class="btn-xs" style="background:var(--primary);">Pontuar</a>
+                            {% if not concurso.contrato_ativo %}
+                                <a href="{% url 'ugea:adjudicar_proposta' p.id %}" 
+                                   onclick="return confirm('Confirmar adjudicação à {{ p.fornecedor }}? Isto gerará o contrato oficial.')"
+                                   class="btn-xs" style="background:#28a745; color:white;">Adjudicar</a>
+                            {% elif concurso.contrato_ativo.proposta_vencedora == p %}
+                                <span style="background:#d4edda; color:#155724; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold;">Vencedora / Contratada</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Styles Specific to this page -->
+<style>
+    .header-summary { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; background: #999; }
+    .badge.aberto { background: #28a745; }
+    .badge.avaliacao { background: #ffc107; color: #333; }
+    
+    .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+    .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: #666; font-weight: 600; }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { border-bottom: 2px solid var(--primary); color: var(--primary); }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .detail-table th { text-align: left; color: #777; padding: 5px 0; }
+    .timeline { display: flex; justify-content: space-between; margin-top: 20px; position: relative; }
+    .timeline::before { content: ''; position: absolute; top: 10px; left: 0; right: 0; height: 2px; background: #eee; z-index: 0; }
+    .step { background: #eee; padding: 5px 15px; border-radius: 20px; font-size: 12px; z-index: 1; position: relative; color: #999; }
+    .step.active { background: var(--primary); color: white; }
+    
+    .hidden-form { display: none; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px; }
+    .btn-text { background: none; border: none; color: var(--primary); cursor: pointer; text-decoration: underline; font-size: 13px; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .data-table th, .data-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+    .btn-xs { padding: 2px 8px; background: var(--primary); color: white; border-radius: 3px; font-size: 11px; text-decoration: none; }
+    
+    /* Upload fields fix */
+    input[type="file"] { padding: 5px; }
+</style>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+    
+    function toggleForm(id) {
+        var el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Auto-restaurar aba após submissão ou erro
+    window.onload = function() {
+        {% if form_proposta.errors or 'submit_proposta' in request.POST %}
+            openTab(null, 'Propostas');
+        {% elif form_juri.errors or 'submit_juri' in request.POST %}
+            openTab(null, 'Planeamento');
+        {% endif %}
+        
+        // Se houver mensagens de erro/sucesso, rolar até lá
+        if (document.querySelector('.messages') || document.querySelector('.hidden-form[style*="display: block"]')) {
+             window.scrollTo({ top: 400, behavior: 'smooth' });
+        }
+    };
+</script>
+{% endblock %}

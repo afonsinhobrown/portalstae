@@ -1,0 +1,114 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Verificar Credencial • Credenciais{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="credenciais-card">
+            <div class="card-header bg-transparent border-0 text-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-qrcode me-2 text-primary"></i>
+                    Verificar Credencial
+                </h5>
+            </div>
+            
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-id-card fa-5x text-primary mb-4"></i>
+                    <h3 class="fw-bold text-primary">Verificação de Credencial</h3>
+                    <p class="text-muted">
+                        Use um leitor de QR Code para verificar a validade de uma credencial.
+                    </p>
+                </div>
+
+                <!-- Área de Verificação -->
+                <div class="border rounded p-4 bg-light mb-4">
+                    <h6 class="fw-bold mb-3">Verificação Manual</h6>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Insira o código de verificação" id="codigoInput">
+                        <button class="btn btn-primary" onclick="verificarCredencial()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultado -->
+                <div id="resultado" class="d-none">
+                    <div class="alert" id="resultadoAlert">
+                        <h5 class="alert-heading" id="resultadoTitulo"></h5>
+                        <p class="mb-2" id="resultadoMensagem"></p>
+                        <hr>
+                        <div id="resultadoDetalhes"></div>
+                    </div>
+                </div>
+
+                <!-- Informações -->
+                <div class="alert alert-info">
+                    <h6 class="fw-bold">Como Verificar</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="fas fa-qrcode me-2"></i>Use um leitor de QR Code no crachá</li>
+                        <li><i class="fas fa-mobile-alt me-2"></i>Ou insira o código manualmente</li>
+                        <li><i class="fas fa-shield-alt me-2"></i>Sistema verifica validade e autenticidade</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function verificarCredencial() {
+    const codigo = document.getElementById('codigoInput').value.trim();
+    const resultado = document.getElementById('resultado');
+    const resultadoAlert = document.getElementById('resultadoAlert');
+    const resultadoTitulo = document.getElementById('resultadoTitulo');
+    const resultadoMensagem = document.getElementById('resultadoMensagem');
+    const resultadoDetalhes = document.getElementById('resultadoDetalhes');
+    
+    if (!codigo) {
+        alert('Por favor, insira um código para verificar.');
+        return;
+    }
+    
+    // Simular verificação (em produção seria uma chamada AJAX)
+    fetch(`{% url 'credenciais:verificar_credencial' %}?codigo=${codigo}`)
+        .then(response => response.json())
+        .then(data => {
+            resultado.classList.remove('d-none');
+            
+            if (data.valida) {
+                resultadoAlert.className = 'alert alert-success';
+                resultadoTitulo.textContent = '✓ Credencial Válida';
+                resultadoMensagem.textContent = 'Esta credencial está activa e válida.';
+                resultadoDetalhes.innerHTML = `
+                    <p class="mb-1"><strong>Número:</strong> ${data.numero}</p>
+                    <p class="mb-1"><strong>Solicitante:</strong> ${data.solicitante}</p>
+                    <p class="mb-1"><strong>Validade:</strong> ${new Date(data.validade).toLocaleDateString('pt-PT')}</p>
+                `;
+            } else {
+                resultadoAlert.className = 'alert alert-danger';
+                resultadoTitulo.textContent = '✗ Credencial Inválida';
+                resultadoMensagem.textContent = data.erro || 'Esta credencial não é válida ou expirou.';
+                resultadoDetalhes.innerHTML = '';
+            }
+        })
+        .catch(error => {
+            resultado.classList.remove('d-none');
+            resultadoAlert.className = 'alert alert-warning';
+            resultadoTitulo.textContent = '⚠ Erro na Verificação';
+            resultadoMensagem.textContent = 'Ocorreu um erro ao verificar a credencial.';
+            resultadoDetalhes.innerHTML = '';
+        });
+}
+
+// Permitir verificação com Enter
+document.getElementById('codigoInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        verificarCredencial();
+    }
+});
+</script>
+{% endblock %}

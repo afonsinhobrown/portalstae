@@ -1,0 +1,120 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Eventos • Credenciais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Gestão de Eventos</h4>
+        <p class="text-muted small mb-0">Gerencie os eventos ativos para emissão de credenciais</p>
+    </div>
+    {% if user.is_staff %}
+    <a href="{% url 'credenciais:adicionar_evento' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Evento
+    </a>
+    {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <form method="get" class="row g-2">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0"
+                        placeholder="Pesquisar por nome ou local..." value="{{ query }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th>Evento</th>
+                    <th>Período</th>
+                    <th>Local / Província</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evento in eventos %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if evento.logotipo %}
+                            <img src="{{ evento.logotipo.url }}" class="rounded me-3"
+                                style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center me-3"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ evento.nome }}</h6>
+                                <span class="text-muted small">{{ evento.descricao|truncatechars:50 }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="small">
+                            {{ evento.data_inicio|date:"d/m/Y" }} - {{ evento.data_fim|date:"d/m/Y" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="small">
+                            <span class="badge bg-info bg-opacity-10 text-info mb-1">{{ evento.get_abrangencia_display
+                                }}</span><br>
+                            {% if evento.abrangencia == 'nacional' %}
+                            <span class="text-muted"><i class="fas fa-globe-africa me-1"></i> Todo o País</span>
+                            {% elif evento.abrangencia == 'provincial' %}
+                            <span class="text-muted"><i class="fas fa-map me-1"></i> {{ evento.get_provincia_display
+                                }}</span>
+                            {% else %}
+                            <i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ evento.local }}<br>
+                            <span class="text-muted">{{ evento.get_provincia_display }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if evento.esta_ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativo / Encerrado</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <a href="{% url 'credenciais:detalhe_evento' evento.id %}"
+                                class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if user.is_staff %}
+                            <a href="{% url 'credenciais:editar_evento' evento.id %}"
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="fas fa-calendar-times fa-3x mb-3 d-block"></i>
+                        Nenhum evento encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,420 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{{ formacao.nome }} - DFEC{% endblock %}
+{% block page_title %}{{ formacao.nome }}{% endblock %}
+{% block page_subtitle %}{{ formacao.get_tipo_formacao_display }} | {{ formacao.local_realizacao }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-cog me-2"></i> Ações
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'dfec:formacao_editar' formacao.pk %}"><i class="fas fa-edit me-2"></i>Editar Formação</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Exportar Excel</a></li>
+        <li><a class="dropdown-item" href="{% url 'dfec:gerar_pdf_participantes' formacao.pk %}"><i class="fas fa-file-pdf me-2"></i>Gerar Lista de Presença</a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Informações Gerais -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary"><i class="fas fa-info-circle me-2"></i>Informações da Formação</h6>
+                <span class="badge bg-{% if formacao.status == 'PLANEADO' %}secondary{% elif formacao.status == 'INICIADO' %}primary{% elif formacao.status == 'EM_EXECUCAO' %}success{% else %}info{% endif %}">{{ formacao.get_status_display }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Tipo:</dt>
+                            <dd class="col-sm-7"><span class="badge bg-primary">{{ formacao.get_tipo_formacao_display }}</span></dd>
+
+                            <dt class="col-sm-5">Local:</dt>
+                            <dd class="col-sm-7">{{ formacao.local_realizacao }}</dd>
+
+                            <dt class="col-sm-5">Carga Horária:</dt>
+                            <dd class="col-sm-7">{{ formacao.carga_horaria }} horas</dd>
+
+                            <dt class="col-sm-5">Datas:</dt>
+                            <dd class="col-sm-7">
+                                {{ formacao.data_inicio_planeada|date:"d/m/Y" }} - {{ formacao.data_fim_planeada|date:"d/m/Y" }}
+                                {% if formacao.data_inicio_real %}
+                                <br><small class="text-muted">Real: {{ formacao.data_inicio_real|date:"d/m/Y" }} - {{ formacao.data_fim_real|date:"d/m/Y" }}</small>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Vagas:</dt>
+                            <dd class="col-sm-7">
+                                {{ formacao.vagas_preenchidas }} / {{ formacao.vagas_planeadas }}
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {% widthratio formacao.participantes.count formacao.vagas_planeadas 100 %}%;"></div>
+                                </div>
+                            </dd>
+
+                            <dt class="col-sm-5">Orçamento:</dt>
+                            <dd class="col-sm-7">
+                                {{ formacao.orcamento_planeado|floatformat:2 }} MT
+                                <br>
+                                <small class="text-{% if formacao.orcamento_executado > formacao.orcamento_planeado %}danger{% else %}success{% endif %}">Executado: {{ formacao.orcamento_executado|floatformat:2 }} MT</small>
+                            </dd>
+
+                            <dt class="col-sm-5">Responsável:</dt>
+                            <dd class="col-sm-7">
+                                {{ formacao.responsavel_principal.get_full_name }}
+                                <br><small class="text-muted">{{ formacao.responsavel_principal.email }}</small>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6 class="fw-bold text-primary mb-2">Descrição</h6>
+                    <p>{{ formacao.descricao|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary"><i class="fas fa-chart-bar me-2"></i>Estatísticas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="stat-card bg-primary text-white p-3 rounded">
+                            <h3 class="mb-0">{{ estatisticas.total_participantes }}</h3>
+                            <small>Participantes</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card bg-success text-white p-3 rounded">
+                            <h3 class="mb-0">{{ estatisticas.aprovados }}</h3>
+                            <small>Aprovados</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card bg-warning text-dark p-3 rounded">
+                            <h3 class="mb-0">{{ estatisticas.total_turmas }}</h3>
+                            <small>Turmas</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card bg-info text-white p-3 rounded">
+                            <h3 class="mb-0">{{ estatisticas.total_brigadas }}</h3>
+                            <small>Brigadas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h6 class="fw-bold text-primary mb-3">Distribuição por Gênero</h6>
+                    <div class="chart-pie pt-2">
+                        <canvas id="generoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 border-0">
+                <ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="participantes-tab" data-bs-toggle="tab" data-bs-target="#participantes" type="button">
+                            <i class="fas fa-users me-2"></i>Participantes <span class="badge bg-primary ms-2">{{ formacao.participantes.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="turmas-tab" data-bs-toggle="tab" data-bs-target="#turmas" type="button">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Turmas <span class="badge bg-success ms-2">{{ formacao.turmas.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="brigadas-tab" data-bs-toggle="tab" data-bs-target="#brigadas" type="button">
+                            <i class="fas fa-user-friends me-2"></i>Brigadas <span class="badge bg-info ms-2">{{ formacao.brigadas.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="materiais-tab" data-bs-toggle="tab" data-bs-target="#materiais" type="button">
+                            <i class="fas fa-boxes me-2"></i>Materiais
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="myTabContent">
+
+                    <!-- Tab: Participantes -->
+                    <div class="tab-pane fade show active" id="participantes" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-4">
+                            <h6 class="fw-bold text-primary">Lista de Participantes</h6>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCriarParticipante">
+                                    <i class="fas fa-plus me-1"></i>Novo Manual
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#importParticipantesModal">
+                                    <i class="fas fa-file-import me-1"></i>Importar CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        {% if formacao.participantes.exists %}
+                        <div class="table-responsive">
+                            <table class="table table-hover datatable">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>BI</th>
+                                        <th>Gênero</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for participante in formacao.participantes.all %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ participante.nome_completo }}</strong>
+                                            <br><small class="text-muted">{{ participante.telefone }}</small>
+                                        </td>
+                                        <td>{{ participante.bilhete_identidade }}</td>
+                                        <td><span class="badge bg-secondary">{{ participante.get_genero_display }}</span></td>
+                                        <td>
+                                            <span class="badge bg-{% if participante.status == 'APROVADO' %}success{% elif participante.status == 'REPROVADO' %}danger{% else %}secondary{% endif %}">{{ participante.get_status_display }}</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <h5 class="text-muted">Nenhum participante registado</h5>
+                             <div class="mt-3">
+                                <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#modalCriarParticipante">
+                                    <i class="fas fa-plus me-1"></i>Novo Manual
+                                </button>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importParticipantesModal">
+                                    <i class="fas fa-file-import me-1"></i>Importar CSV
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tab: Turmas -->
+                    <div class="tab-pane fade" id="turmas" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-4">
+                            <h6 class="fw-bold text-primary">Turmas da Formação</h6>
+                            <div class="btn-group">
+                                <a href="{% url 'dfec:turma_criar' formacao.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Nova Turma
+                                </a>
+                                <a href="{% url 'dfec:gerar_turmas_inteligente' formacao.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-magic me-1"></i>Gerar Auto
+                                </a>
+                                <a href="{% url 'dfec:turma_limpar' formacao.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash me-1"></i>Limpar
+                                </a>
+                            </div>
+                        </div>
+
+                        {% if turmas %}
+                        <div class="row">
+                            {% for turma in turmas %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">{{ turma.nome }}</h6>
+                                    </div>
+                                    <div class="card-body">
+                                         <p class="mb-1 fw-bold">Equipe de Formadores:</p>
+                                         <ul class="list-unstyled small mb-3 ps-2 border-start border-primary border-3 bg-light py-2 rounded-end">
+                                            {% if turma.formador_principal %}
+                                            <li class="fw-bold text-primary mb-1"><i class="fas fa-user-tie me-1"></i>{{ turma.formador_principal.get_full_name }} (Principal)</li>
+                                            {% endif %}
+                                            {% for aux in turma.formadores_auxiliares.all %}
+                                            <li class="mb-1"><i class="fas fa-user me-1"></i>{{ aux.get_full_name }}</li>
+                                            {% empty %}
+                                            {% if not turma.formador_principal %}
+                                            <li class="text-muted fst-italic">Nenhum formador alocado.</li>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                        <p class="small text-muted mb-0"><strong>Participantes:</strong> {{ turma.num_participantes }}</p>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <a href="{% url 'dfec:turma_detalhe' turma.pk %}" class="btn btn-sm btn-primary">Ver Detalhes</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">Nenhuma turma criada.</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tab: Brigadas -->
+                    <div class="tab-pane fade" id="brigadas" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-4">
+                            <h6 class="fw-bold text-primary">Brigadas</h6>
+                            <a href="{% url 'dfec:gerar_brigadas_automatico' formacao.pk %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-robot me-1"></i>Gerar Brigadas
+                            </a>
+                        </div>
+                        {% if formacao.brigadas.exists %}
+                        <div class="row">
+                            {% for brigada in formacao.brigadas.all %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ brigada.codigo }}</h5>
+                                        <p class="card-text">{{ brigada.localidade }}</p>
+                                        <a href="{% url 'dfec:brigada_detalhe' brigada.pk %}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary">Nenhuma brigada formada.</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tab: Materiais -->
+                    <div class="tab-pane fade" id="materiais" role="tabpanel">
+                        <h6 class="fw-bold text-primary mb-3">Materiais</h6>
+                        {% if formacao.materiais.exists %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Qtd</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for material in formacao.materiais.all %}
+                                <tr>
+                                    <td>{{ material.nome }}</td>
+                                    <td>{{ material.quantidade_disponivel }} / {{ material.quantidade_necessaria }}</td>
+                                    <td>
+                                        {% if material.quantidade_disponivel >= material.quantidade_necessaria %}
+                                        <span class="badge bg-success">Ok</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Parcial</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p>Nenhum material cadastrado.</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import -->
+<div class="modal fade" id="importParticipantesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'dfec:carregar_participantes' formacao.pk %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Importar Participantes CSV</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" name="arquivo" class="form-control" required accept=".csv">
+                    <div class="mt-2"><a href="{% url 'dfec:download_template_participantes' %}">Baixar Template</a></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Criar Participante Manual -->
+<div class="modal fade" id="modalCriarParticipante" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'dfec:participante_criar' formacao.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Participante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome Completo *</label>
+                        <input type="text" name="nome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bilhete de Identidade</label>
+                        <input type="text" name="bi" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Gênero</label>
+                            <select name="genero" class="form-select">
+                                <option value="M">Masculino</option>
+                                <option value="F">Feminino</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" name="telefone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoria</label>
+                        <select name="categoria" class="form-select">
+                            <option value="BRIGADISTA" selected>Brigadista</option>
+                            <option value="MMV">MMV</option>
+                            <option value="AGENTE_EC">Agente de Educação Cívica</option>
+                            <option value="TECNICO">Técnico de Apoio</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Script do gráfico removido para evitar erros de sintaxe -->
+{% endblock %}

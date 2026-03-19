@@ -1,0 +1,20 @@
+{% extends 'credenciais/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>🚨 Controle de Emergência</h2>
+    <p>Bloqueie credenciais em massa em caso de emergência.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label>Tipo de Bloqueio:</label>
+            <select name="tipo_bloqueio" class="form-control">
+                <option value="evento">Por Evento</option>
+                <option value="todos">Todas as Credenciais</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-danger">Ativar Bloqueio</button>
+    </form>
+</div>
+{% endblock %}

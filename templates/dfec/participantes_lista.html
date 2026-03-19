@@ -1,0 +1,106 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Participantes - DFEC{% endblock %}
+{% block page_title %}Diretório de Participantes{% endblock %}
+{% block page_subtitle %}Gestão de Brigadistas, Membros MMV e Agentes de EC{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-filter me-1"></i> Filtrar por Categoria
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item {% if not categoria_filtro %}active{% endif %}"
+                href="{% url 'dfec:participantes_lista' %}">Todos</a></li>
+        {% for cat_code, cat_name in categorias %}
+        <li><a class="dropdown-item {% if categoria_filtro == cat_code %}active{% endif %}"
+                href="{% url 'dfec:participantes_lista' %}?categoria={{ cat_code }}">{{ cat_name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    {% if categoria_filtro %}
+                    Listando: {{ categoria_filtro }}
+                    {% else %}
+                    Todos os Participantes
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover datatable" id="participantesTable">
+                        <thead>
+                            <tr>
+                                <th>Nome Completo</th>
+                                <th>Categoria</th>
+                                <th>Província/Distrito</th>
+                                <th>Formação</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in participantes %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-light rounded-circle p-2 me-2 text-center"
+                                            style="width: 35px;">
+                                            <i class="fas fa-user text-secondary"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold">{{ p.nome_completo }}</span><br>
+                                            <small class="text-muted">{{ p.bilhete_identidade }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if p.categoria == 'BRIGADISTA' %}primary{% elif p.categoria == 'MMV' %}info{% elif p.categoria == 'AGENTE_EC' %}success{% else %}secondary{% endif %}">
+                                        {{ p.get_categoria_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ p.get_provincia_display }}</small><br>
+                                    <span class="text-muted">{{ p.distrito|default:"-" }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'dfec:formacao_detalhe' p.formacao.pk %}" class="small">
+                                        {{ p.formacao.nome|truncatechars:30 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ p.status|yesno:'success,warning,info' }}">
+                                        {{ p.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="verDetalhes('{{ p.id }}')">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-users-slash fa-3x mb-3"></i><br>
+                                    Nenhum participante encontrado com os filtros selecionados.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base_apps.html' %}
+{% block title %}Calendário Eleitoral{% endblock %}
+{% block module_name %}ELEIÇÕES{% endblock %}
+{% block icon %}fas fa-calendar-alt{% endblock %}
+{% block dashboard_url %}{% url 'eleicao:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>Marcos e Eventos Eleitorais</h3>
+        <div style="font-size: 14px; color: #666;">
+            Acompanhe as datas críticas do processo eleitoral.
+        </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #ddd; background: #f8f9fa;">
+                <th style="padding: 12px;">Eleição</th>
+                <th style="padding: 12px;">Evento</th>
+                <th style="padding: 12px;">Início</th>
+                <th style="padding: 12px;">Fim</th>
+                <th style="padding: 12px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evento in eventos %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px;">{{ evento.eleicao.nome }}</td>
+                <td style="padding: 12px; font-weight: bold;">{{ evento.nome }}</td>
+                <td style="padding: 12px;">{{ evento.data_inicio|date:"d/m/Y" }}</td>
+                <td style="padding: 12px;">{{ evento.data_fim|date:"d/m/Y" }}</td>
+                <td style="padding: 12px;">
+                    {% if evento.data_fim < today %}
+                        <span style="color: #666;"><i class="fas fa-check-circle"></i> Concluído</span>
+                    {% elif evento.data_inicio <= today and evento.data_fim >= today %}
+                        <span style="color: #2e7d32; font-weight: bold;"><i class="fas fa-spinner fa-spin"></i> Em curso</span>
+                    {% else %}
+                        <span style="color: #d97706;"><i class="fas fa-clock"></i> Agendado</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="padding: 30px; text-align: center; color: #777;">Nenhum evento agendado no calendário.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card" style="margin-top: 30px; border-left: 4px solid var(--primary);">
+    <h4>Tipos de Eventos Recomendados</h4>
+    <ul style="margin-top: 15px; line-height: 1.8;">
+        <li><strong>Recenseamento Eleitoral:</strong> Período de inscrição de novos eleitores.</li>
+        <li><strong>Apresentação de Candidaturas:</strong> Prazo para os partidos submeterem candidatos.</li>
+        <li><strong>Campanha Eleitoral:</strong> Período de propaganda política.</li>
+        <li><strong>Dia da Votação:</strong> A data principal do pleito.</li>
+        <li><strong>Apuramento e Proclamação:</strong> Contagem de votos e anúncio oficial.</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema STAE - Credenciais{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --stae-primary: #0056b3;
+            --stae-secondary: #6c757d;
+            --stae-success: #28a745;
+            --stae-danger: #dc3545;
+            --stae-warning: #ffc107;
+            --stae-info: #17a2b8;
+        }
+
+        .navbar-stae {
+            background-color: var(--stae-primary);
+        }
+
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .sidebar .nav-link {
+            color: #495057;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #e9ecef;
+            color: var(--stae-primary);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--stae-primary);
+            color: white;
+        }
+
+        .card-stae {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .card-stae:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .badge-pendente {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .badge-aprovado {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .badge-rejeitado {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .badge-emitido {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .badge-rascunho {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .badge-em_analise {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        .credencial-card {
+            border: 2px solid var(--stae-primary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .credencial-header {
+            background-color: var(--stae-primary);
+            color: white;
+            padding: 15px;
+        }
+
+        .qr-code-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .offline-code {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            background-color: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* Estilos para mensagens */
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        .alert-info {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-stae">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'credenciais:dashboard_credenciais' %}">
+                <i class="fas fa-id-card"></i> STAE - Sistema de Credenciais
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Meu Perfil</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i>
+                                    Sair</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Entrar</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            {% if user.is_authenticated %}
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <div class="p-3">
+                    <h5 class="text-muted mb-3">Menu Credenciais</h5>
+                    <nav class="nav flex-column">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_credenciais' %}active{% endif %}"
+                            href="{% url 'credenciais:dashboard_credenciais' %}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+
+                        <hr>
+
+                        <h6 class="text-muted mt-3 mb-2">Solicitantes</h6>
+                        <a class="nav-link {% if 'solicitantes' in request.resolver_match.url_name %}active{% endif %}"
+                            href="{% url 'credenciais:lista_solicitantes' %}">
+                            <i class="fas fa-users"></i> Listar Solicitantes
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'adicionar_solicitante' %}active{% endif %}"
+                            href="{% url 'credenciais:adicionar_solicitante' %}">
+                            <i class="fas fa-user-plus"></i> Adicionar Solicitante
+                        </a>
+
+                        <h6 class="text-muted mt-3 mb-2">Pedidos</h6>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'lista_pedidos' %}active{% endif %}"
+                            href="{% url 'credenciais:lista_pedidos' %}">
+                            <i class="fas fa-list"></i> Listar Pedidos
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'pedir_credencial' %}active{% endif %}"
+                            href="{% url 'credenciais:pedir_credencial' %}">
+                            <i class="fas fa-plus-circle"></i> Novo Pedido
+                        </a>
+                        <a class="nav-link" href="{% url 'credenciais:pedido_remoto' %}" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Pedido Remoto
+                        </a>
+
+                        <h6 class="text-muted mt-3 mb-2">Eventos</h6>
+                        <a class="nav-link {% if 'evento' in request.resolver_match.url_name and 'lista' in request.resolver_match.url_name %}active{% endif %}"
+                            href="{% url 'credenciais:lista_eventos' %}">
+                            <i class="fas fa-calendar-alt"></i> Listar Eventos
+                        </a>
+                        {% if user.is_staff %}
+                        <a class="nav-link {% if request.resolver_match.url_name == 'adicionar_evento' %}active{% endif %}"
+                            href="{% url 'credenciais:adicionar_evento' %}">
+                            <i class="fas fa-calendar-plus"></i> Novo Evento
+                        </a>
+                        {% endif %}
+
+                        <h6 class="text-muted mt-3 mb-2">Verificação</h6>
+                        <a class="nav-link {% if 'verificar' in request.resolver_match.url_name %}active{% endif %}"
+                            href="{% url 'credenciais:verificar_credencial' %}">
+                            <i class="fas fa-qrcode"></i> Verificar Credencial
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'verificar_offline' %}active{% endif %}"
+                            href="{% url 'credenciais:verificar_offline' %}">
+                            <i class="fas fa-wifi-slash"></i> Verificação Offline
+                        </a>
+
+                        {% if user.is_staff %}
+                        <h6 class="text-muted mt-3 mb-2">Administração</h6>
+                        <a class="nav-link {% if 'funcionarios' in request.resolver_match.url_name %}active{% endif %}"
+                            href="{% url 'credenciais:lista_credenciais_funcionarios' %}">
+                            <i class="fas fa-id-badge"></i> Credenciais Funcionários
+                        </a>
+                        <a class="nav-link {% if 'emergencia' in request.resolver_match.url_name %}active{% endif %}"
+                            href="{% url 'credenciais:emergencia_bloqueio' %}">
+                            <i class="fas fa-exclamation-triangle"></i> Emergência
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'auditoria_credenciais' %}active{% endif %}"
+                            href="{% url 'credenciais:auditoria_credenciais' %}">
+                            <i class="fas fa-history"></i> Auditoria
+                        </a>
+                        <a class="nav-link {% if 'tipos-credencial' in request.resolver_match.url_name %}active{% endif %}"
+                            href="{% url 'credenciais:lista_tipos_credencial' %}">
+                            <i class="fas fa-tags"></i> Tipos de Credencial
+                        </a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'relatorios_credenciais' %}active{% endif %}"
+                            href="{% url 'credenciais:relatorios_credenciais' %}">
+                            <i class="fas fa-chart-bar"></i> Relatórios
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Main Content -->
+            <div class="{% if user.is_authenticated %}col-md-10{% else %}col-12{% endif %}">
+                <div class="p-3">
+                    <!-- Messages -->
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas
+                                    {% if message.tags == 'success' %}fa-check-circle
+                                    {% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle
+                                    {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                                    {% else %}fa-info-circle
+                                    {% endif %}
+                                    me-2"></i>
+                                <div>
+                                    {{ message|safe }}
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Fechar"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Page Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="fw-bold">{% block page_title %}{% endblock %}</h2>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{% url 'credenciais:dashboard_credenciais' %}">
+                                            <i class="fas fa-home"></i> Home</a></li>
+                                    {% block breadcrumbs %}{% endblock %}
+                                </ol>
+                            </nav>
+                        </div>
+                        {% block page_actions %}{% endblock %}
+                    </div>
+
+                    <!-- Content -->
+                    <div class="content-wrapper">
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light border-top">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="text-muted">
+                        <i class="fas fa-copyright"></i> {% now "Y" %} STAE - Sistema de Credenciais
+                    </span>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted">
+                        <i class="fas fa-code"></i> v1.0.0 |
+                        <i class="fas fa-user-shield"></i> {{ user.username }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        $(document).ready(function () {
+            setTimeout(function () {
+                $('.alert:not(.alert-permanent)').alert('close');
+            }, 5000);
+
+            // Adicionar classe para alertas que não devem fechar automaticamente
+            $('.alert').not('.alert-danger, .alert-warning').addClass('alert-auto-dismiss');
+
+            // Fechar alertas com classe auto-dismiss
+            setTimeout(function () {
+                $('.alert-auto-dismiss').alert('close');
+            }, 5000);
+
+            // Tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Popovers
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+
+        // Dynamic form fields for emergency configuration
+        $(document).ready(function () {
+            function toggleEmergencyFields() {
+                var tipo = $('#id_tipo_bloqueio').val();
+                $('.campo-condicional').parent().hide();
+                $('.campo-condicional[data-tipo="' + tipo + '"]').parent().show();
+            }
+
+            $('#id_tipo_bloqueio').change(toggleEmergencyFields);
+            toggleEmergencyFields();
+        });
+
+        // Confirmação para ações críticas
+        function confirmAction(message, formId) {
+            if (confirm(message)) {
+                document.getElementById(formId).submit();
+            }
+            return false;
+        }
+
+        // Copiar para área de transferência
+        function copyToClipboard(elementId) {
+            var copyText = document.getElementById(elementId);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // Para dispositivos móveis
+            navigator.clipboard.writeText(copyText.value);
+
+            // Mostrar feedback
+            var originalText = copyText.value;
+            copyText.value = "Copiado!";
+            setTimeout(function () {
+                copyText.value = originalText;
+            }, 1000);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

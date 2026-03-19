@@ -1,0 +1,76 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Contratos de Manutenção • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold mb-0">Contratos de Manutenção Activos</h4>
+        <a href="{% url 'ugea:lista_contratos' %}" class="btn btn-outline-warning" target="_blank">
+            <i class="fas fa-external-link-alt me-2"></i>Gerir na UGEA
+        </a>
+    </div>
+</div>
+
+<div class="combustivel-card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nº Contrato</th>
+                        <th>Oficina</th>
+                        <th>Valor Total</th>
+                        <th>Executado</th>
+                        <th>Validade</th>
+                        <th class="text-end">Estado</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contrato in contratos %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'gestaocombustivel:detalhe_contrato_manutencao' contrato.id %}"
+                                class="text-decoration-none fw-bold">
+                                {{ contrato.numero_contrato }}
+                            </a>
+                        </td>
+                        <td>{{ contrato.fornecedor.nome }}</td>
+                        <td>{{ contrato.valor_total|floatformat:2 }} MT</td>
+                        <td>
+                            <div class="progress" style="height: 10px; width: 100px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                    style="width:{{ contrato.percentual_execucao }}%;"></div>
+                            </div>
+                            <small>{{ contrato.percentual_execucao }}%</small>
+                        </td>
+                        <td>{{ contrato.data_fim|date:"d/m/Y" }}</td>
+                        <td class="text-end">
+                            <span
+                                class="badge {% if contrato.estado == 'Ativo' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ contrato.estado }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="{% url 'gestaocombustivel:detalhe_contrato_manutencao' contrato.id %}"
+                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Nenhum contrato registado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

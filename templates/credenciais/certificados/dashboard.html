@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Certificação e Diplomas</h1>
+        <a href="{% url 'credenciais:cert_novo' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Novo Projeto
+        </a>
+    </div>
+
+    <div class="row">
+        {% for projeto in projetos %}
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                {{ projeto.modelo.nome }}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ projeto.nome }}</div>
+                            <div class="mt-2 text-muted small">
+                                <i class="fas fa-calendar me-1"></i>{{ projeto.created_at|date:"d/m/Y" }}
+                                <span class="mx-1">|</span>
+                                <i class="fas fa-user-graduate me-1"></i>{{ projeto.documentos.count }} beneficiários
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-certificate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'credenciais:cert_editor' projeto.id %}" class="btn btn-sm btn-outline-secondary">Editar Design</a>
+                        <a href="{% url 'credenciais:cert_beneficiarios' projeto.id %}" class="btn btn-sm btn-primary">Gerir & Emitir</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 py-5 text-center">
+            <img src="https://img.icons8.com/clouds/100/000000/certificate.png" alt="Sem dados">
+            <p class="mt-3 text-muted">Nenhum projeto de certificação criado ainda.</p>
+            <a href="{% url 'credenciais:cert_novo' %}" class="btn btn-lg btn-primary mt-2">Começar Agora</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0cm;
+            padding: 0cm;
+            background-color: white;
+            {% if projeto.fundo_personalizado %}
+                background-image: url("{{ projeto.fundo_personalizado.path }}");
+            {% elif projeto.modelo.fundo_padrao %}
+                background-image: url("{{ projeto.modelo.fundo_padrao.path }}");
+            {% endif %}
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        body {
+            font-family: Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* Layout Table - The Container of Everything */
+        /* Table layout prevents page breaks better than divs in xhtml2pdf */
+        .layout-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .content-cell {
+            vertical-align: top;
+            text-align: center;
+            padding-top: 15mm; /* Header vertical space */
+            padding-left: 20mm;
+            padding-right: 20mm;
+        }
+
+        /* Header Styles */
+        .header-box { margin-bottom: 5mm; }
+        .h-line1 { font-family: "Times New Roman", serif; font-size: 11pt; color: #444; margin-bottom: 2px; }
+        .h-line2 { font-family: "Times New Roman", serif; font-size: 14pt; font-weight: bold; text-transform: uppercase; color: #000; }
+
+        /* Title */
+        .cert-title {
+            font-size: 32pt;
+            font-weight: bold;
+            color: #003366;
+            text-transform: uppercase;
+            margin-bottom: 10mm;
+            letter-spacing: 2px;
+        }
+
+        /* Body */
+        .cert-body {
+            font-size: 15pt;
+            line-height: 1.5;
+            margin-bottom: 10mm;
+            min-height: 40mm;
+            padding: 0 10mm;
+        }
+        
+        /* Date */
+        .cert-date {
+            font-size: 13pt;
+            color: #666;
+            margin-bottom: 15mm;
+        }
+
+        /* Signatures Table */
+        .sig-tbl {
+            width: 100%;
+            margin-top: 0mm;
+        }
+        .sig-cell {
+            vertical-align: top;
+            text-align: center;
+            padding: 0 5mm;
+        }
+        .sig-line {
+            border-top: 1px solid #333;
+            width: 80%;
+            margin: 0 auto 2mm auto;
+        }
+        .sig-name { font-weight: bold; font-size: 12pt; margin-bottom: 1mm; }
+        .sig-role { font-size: 10pt; font-style: italic; color: #555; }
+
+    </style>
+</head>
+<body>
+    <!-- Main Layout Table - Ensures Single Page -->
+    <table class="layout-table">
+        <tr>
+            <td class="content-cell">
+                
+                <!-- ENTITY HEADER -->
+                <div class="header-box">
+                    <div class="h-line1">República de Moçambique</div>
+                    <div class="h-line2">
+                        {% if projeto.entidade_emissora == 'cne' %}
+                            Comissão Nacional de Eleições
+                        {% else %}
+                            Secretariado Técnico de Admin. Eleitoral
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- TITLE -->
+                <div class="cert-title">{{ projeto.titulo }}</div>
+
+                <!-- BODY TEXT -->
+                <div class="cert-body">
+                    {{ texto_corpo_processado|safe|default:projeto.texto_corpo|linebreaksbr }}
+                </div>
+
+                <!-- DATE -->
+                <div class="cert-date">
+                    {% if projeto.data_extenso %}
+                        {{ projeto.data_extenso }}
+                    {% else %}
+                        Maputo, {{ data_hoje|date:"d" }} de {{ data_hoje|date:"F" }} de {{ data_hoje|date:"Y" }}
+                    {% endif %}
+                </div>
+
+                <!-- SIGNATURES -->
+                <table class="sig-tbl">
+                    <tr>
+                        <td width="50%" class="sig-cell">
+                            {% if projeto.nome_assinatura_1 %}
+                                <div style="display:block; width:100%;">
+                                    <div class="sig-line"></div>
+                                    <div class="sig-name">{{ projeto.nome_assinatura_1 }}</div>
+                                    <div class="sig-role">{{ projeto.cargo_assinatura_1 }}</div>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td width="50%" class="sig-cell">
+                            {% if projeto.nome_assinatura_2 %}
+                                <div style="display:block; width:100%;">
+                                    <div class="sig-line"></div>
+                                    <div class="sig-name">{{ projeto.nome_assinatura_2 }}</div>
+                                    <div class="sig-role">{{ projeto.cargo_assinatura_2 }}</div>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

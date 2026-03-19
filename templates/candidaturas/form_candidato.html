@@ -1,0 +1,111 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}CANDIDATURAS - REGISTO{% endblock %}
+{% block icon %}fas fa-user-tie{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: auto;">
+    <div class="card-header">
+        <h3>{{ titulo }}</h3>
+        {% if subtitulo %}<p class="text-muted">{{ subtitulo }}</p>{% endif %}
+    </div>
+    
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="row">
+                        {% if partidos_ativos %}
+                        <div class="col-md-12">
+                            <div class="form-group mb-3 p-3 bg-primary-subtle rounded border border-primary">
+                                <label class="fw-bold text-primary"><i class="fas fa-university me-2"></i>Vincular a Partido Inscrito</label>
+                                <select name="inscricao_partido" class="form-control" required>
+                                    <option value="">Selecione o Partido...</option>
+                                    {% for p in partidos_ativos %}
+                                    <option value="{{ p.id }}">{{ p.partido.sigla }} - {{ p.eleicao.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                <label>Nome Completo (Conforme BI)</label>
+                                {{ form.nome_completo }}
+                                <small class="text-muted">Este nome aparecerá no boletim de voto.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>BI / Documento</label>
+                                {{ form.bi_numero }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Cartão de Eleitor</label>
+                                {{ form.numero_eleitor }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3 text-center">
+                        <label>Foto Oficial</label>
+                        <div style="width: 150px; height: 180px; background: #f8fafc; border: 2px dashed #cbd5e1; margin: auto; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px;">
+                            <i class="fas fa-camera" style="font-size: 30pt; color: #94a3b8;"></i>
+                        </div>
+                        <div class="mt-2">
+                            {{ form.foto }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label>Categoria</label>
+                        {{ form.categoria }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label>Género</label>
+                        {{ form.genero }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label>Data de Nascimento</label>
+                        {{ form.data_nascimento }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label>Tipo de Candidato</label>
+                        {{ form.tipo }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label>Posição na Lista</label>
+                        {{ form.posicao }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{% url 'candidaturas:dashboard' %}" class="btn btn-light" style="margin-right: 10px;">Cancelar</a>
+                <button type="submit" class="btn btn-primary" style="padding-left: 40px; padding-right: 40px;">
+                    Finalizar Registo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

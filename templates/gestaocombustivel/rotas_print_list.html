@@ -1,0 +1,208 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Rotas de Transporte - Portal STAE</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #005a8d;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #005a8d;
+            font-size: 24px;
+        }
+
+        .rota-section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .rota-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #005a8d;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .rota-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #005a8d;
+            margin: 0;
+        }
+
+        .rota-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            text-align: left;
+            padding: 6px;
+            border: 1px solid #ddd;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 6px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+            vertical-align: top;
+        }
+
+        .point-name {
+            font-weight: bold;
+            color: #005a8d;
+        }
+
+        .passenger-list {
+            margin: 0;
+            padding-left: 15px;
+            font-size: 10px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+            }
+        }
+
+        .no-print {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #005a8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print">Imprimir Documento</button>
+
+    <div class="header">
+        <h1>LISTA GERAL DE ROTAS DE TRANSPORTE</h1>
+        <p>Portal STAE - Gestão de Frotas</p>
+    </div>
+
+    {% for item in dados_rotas %}
+    <div class="rota-section">
+        <div class="rota-header">
+            <h2 class="rota-title">{{ item.rota.nome_rota }}</h2>
+            <div style="font-size: 12px; color: #666;">{{ item.rota.dias_semana }}</div>
+        </div>
+
+        <div class="rota-info">
+            <div>
+                <strong>Viatura:</strong> {{ item.rota.viatura.matricula }} ({{ item.rota.viatura.marca }})<br>
+                <strong>Motorista:</strong> {{ item.rota.motorista.nome_completo }}
+            </div>
+            <div style="text-align: right;">
+                <strong>Horário:</strong> {{ item.rota.hora_partida|time:"H:i" }} - {{ item.rota.hora_chegada|time:"H:i"
+                }}<br>
+                <strong>Distância:</strong> {{ item.rota.distancia_total|default:"0" }} KM
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30px;">#</th>
+                    <th>Ponto / Localização</th>
+                    <th style="width: 60px;">Hora</th>
+                    <th>Funcionários</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ponto in item.pontos %}
+                <tr>
+                    <td style="text-align: center;">{{ ponto.ordem }}</td>
+                    <td>
+                        <span class="point-name">{{ ponto.nome_ponto }}</span>
+                        <br><small>{{ ponto.localizacao }}</small>
+                    </td>
+                    <td style="text-align: center;">{{ ponto.hora_estimada|time:"H:i" }}</td>
+                    <td>
+                        {% with passageiros=item.passageiros_por_ponto|get_item:ponto.id %}
+                        {% if passageiros %}
+                        <ul class="passenger-list">
+                            {% for p in passageiros %}
+                            <li>{{ p.funcionario.nome_completo|truncatechars:30 }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        -
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+
+    <div class="footer">
+        Relatório geral gerado em {{ now|date:"d/m/Y H:i" }} • Portal STAE
+    </div>
+</body>
+
+</html>

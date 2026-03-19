@@ -1,0 +1,121 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block page_title %}Comparação de Ciclos Eleitorais{% endblock %}
+{% block page_subtitle %}Análise evolutiva entre pleitos eleitorais{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Card de Seleção -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body bg-light">
+                <form method="get" class="row align-items-end g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Eleição Base (Referência)</label>
+                        <select name="ano1" class="form-select border-primary">
+                            {% for ano in anos_disponiveis %}
+                            <option value="{{ ano }}" {% if ano == ano1 %}selected{% endif %}>{{ ano }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Eleição para Comparar (Atual)</label>
+                        <select name="ano2" class="form-select border-success">
+                            {% for ano in anos_disponiveis %}
+                            <option value="{{ ano }}" {% if ano == ano2 %}selected{% endif %}>{{ ano }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="fas fa-exchange-alt me-2"></i>Comparar Resultados
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if dados_comparativos %}
+<div class="row">
+    <!-- KPIs de Evolução -->
+    <div class="col-12 mb-4">
+        <div class="card section-card border-0 shadow">
+            <div class="card-header bg-white border-bottom pt-3">
+                <h5 class="fw-bold text-dark"><i class="fas fa-chart-line me-2 text-primary"></i>Conclusões da Evolução ({{ ano1 }} -> {{ ano2 }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for item in conclusoes %}
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 rounded bg-light border-start border-4 {% if item.tendencia == 'melhoria' %}border-success{% elif item.tendencia == 'piora' %}border-danger{% else %}border-secondary{% endif %}">
+                            <h6 class="fw-bold">{{ item.unidade }}</h6>
+                            <p class="small mb-1">{{ item.texto }}</p>
+                            <span class="badge {% if item.tendencia == 'melhoria' %}bg-success{% elif item.tendencia == 'piora' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ item.tipo_movimento }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Detalhada -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover align-middle table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th rowspan="2" class="align-middle">Província</th>
+                            <th colspan="3" class="text-center">Abstenção (%)</th>
+                            <th colspan="3" class="text-center">Votos Nulos (%)</th>
+                            <th rowspan="2" class="align-middle">Análise Sintética</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center small">{{ ano1 }}</th>
+                            <th class="text-center small">{{ ano2 }}</th>
+                            <th class="text-center small">Var.</th>
+                            <th class="text-center small">{{ ano1 }}</th>
+                            <th class="text-center small">{{ ano2 }}</th>
+                            <th class="text-center small">Var.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in dados_comparativos %}
+                        <tr>
+                            <td class="fw-bold">{{ row.unidade }}</td>
+                            
+                            <!-- Abstenção -->
+                            <td class="text-center text-muted">{{ row.abs1 }}%</td>
+                            <td class="text-center fw-bold">{{ row.abs2 }}%</td>
+                            <td class="text-center">
+                                <span class="badge {% if row.delta_abs > 0 %}bg-danger{% elif row.delta_abs < 0 %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if row.delta_abs > 0 %}+{% endif %}{{ row.delta_abs }}%
+                                </span>
+                            </td>
+
+                            <!-- Nulos -->
+                            <td class="text-center text-muted">{{ row.nul1 }}%</td>
+                            <td class="text-center fw-bold">{{ row.nul2 }}%</td>
+                            <td class="text-center">
+                                <span class="badge {% if row.delta_nul > 0 %}bg-warning text-dark{% elif row.delta_nul < 0 %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if row.delta_nul > 0 %}+{% endif %}{{ row.delta_nul }}%
+                                </span>
+                            </td>
+
+                            <td class="small">{{ row.diagnostico_texto }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Competência - Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if competencia %}Editar{% else %}Nova{% endif %} Competência
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome da Competência</label>
+                        <input type="text" class="form-control" id="nome" name="nome"
+                            value="{{ competencia.nome|default:'' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="4"
+                            required>{{ competencia.descricao|default:'' }}</textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="peso" class="form-label">Peso na Avaliação (0.1 - 10.0)</label>
+                            <input type="number" step="0.1" class="form-control" id="peso" name="peso"
+                                value="{{ competencia.peso|default:'1.0' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="ativo" name="ativo" {% if not competencia or
+                            competencia.ativo %}checked{% endif %}>
+                        <label class="form-check-label" for="ativo">
+                            Item Ativo (aparece nas avaliações)
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'recursoshumanos:lista_competencias' %}"
+                            class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

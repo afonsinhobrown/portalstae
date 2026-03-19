@@ -1,0 +1,179 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Listas de Candidatos - {{ inscricao.partido.sigla }}{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+{% block module_name %}CANDIDATURAS - GESTÃO CENTRAL{% endblock %}
+{% block icon %}fas fa-users-viewfinder{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho de Contexto -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-primary text-white shadow-sm border-0">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div>
+                    <h3 class="mb-1 fw-bold">{{ inscricao.partido.sigla }} - {{ inscricao.partido.nome_completo }}</h3>
+                    <p class="mb-0 opacity-75"><i class="fas fa-calendar-check me-2"></i>{{ inscricao.eleicao.nome }} ({{ inscricao.eleicao.ano }})</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-white text-primary fs-6 px-3 py-2 rounded-pill">
+                        <i class="fas fa-layer-group me-1"></i> Âmbito: 
+                        {% if inscricao.scope_provincia %}Provincial ({{ inscricao.scope_provincia.nome }})
+                        {% elif inscricao.scope_circulo %}Local ({{ inscricao.scope_circulo.nome }})
+                        {% else %}Nacional{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sistema de Abas Navegáveis -->
+<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-white p-0 border-0">
+        <ul class="nav nav-tabs nav-justified border-0" id="candidaturaTabs" role="tablist" style="background: #f8f9fa;">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active py-3 fw-bold text-uppercase border-0 rounded-0" id="lista-tab" data-bs-toggle="tab" data-bs-target="#lista" type="button" role="tab">
+                    <i class="fas fa-list-check me-2"></i> Visualização de Listas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-3 fw-bold text-uppercase border-0 rounded-0" id="submissao-tab" data-bs-toggle="tab" data-bs-target="#submissao" type="button" role="tab">
+                    <i class="fas fa-cloud-arrow-up me-2"></i> Submissão de Listas
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="tab-content" id="candidaturaTabsContent">
+        <!-- ABA 1: VISUALIZAÇÃO DE LISTAS -->
+        <div class="tab-pane fade show active" id="lista" role="tabpanel">
+            <div class="p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="border-0 ps-4">Círculo Eleitoral</th>
+                                <th class="border-0">Cargo Disputado</th>
+                                <th class="border-0">Estatística</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0 text-end pe-4">Ações de Gestão</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lista in listas %}
+                            <tr class="border-bottom">
+                                <td class="ps-4">
+                                    <div class="fw-bold fs-5 text-dark">{{ lista.circulo.nome }}</div>
+                                    <small class="text-muted">{{ lista.circulo.provincia|default:"---" }}</small>
+                                </td>
+                                <td><span class="text-secondary fw-medium">{{ lista.cargo_disputado }}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-info-subtle text-info p-2 rounded-3 me-2">
+                                            <i class="fas fa-users-line fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">{{ lista.num_candidatos }}</h6>
+                                            <small class="text-muted">Candidatos</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if lista.validada %}
+                                        <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                                            <i class="fas fa-check-circle me-1"></i> Validada
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill">
+                                            <i class="fas fa-clock me-1"></i> Pendente
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group shadow-sm">
+                                        <a href="{% url 'candidaturas:detalhe_lista' lista.id %}" class="btn btn-primary px-3">
+                                            <i class="fas fa-edit me-1"></i> Detalhes/Editar
+                                        </a>
+                                        <a href="{% url 'candidaturas:remover_lista' lista.id %}" class="btn btn-outline-danger" 
+                                           onclick="return confirm('ATENÇÃO: A remoção desta lista anulará o registo do partido neste círculo eleitoral. Confirmar?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="opacity-25 mb-3"><i class="fas fa-folder-open fa-4x"></i></div>
+                                    <h5 class="text-muted">Nenhuma lista registada para este partido.</h5>
+                                    <p class="text-muted thin">Comece por submeter uma nova lista na aba ao lado.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 2: SUBMISSÃO DE LISTAS -->
+        <div class="tab-pane fade" id="submissao" role="tabpanel">
+            <div class="p-5">
+                <div class="row">
+                    <div class="col-md-7 border-end">
+                        <div class="mb-5 pb-4 border-bottom">
+                            <h4 class="fw-bold mb-4 text-primary"><i class="fas fa-rocket me-2"></i>Submissão Massiva via Excel</h4>
+                            <p class="text-muted">A forma mais rápida e segura de registar todos os seus candidatos de uma só vez. O sistema validará automaticamente os mandatos e identidades.</p>
+                            <a href="{% url 'candidaturas:central_importacao' inscricao.id %}" class="btn btn-primary btn-lg px-5 shadow">
+                                <i class="fas fa-file-excel me-2"></i> Ir para Central de Importação
+                            </a>
+                        </div>
+
+                        <h4 class="fw-bold mb-4 text-success"><i class="fas fa-pencil me-2"></i>Registo Manual de Círculo</h4>
+                        <form method="post" class="bg-light p-4 rounded-4 border">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="small fw-bold text-uppercase text-muted">Círculo Eleitoral Destino</label>
+                                {{ form.circulo }}
+                            </div>
+                            <div class="mb-4">
+                                <label class="small fw-bold text-uppercase text-muted">Cargo em Disputa (Ex: Assembleia da República)</label>
+                                {{ form.cargo_disputado }}
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
+                                <i class="fas fa-plus-circle me-2"></i> Formalizar Inscrição no Círculo
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-5 ps-4">
+                        <div class="alert alert-info border-0 shadow-sm rounded-4 p-4">
+                            <h5 class="fw-bold"><i class="fas fa-circle-info me-2"></i>Regras de Submissão</h5>
+                            <hr>
+                            <ul class="list-unstyled">
+                                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>Mandatos:</strong> A lista de candidatos efetivos deve corresponder exatamente ao número de mandatos do círculo.</li>
+                                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>Suplentes:</strong> É obrigatório incluir no mínimo 3 suplentes por lista.</li>
+                                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>Identidade:</strong> Todos os candidatos devem ter um BI/NUIT válido. O sistema cruzará dados com o Registo de Eleitores.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'candidaturas:dashboard' %}" class="btn btn-secondary px-4">
+        <i class="fas fa-arrow-left me-2"></i> Voltar ao Painel Geral
+    </a>
+</div>
+
+<style>
+    .nav-tabs .nav-link { color: #64748b; }
+    .nav-tabs .nav-link.active { background: white !important; color: var(--primary) !important; border-bottom: 3px solid var(--primary) !important; }
+    .tab-content { background: white; border-radius: 0 0 1rem 1rem; }
+    form select, form input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; }
+</style>
+{% endblock %}

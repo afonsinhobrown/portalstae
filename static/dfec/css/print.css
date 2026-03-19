@@ -1,0 +1,162 @@
+/* static/dfec/css/print.css */
+@media print {
+    /* Esconder elementos não necessários na impressão */
+    .navbar,
+    .sidebar,
+    .breadcrumb,
+    .btn,
+    .dropdown,
+    .dataTables_length,
+    .dataTables_filter,
+    .dataTables_info,
+    .dataTables_paginate,
+    .page-actions,
+    .alert,
+    footer {
+        display: none !important;
+    }
+
+    /* Ajustar layout */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Melhorar aparência de tabelas */
+    .table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+
+    .table th,
+    .table td {
+        border: 1px solid #ddd !important;
+        padding: 8px !important;
+    }
+
+    .table-striped tbody tr:nth-child(odd) {
+        background-color: #f9f9f9 !important;
+    }
+
+    /* Quebra de página para tabelas longas */
+    .table {
+        page-break-inside: auto;
+    }
+
+    .table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    /* Ajustar cartões */
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        margin-bottom: 20px !important;
+        page-break-inside: avoid;
+    }
+
+    .card-header {
+        background-color: #f8f9fa !important;
+        border-bottom: 1px solid #ddd !important;
+    }
+
+    /* Gráficos - converter para imagem se possível */
+    .chart-container {
+        page-break-inside: avoid;
+    }
+
+    /* Cabeçalho do relatório */
+    .report-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #333;
+        padding-bottom: 20px;
+    }
+
+    .report-header h1 {
+        color: #000;
+        margin-bottom: 10px;
+    }
+
+    .report-header .metadata {
+        color: #666;
+        font-size: 0.9em;
+    }
+
+    /* Rodapé do relatório */
+    @page {
+        @bottom-right {
+            content: "Página " counter(page) " de " counter(pages);
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        @bottom-left {
+            content: "DFEC - Sistema de Gestão de Educação Cívica";
+            font-size: 0.8em;
+            color: #666;
+        }
+    }
+
+    /* Não quebrar dentro de elementos importantes */
+    .no-break {
+        page-break-inside: avoid;
+    }
+
+    /* Tamanho de fonte ajustado para impressão */
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+
+    h1 { font-size: 18pt; }
+    h2 { font-size: 16pt; }
+    h3 { font-size: 14pt; }
+    h4, h5, h6 { font-size: 12pt; }
+
+    /* Cores em preto e branco para economizar tinta */
+    .text-primary { color: #000 !important; }
+    .text-success { color: #000 !important; }
+    .text-danger { color: #000 !important; }
+    .text-warning { color: #000 !important; }
+    .text-info { color: #000 !important; }
+
+    .bg-primary,
+    .bg-success,
+    .bg-danger,
+    .bg-warning,
+    .bg-info {
+        background-color: #f0f0f0 !important;
+        color: #000 !important;
+        border: 1px solid #ddd !important;
+    }
+
+    /* Badges */
+    .badge {
+        border: 1px solid #000;
+        background-color: transparent !important;
+        color: #000 !important;
+        font-weight: normal;
+    }
+
+    /* Links não devem aparecer sublinhados */
+    a {
+        color: #000 !important;
+        text-decoration: none !important;
+    }
+
+    /* Mostrar URLs em links */
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        font-weight: normal;
+    }
+
+    /* Não mostrar URLs para links internos ou especiais */
+    a[href^="#"]:after,
+    a[href^="javascript:"]:after {
+        content: "";
+    }
+}

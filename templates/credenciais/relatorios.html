@@ -1,0 +1,316 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Relatórios • Credenciais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Relatórios e Estatísticas</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'credenciais:dashboard_credenciais' %}">Credenciais</a></li>
+                <li class="breadcrumb-item active">Relatórios</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>Imprimir Relatório
+        </button>
+    </div>
+</div>
+
+<!-- Estatísticas Gerais -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="credenciais-stat-card text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ total_solicitantes }}</h2>
+                <p class="mb-0">Solicitantes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="credenciais-stat-card success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ total_pedidos }}</h2>
+                <p class="mb-0">Total Pedidos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="credenciais-stat-card warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-id-card fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ total_credenciais }}</h2>
+                <p class="mb-0">Credenciais</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="credenciais-card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x text-primary mb-3"></i>
+                <h2 class="fw-bold display-6 text-primary">
+                    {% widthratio total_credenciais total_pedidos 100 %}%
+                </h2>
+                <p class="mb-0 text-muted">Taxa de Emissão</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Estatísticas por Género -->
+    <div class="col-lg-6">
+        <div class="credenciais-card h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-venus-mars me-2 text-primary"></i>
+                    Distribuição por Género
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if stats_genero %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Género</th>
+                                <th>Quantidade</th>
+                                <th>Percentagem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in stats_genero %}
+                            <tr>
+                                <td>
+                                    <strong>{{ stat.genero|title }}</strong>
+                                </td>
+                                <td>
+                                    {{ stat.total }}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar"
+                                                style="width: {% widthratio stat.total total_solicitantes 100 %}%">
+                                            </div>
+                                        </div>
+                                        <span>{% widthratio stat.total total_solicitantes 100 %}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-pie fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Sem dados disponíveis</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Nacionalidades -->
+    <div class="col-lg-4">
+        <div class="credenciais-card h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-globe-africa me-2 text-success"></i>
+                    Top Nacionalidades
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if stats_nacionalidade %}
+                <div class="list-group list-group-flush">
+                    {% for stat in stats_nacionalidade %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ stat.nacionalidade }}</span>
+                        <span class="badge bg-primary rounded-pill">{{ stat.total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-globe fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Sem dados disponíveis</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tipos de Organização -->
+    <div class="col-lg-4">
+        <div class="credenciais-card h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-building me-2 text-info"></i>
+                    Tipos de Solicitantes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if stats_tipo_solicitante %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            {% for stat in stats_tipo_solicitante %}
+                            <tr>
+                                <td>{{ stat.tipo|title }}</td>
+                                <td class="text-end fw-bold">{{ stat.total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-city fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Sem dados disponíveis</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Eventos Mais Populares -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="credenciais-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-star me-2 text-warning"></i>
+                    Eventos Mais Procurados
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if eventos_populares %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Evento</th>
+                                <th>Tipo</th>
+                                <th>Período</th>
+                                <th>Localização</th>
+                                <th>Pedidos</th>
+                                <th>Popularidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for evento in eventos_populares %}
+                            <tr>
+                                <td>
+                                    <strong>{{ evento.nome }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                                        {{ evento.get_tipo_evento_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ evento.data_inicio|date:"d/m/Y" }} - {{ evento.data_fim|date:"d/m/Y"
+                                        }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ evento.localizacao }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ evento.total_pedidos }}</strong>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-warning"
+                                            style="width: {% widthratio evento.total_pedidos eventos_populares.0.total_pedidos 100 %}%">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-alt fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Sem dados de eventos disponíveis</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo Executivo -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="credenciais-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-file-contract me-2 text-info"></i>
+                    Resumo Executivo
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Demografia</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-users text-primary me-2"></i>
+                                <strong>Total de Solicitantes:</strong> {{ total_solicitantes }}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-venus text-success me-2"></i>
+                                <strong>Feminino:</strong>
+                                {% for stat in stats_genero %}
+                                {% if stat.genero == 'feminino' %}
+                                {{ stat.total }} ({% widthratio stat.total total_solicitantes 100 %}%)
+                                {% endif %}
+                                {% endfor %}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-mars text-primary me-2"></i>
+                                <strong>Masculino:</strong>
+                                {% for stat in stats_genero %}
+                                {% if stat.genero == 'masculino' %}
+                                {{ stat.total }} ({% widthratio stat.total total_solicitantes 100 %}%)
+                                {% endif %}
+                                {% endfor %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Performance</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-file-alt text-warning me-2"></i>
+                                <strong>Pedidos Processados:</strong> {{ total_pedidos }}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-id-card text-success me-2"></i>
+                                <strong>Credenciais Emitidas:</strong> {{ total_credenciais }}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-chart-line text-info me-2"></i>
+                                <strong>Taxa de Conversão:</strong> {% widthratio total_credenciais total_pedidos 100
+                                %}%
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

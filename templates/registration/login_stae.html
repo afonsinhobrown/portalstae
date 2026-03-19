@@ -1,0 +1,91 @@
+<!-- templates/registration/login_stae.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Acesso Funcionários STAE{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-tie me-2"></i>
+                        ACESSO FUNCIONÁRIOS STAE
+                    </h3>
+                    <p class="mb-0 mt-2 small">Sistema de Recursos Humanos e Gestão</p>
+                </div>
+
+                <div class="card-body p-4">
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Usuário ou senha incorretos. Tente novamente.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login_stae' %}">
+                        {% csrf_token %}
+
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-user me-1"></i> Matrícula ou Email
+                            </label>
+                            <input type="text" name="username" class="form-control form-control-lg"
+                                   id="id_username" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">
+                                <i class="fas fa-lock me-1"></i> Senha
+                            </label>
+                            <input type="password" name="password" class="form-control form-control-lg"
+                                   id="id_password" required>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i> Entrar no Sistema STAE
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <a href="{% url 'password_reset' %}" class="text-decoration-none">
+                                <i class="fas fa-key me-1"></i> Esqueci minha senha
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer text-center py-3">
+                    <p class="mb-2 small text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Acesso restrito a funcionários do STAE
+                    </p>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-home me-1"></i> Voltar para Home
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-circle me-2"></i>Primeiro Acesso?
+                    </h6>
+                    <p class="mb-0 small">
+                        Funcionários do STAE devem contactar o Departamento de Recursos Humanos
+                        para obter credenciais de acesso.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Caderno de Encargos - {{ concurso.numero }}</title>
+    <style>
+        body { font-family: "Times New Roman", serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid black; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo-placeholder { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        h1 { font-size: 22px; text-transform: uppercase; margin-bottom: 5px; }
+        h2 { font-size: 18px; font-weight: normal; margin-top: 0; color: #444; }
+        
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 16px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 20px; }
+        .label { font-weight: bold; }
+        
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; border-top: 1px solid #ccc; padding-top: 20px; }
+        
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #003366; color: white; border: none; cursor: pointer; font-weight: bold;">IMPRIMIR DOCUMENTO</button>
+    </div>
+
+    <div class="header">
+        <div class="logo-placeholder">REPÚBLICA DE MOÇAMBIQUE</div>
+        <div>SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</div>
+        <br>
+        <h1>CADERNO DE ENCARGOS</h1>
+        <h2>Concurso Público Nº {{ concurso.numero }}</h2>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. Dados do Processo</div>
+        <div class="info-grid">
+            <div><span class="label">Título:</span> {{ concurso.titulo }}</div>
+            <div><span class="label">Tipo:</span> {{ concurso.tipo }}</div>
+            <div><span class="label">Entidade:</span> STAE - Sede</div>
+            <div><span class="label">Data Abertura:</span> {{ concurso.data_abertura|date:"d/m/Y" }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. Objeto do Concurso</div>
+        <p>{{ caderno.objeto_concurso|linebreaksbr }}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">3. Especificações Técnicas</div>
+        <div style="text-align: justify;">{{ caderno.especificacoes_tecnicas|linebreaksbr }}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">4. Condições Administrativas</div>
+        <div class="info-grid">
+            <div><span class="label">Prazo de Execução:</span> {{ caderno.prazo_execucao_dias }} Dias</div>
+            <div><span class="label">Garantia Exigida:</span> {{ caderno.garantia_exigida }} MT</div>
+        </div>
+        <p>{{ caderno.condicoes_administrativas|linebreaksbr }}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">5. Obrigações das Partes</div>
+        <p><strong>Do Contratante:</strong><br>{{ caderno.obrigacoes_contratante|default:"Conforme legislação vigente."|linebreaksbr }}</p>
+        <p><strong>Do Contratado:</strong><br>{{ caderno.obrigacoes_contratado|default:"Conforme proposta submetida."|linebreaksbr }}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">6. Cláusulas Contratuais</div>
+        <p>{{ caderno.clausulas_contratuais|linebreaksbr }}</p>
+    </div>
+
+    <div class="footer">
+        Gerado automaticamente pelo Portal STAE em {% now "d/m/Y H:i" %}
+    </div>
+
+</body>
+</html>

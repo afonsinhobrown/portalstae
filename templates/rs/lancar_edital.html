@@ -1,0 +1,147 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}RS - APURAMENTO{% endblock %}
+{% block icon %}fas fa-file-signature{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>{{ titulo }}</h3>
+        <span class="badge" style="background: var(--primary);">MODO OFICIAL</span>
+    </div>
+
+    <form method="post" id="formEdital">
+        {% csrf_token %}
+        
+        <!-- SELEÇÃO INICIAL -->
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Modalidade</label>
+                <select name="modalidade" class="form-control" required>
+                    <option value="MESA">Edital de Mesa (Assembleia de Voto)</option>
+                    <option value="DISTRITAL">Edital de Centralização Distrital</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Eleição</label>
+                <select name="eleicao" class="form-control" required>
+                    {% for e in eleicoes %}
+                    <option value="{{ e.id }}">{{ e.nome }} ({{ e.ano }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Círculo Eleitoral</label>
+                <select name="circulo" class="form-control" required>
+                    {% for c in circulos %}
+                    <option value="{{ c.id }}">{{ c.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <!-- CÓDIGOS DE SEGURANÇA -->
+        <div class="form-grid" style="background: #fff8e1; padding: 20px; border-radius: 8px; border: 1px solid #ffe082;">
+            <div class="form-group">
+                <label style="color: #f57f17; font-weight: bold;">CÓDIGO DO EDITAL</label>
+                <input type="text" name="codigo_edital" class="form-control" placeholder="Ex: ED-2024-XXXX" required>
+                <small>Deve constar no rodapé do edital físico.</small>
+            </div>
+            <div class="form-group">
+                <label style="color: #f57f17; font-weight: bold;">CÓDIGO DE VALIDAÇÃO</label>
+                <input type="text" name="codigo_validacao" class="form-control" placeholder="Ex: V-XXXX-XXXX" required>
+                <small>Código de segurança de 8 dígitos.</small>
+            </div>
+        </div>
+
+        <hr style="margin: 25px 0;">
+
+        <!-- LANÇAMENTO DE VOTOS POR PARTIDO -->
+        <h4 style="margin-bottom: 20px;"><i class="fas fa-list-ol me-2"></i>Resultados por Entidade Política</h4>
+        <div class="partidos-list">
+            <table class="table-votos">
+                <thead>
+                    <tr>
+                        <th>ORDEM</th>
+                        <th>PARTIDO / COLIGAÇÃO</th>
+                        <th style="width: 200px;">VOTOS OBTIDOS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in partidos %}
+                    <tr>
+                        <td style="text-align: center;">
+                            <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold mx-auto" style="width: 30px; height: 30px;">
+                                {{ p.posicao_boletim|default:forloop.counter }}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                {% if p.partido.sigla %}
+                                    <span class="badge" style="background: #1e293b; color: white;">{{ p.partido.sigla }}</span>
+                                    <span class="fw-bold">{{ p.partido.nome_completo }}</span>
+                                    <input type="hidden" name="partido_id" value="{{ p.partido.id }}">
+                                {% else %}
+                                    <span class="badge">{{ p.sigla }}</span>
+                                    <span>{{ p.nome_completo }}</span>
+                                    <input type="hidden" name="partido_id" value="{{ p.id }}">
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" name="votos_partido" class="form-control" value="0" min="0" required style="font-weight: bold; font-size: 1.2rem; text-align: center;">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TOTAIS DA MESA -->
+        <div class="form-grid" style="margin-top: 30px; background: #f1f5f9; padding: 20px; border-radius: 8px;">
+            <div class="form-group">
+                <label>Votos Brancos</label>
+                <input type="number" name="votos_brancos" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Votos Nulos</label>
+                <input type="number" name="votos_nulos" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Total de Votantes (Presenças)</label>
+                <input type="number" name="total_votantes" class="form-control" value="0" min="0">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label>Reclamações / Observações</label>
+            <textarea name="reclamacoes" class="form-control" rows="3" placeholder="Descreva qualquer irregularidade reportada..."></textarea>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; text-align: right;">
+            <a href="{% url 'rs:documentos' %}" class="action-btn secondary" style="margin-right: 10px;">Cancelar</a>
+            <button type="submit" class="action-btn" style="background: #1e293b; padding: 15px 40px;">
+                <i class="fas fa-check-circle me-1"></i> FINALIZAR E PROCESSAR EDITAL
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 13px; color: #475569; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+    .form-control:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    
+    .table-votos { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .table-votos th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 12px; text-transform: uppercase; color: #64748b; }
+    .table-votos td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    
+    .badge { background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    
+    .action-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; background: var(--primary); color: white !important; text-decoration: none !important; border-radius: 6px; border:none; cursor: pointer; font-weight: bold; }
+    .action-btn.secondary { background: #f1f5f9; color: #475569 !important; border: 1px solid #e2e8f0; }
+</style>
+{% endblock %}

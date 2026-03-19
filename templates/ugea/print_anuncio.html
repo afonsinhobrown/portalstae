@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Anúncio - {{ concurso.numero }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.3; color: black; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .ugea-title { font-weight: bold; font-size: 14px; margin-top: 10px; text-transform: uppercase; }
+        .main-title { font-weight: 900; font-size: 24px; margin: 15px 0; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .intro-text { text-align: justify; margin-bottom: 20px; font-size: 14px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+        th, td { border: 2px solid black; padding: 8px; text-align: left; vertical-align: top; }
+        th { background-color: white; font-weight: bold; text-align: center; }
+        
+        .footer-section { font-size: 12px; margin-top: 20px; }
+        .footer-title { font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        
+        .date_place { text-align: center; margin-top: 40px; font-weight: bold; font-size: 14px; }
+        
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #000; color: white; border: none; cursor: pointer; font-weight: bold;">IMPRIMIR</button>
+    </div>
+
+    <!-- CABEÇALHO -->
+    <div class="header">
+        <!-- Logo Placeholder (Esquerda e Direita simulados) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid black; padding-bottom: 15px; margin-bottom: 10px;">
+            <div style="font-weight: bold; font-size: 20px;">REPÚBLICA DE MOÇAMBIQUE</div>
+            <div style="font-size: 12px; font-weight: bold;">STAE</div>
+        </div>
+
+        <div class="ugea-title">UNIDADE GESTORA EXECUTORA DE AQUISIÇÕES – UGEA</div>
+        <div class="main-title">ANÚNCIO DE CONCURSO</div>
+    </div>
+
+    <!-- TEXTO INTRODUTÓRIO -->
+    <div class="intro-text">
+        O Secretariado Técnico de Administração Eleitoral (STAE), convida empresas interessadas para apresentarem propostas fechadas para a contratação com vista ao fornecimento de Bens e Serviços descritos na tabela abaixo, com as características indicadas nos documentos do concurso.
+        <br><br>
+        Os Documentos do concurso poderão ser adquiridos na Direcção de Administração e Finanças / UGEA, no endereço abaixo indicado, por um valor não reembolsável de <strong>{{ concurso.preco_caderno|default:"500,00" }} MT</strong>.
+    </div>
+
+    <!-- TABELA -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Número do concurso</th>
+                <th style="width: 40%;">Descrição</th>
+                <th style="width: 15%;">Modalidade</th>
+                <th style="width: 15%;">Garantia Provisória</th>
+                <th style="width: 15%;">Data e hora de abertura</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center; font-weight: bold;">{{ concurso.numero }}</td>
+                <td>{{ concurso.titulo }}<br><small>{{ concurso.descricao|truncatewords:20 }}</small></td>
+                <td style="text-align: center;">{{ concurso.tipo|upper }}</td>
+                <td style="text-align: center;">
+                    {% if concurso.cadernoencargos and concurso.cadernoencargos.garantia_exigida > 0 %}
+                        Exigida ({{ concurso.cadernoencargos.garantia_exigida }} MT)
+                    {% else %}
+                        Não Exigida
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {{ concurso.data_encerramento|date:"d/m/Y" }}<br>
+                    {{ concurso.data_encerramento|date:"H:i" }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- RODAPÉ CONTACTOS -->
+    <div class="footer-section">
+        <div class="footer-title">STAE – Sede / UGEA</div>
+        <p>Av. Acordos de Lusaka, nº 2115, Maputo - Moçambique</p>
+        <p>Telefones: +258 21 000 000 / Fax: +258 21 000 001</p>
+        <p>E-mail: ugea@stae.org.mz</p>
+    </div>
+
+    <!-- NOTA FINAL -->
+    <div class="footer-section">
+        <p style="text-align: justify;">
+            A abertura das propostas terá lugar no dia {{ concurso.data_encerramento|date:"d \d\e F \d\e Y" }}, na Sala de Reuniões do STAE, nas horas acima citadas.
+            O período de validade das propostas é de 120 dias desde a data da abertura.
+        </p>
+    </div>
+
+    <div class="date_place">
+        Maputo, aos {% now "d \d\e F \d\e Y" %}
+        <br>
+        A UGEA
+    </div>
+
+</body>
+</html>

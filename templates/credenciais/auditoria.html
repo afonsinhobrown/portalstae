@@ -1,0 +1,29 @@
+{% extends 'credenciais/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📊 Auditoria do Sistema</h2>
+    <p>Registro de todas as ações no sistema de credenciais.</p>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Ação</th>
+                <th>Usuário</th>
+                <th>Detalhes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in registros %}
+            <tr>
+                <td>{{ registro.data_hora }}</td>
+                <td>{{ registro.get_acao_display }}</td>
+                <td>{{ registro.usuario|default:"Sistema" }}</td>
+                <td>{{ registro.detalhes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

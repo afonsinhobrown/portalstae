@@ -1,0 +1,191 @@
+<!-- ARQUIVO: templates/credenciais/imprimir.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Credencial {{ credencial.numero_credencial }}</title>
+    <style>
+        @page {
+            size: 85.6mm 54mm;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            width: 85.6mm;
+            height: 54mm;
+            background-color: {{ credencial.tipo.cor }};
+            color: white;
+            position: relative;
+        }
+
+        .container {
+            padding: 3mm;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2mm;
+            font-size: 6pt;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            padding-bottom: 1mm;
+        }
+
+        .content {
+            display: flex;
+            height: 40mm;
+        }
+
+        .photo-section {
+            width: 25mm;
+            height: 35mm;
+            margin-right: 2mm;
+        }
+
+        .photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 1px solid white;
+        }
+
+        .info-section {
+            flex: 1;
+            font-size: 7pt;
+        }
+
+        .info-row {
+            margin-bottom: 1.5mm;
+        }
+
+        .label {
+            font-weight: bold;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .qr-section {
+            position: absolute;
+            bottom: 3mm;
+            right: 3mm;
+            width: 15mm;
+            height: 15mm;
+            background: white;
+            padding: 1mm;
+        }
+
+        .qr-code {
+            width: 100%;
+            height: 100%;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 1mm;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 5pt;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Apenas para visualização no navegador */
+        @media screen {
+            body {
+                margin: 20px auto;
+                border: 1px solid #ccc;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</div>
+            <div><strong>{{ credencial.tipo.nome|upper }}</strong></div>
+        </div>
+
+        <div class="content">
+            <div class="photo-section">
+                {% if credencial.pessoa.foto %}
+                <img src="{{ credencial.pessoa.foto.url }}" class="photo">
+                {% else %}
+                <div style="width:100%;height:100%;background:#2c3e50;display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:6pt;">SEM FOTO</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="info-section">
+                <div class="info-row">
+                    <div class="label">NOME:</div>
+                    <div>{{ credencial.pessoa.nome_completo|truncatechars:25 }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="label">IDENTIFICAÇÃO:</div>
+                    <div>{{ credencial.pessoa.numero_identificacao }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="label">Nº CREDENCIAL:</div>
+                    <div>{{ credencial.numero_credencial }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="label">EMISSÃO:</div>
+                    <div>{{ credencial.data_emissao|date:"d/m/Y" }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="label">VALIDADE:</div>
+                    <div>{{ credencial.data_validade|date:"d/m/Y" }}</div>
+                </div>
+
+                {% if credencial.pessoa.empresa %}
+                <div class="info-row">
+                    <div class="label">EMPRESA:</div>
+                    <div>{{ credencial.pessoa.empresa|truncatechars:20 }}</div>
+                </div>
+                {% endif %}
+
+                {% if credencial.pessoa.cargo %}
+                <div class="info-row">
+                    <div class="label">CARGO:</div>
+                    <div>{{ credencial.pessoa.cargo|truncatechars:20 }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="qr-section">
+            {% if credencial.qr_code %}
+            <img src="{{ credencial.qr_code.url }}" class="qr-code">
+            {% else %}
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:black;font-size:6pt;text-align:center;">
+                QR<br>CODE
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            Credencial emitida pelo Sistema STAE • Válida até: {{ credencial.data_validade|date:"d/m/Y" }}
+        </div>
+    </div>
+
+    <script>
+        // Imprimir automaticamente
+        window.onload = function() {
+            window.print();
+            // Fechar após imprimir (opcional)
+            setTimeout(function() {
+                window.close();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

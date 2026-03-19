@@ -1,0 +1,113 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Detalhe da Brigada - DFEC{% endblock %}
+{% block page_title %}Brigada #{{ brigada.codigo }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group shadow-sm">
+    <a href="{% url 'dfec:brigada_editar' brigada.pk %}" class="btn btn-primary">
+        <i class="fas fa-edit me-2"></i>Editar Dados
+    </a>
+    <a href="{% url 'dfec:brigada_lista' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Status Card -->
+        <div class="card shadow mb-4 border-left-{% if brigada.ativa %}success{% else %}danger{% endif %}">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <span class="avatar-title rounded-circle bg-light text-primary h1"
+                            style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-users"></i>
+                        </span>
+                    </div>
+                    <h5 class="fw-bold">{{ brigada.codigo }}</h5>
+                    <p class="text-muted">{{ brigada.distrito }}, {{ brigada.get_provincia_display }}</p>
+                    {% if brigada.ativa %}
+                    <span class="badge bg-success px-3 py-2">ESTADO: ATIVA</span>
+                    {% else %}
+                    <span class="badge bg-danger px-3 py-2">ESTADO: INATIVA</span>
+                    {% endif %}
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        <small class="text-muted d-block">Tipo Eleição</small>
+                        <span class="fw-bold">{{ brigada.formacao.voto_tipo|default:"Geral" }}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Ano</small>
+                        <span class="fw-bold">{% now "Y" %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipa Técnica -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Responsáveis</h6>
+            </div>
+            <div class="card-body text-start">
+                <div class="mb-3">
+                    <small class="text-muted d-block">Supervisor</small>
+                    <span class="fw-bold text-dark">{{ brigada.supervisor.get_full_name|default:"Não definido" }}</span>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Digitador</small>
+                    <span class="fw-bold text-dark">{{ brigada.digitador.get_full_name|default:"Não definido" }}</span>
+                </div>
+                <div class="mb-0">
+                    <small class="text-muted d-block">Entrevistador</small>
+                    <span class="fw-bold text-dark">{{ brigada.entrevistador.get_full_name|default:"Não definido"
+                        }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Localização e Detalhes -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Informações de Localização</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="small text-muted mb-1">Localidade / Posto</label>
+                        <p class="fw-bold">{{ brigada.localidade|default:"Não especificado" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="small text-muted mb-1">Círculo Eleitoral</label>
+                        <p class="fw-bold">{{ brigada.distrito }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Treinamento -->
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Histórico de Treinamento e Execução</h6>
+                <a href="{% url 'dfec:brigada_treinamento' brigada.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i>Registar Ação
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-calendar-check fa-3x mb-3 opacity-25"></i>
+                    <p>Nenhuma ação de formação ou atividade registada para esta brigada.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

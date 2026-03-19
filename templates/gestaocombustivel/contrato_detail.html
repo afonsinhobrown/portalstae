@@ -1,0 +1,220 @@
+{% extends 'gestaocombustivel/base.html' %}
+{% load humanize %}
+
+{% block title %}Contrato {{ contrato.numero_contrato }} • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row animate__animated animate__fadeIn">
+    <!-- Cabeçalho -->
+    <div class="col-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{% url 'gestaocombustivel:lista_contratos' %}"
+                    class="text-decoration-none text-muted mb-2 d-inline-block">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar para Lista
+                </a>
+                <h2 class="fw-bold mb-0">Contrato: <span class="text-primary">{{ contrato.numero_contrato }}</span></h2>
+                <span class="badge {% if contrato.activo %}bg-success{% else %}bg-danger{% endif %} mt-2">
+                    {% if contrato.activo %}ATIVO{% else %}INATIVO{% endif %}
+                </span>
+            </div>
+            <div>
+                <span class="text-muted small"><i class="fas fa-info-circle me-1"></i>Gerido na UGEA</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo Financeiro -->
+    <div class="row mb-4 g-3">
+        <!-- Valor Total -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50 text-uppercase small ls-1">Valor Total</h6>
+                    <h3 class="fw-bold mb-0">{{ contrato.valor_total_contrato|floatformat:2 }} MT</h3>
+                    <small class="opacity-75">{{ contrato.litros_contratados|floatformat:0 }} Litros</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Valor Pago -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50 text-uppercase small ls-1">Valor Pago</h6>
+                    <h3 class="fw-bold mb-0">{{ contrato.valor_pago|floatformat:2 }} MT</h3>
+                    <div class="progress mt-2 bg-white bg-opacity-25" style="height: 4px;">
+                        {% widthratio contrato.valor_pago contrato.valor_total_contrato 100 as percent_pago %}
+                        <div class="progress-bar bg-white" style="width:{{ percent_pago }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saldo Disponível -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small ls-1">Saldo Disponível</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ contrato.saldo_financeiro_restante|floatformat:2 }} MT</h3>
+                    <small class="text-muted">{{ contrato.litros_remanescentes|floatformat:0 }} Litros disp.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumo / Dívida -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small ls-1">Dívida Atual</h6>
+                    {% if contrato.valor_divida > 0 %}
+                    <h3 class="fw-bold text-danger mb-0">{{ contrato.valor_divida|floatformat:2 }} MT</h3>
+                    <small class="text-danger"><i class="fas fa-exclamation-circle"></i> Pendente de Pagto</small>
+                    {% else %}
+                    <h3 class="fw-bold text-secondary mb-0">0,00 MT</h3>
+                    <small class="text-success"><i class="fas fa-check-circle"></i> Regularizado</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Informações Detalhadas -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-3">Detalhes do Contrato</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Fornecedor</span>
+                            <span class="fw-bold">{{ contrato.fornecedor.nome }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Preço Unitário</span>
+                            <span class="fw-bold">{{ contrato.preco_unitario }} MT / Litro</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Data Início</span>
+                            <span class="fw-bold">{{ contrato.data_inicio|date:"d/m/Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Data Fim</span>
+                            <span class="fw-bold">{{ contrato.data_fim|date:"d/m/Y" }}</span>
+                        </li>
+                        <li class="list-group-item px-0">
+                            <span class="text-muted d-block mb-1">Observações</span>
+                            <p class="small text-muted mb-0">{{ contrato.observacoes|default:"Nenhuma observação
+                                registada."|linebreaksbr }}</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Pagamentos -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-file-invoice-dollar me-2 text-success"></i>
+                        Pagamentos
+                    </h5>
+                    <!-- Botao removido -->
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light sticky-top">
+                                <tr>
+                                    <th class="ps-3">Data</th>
+                                    <th>Ref</th>
+                                    <th>Valor</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pag in pagamentos %}
+                                <tr>
+                                    <td class="ps-3">{{ pag.data_pagamento|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if pag.referencia_documento %}
+                                        DOC: {{ pag.referencia_documento }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold text-success text-end pe-3">{{ pag.valor|floatformat:2 }} MT</td>
+                                    <td></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        Nenhum pagamento registado.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Consumo (Full Width) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-history me-2 text-secondary"></i>
+                        Histórico de Consumo
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Data</th>
+                                    <th>Senha</th>
+                                    <th>Viatura</th>
+                                    <th>Solicitante</th>
+                                    <th>Quantidade</th>
+                                    <th>Custo Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos %}
+                                <tr>
+                                    <td class="ps-4">{{ pedido.data_abastecimento|date:"d/m/Y" }}</td>
+                                    <td class="font-monospace text-primary">{{ pedido.numero_senha }}</td>
+                                    <td>{{ pedido.viatura.matricula }}</td>
+                                    <td>{{ pedido.solicitante.nome_completo }}</td>
+                                    <td class="fw-bold">{{ pedido.quantidade_litros }} L</td>
+                                    <td>{{ pedido.custo_total }} MT</td>
+                                    <td>
+                                        {% if pedido.status == 'abastecido' %}
+                                        <span class="badge bg-success">Abastecido</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">{{ pedido.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        Nenhum consumo registado neste contrato.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

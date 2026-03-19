@@ -1,0 +1,224 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Minhas Avaliações • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold text-primary">
+                        <i class="fas fa-chart-line me-2"></i>Minhas Avaliações de Desempenho
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Minhas Avaliações</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <span class="badge bg-primary fs-6">{{ total_avaliacoes }} avaliações</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-5 fw-bold text-primary">
+                        {% if ultima_avaliacao %}{{ ultima_avaliacao.nota_final_geral|floatformat:1 }}{% else %}N/A{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">Última Avaliação</p>
+                    {% if ultima_avaliacao %}
+                    <span class="badge {% if ultima_avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif ultima_avaliacao.classificacao_final == 'Bom' %}bg-info{% elif ultima_avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% elif ultima_avaliacao.classificacao_final == 'Regular' %}bg-danger{% else %}bg-secondary{% endif %} mt-2">
+                        {{ ultima_avaliacao.classificacao_final }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-5 fw-bold text-success">{{ media_historica|floatformat:1 }}</h1>
+                    <p class="text-muted mb-0">Média Histórica</p>
+                    <div class="mt-2">
+                        {% if media_historica >= 4.5 %}
+                        <i class="fas fa-trophy text-warning fa-2x"></i>
+                        {% elif media_historica >= 3.5 %}
+                        <i class="fas fa-star text-info fa-2x"></i>
+                        {% elif media_historica >= 2.5 %}
+                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                        {% else %}
+                        <i class="fas fa-chart-line text-secondary fa-2x"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-5 fw-bold text-info">{{ total_avaliacoes }}</h1>
+                    <p class="text-muted mb-0">Total de Avaliações</p>
+                    {% if avaliacoes %}
+                    <p class="small mt-2">
+                        Primeira: {{ avaliacoes.last.data_avaliacao|date:"m/Y" }}<br>
+                        Última: {{ avaliacoes.first.data_avaliacao|date:"m/Y" }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Evolução (simples) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Evolução do Desempenho</h5>
+                </div>
+                <div class="card-body">
+                    {% if avaliacoes.count >= 2 %}
+                    <div class="evolution-chart" style="height: 200px; position: relative;">
+                        {% for avaliacao in avaliacoes reversed %}
+                        <div class="evolution-point" style="position: absolute; left: {{ forloop.counter|add:"-1"|divisibleby:avaliacoes.count|multiply:100 }}%; bottom: {{ avaliacao.nota_final_geral|multiply:20 }}%;">
+                            <div class="point {% if avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif avaliacao.classificacao_final == 'Bom' %}bg-info{% elif avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% elif avaliacao.classificacao_final == 'Regular' %}bg-danger{% else %}bg-secondary{% endif %}"
+                                 style="width: 12px; height: 12px; border-radius: 50%;"></div>
+                            <div class="point-label" style="position: absolute; top: -25px; left: -10px; font-size: 0.8rem;">
+                                {{ avaliacao.nota_final_geral|floatformat:1 }}
+                            </div>
+                            <div class="point-date" style="position: absolute; top: 15px; left: -20px; font-size: 0.7rem; white-space: nowrap;">
+                                {{ avaliacao.data_avaliacao|date:"m/Y" }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Linhas de referência -->
+                        <div style="position: absolute; left: 0; right: 0; bottom: 20%; border-top: 1px dashed #28a745;"></div>
+                        <div style="position: absolute; left: 0; right: 0; bottom: 40%; border-top: 1px dashed #17a2b8;"></div>
+                        <div style="position: absolute; left: 0; right: 0; bottom: 60%; border-top: 1px dashed #ffc107;"></div>
+                        <div style="position: absolute; left: 0; right: 0; bottom: 80%; border-top: 1px dashed #dc3545;"></div>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-4">
+                        <i class="fas fa-chart-line fa-2x mb-3"></i><br>
+                        Não há dados suficientes para mostrar evolução.<br>
+                        Necessário pelo menos 2 avaliações.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Avaliações -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Histórico Completo</h5>
+                </div>
+                <div class="card-body">
+                    {% if avaliacoes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Data Avaliação</th>
+                                    <th>Avaliado Por</th>
+                                    <th>Nota Final</th>
+                                    <th>Classificação</th>
+                                    <th>Observações</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for avaliacao in avaliacoes %}
+                                <tr>
+                                    <td>{{ avaliacao.periodo }}</td>
+                                    <td>{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</td>
+                                    <td>{{ avaliacao.avaliado_por.get_full_name|default:avaliacao.avaliado_por.username }}</td>
+                                    <td>
+                                        <span class="fw-bold fs-5">{{ avaliacao.nota_final_geral|floatformat:1 }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif avaliacao.classificacao_final == 'Bom' %}bg-info{% elif avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% elif avaliacao.classificacao_final == 'Regular' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ avaliacao.classificacao_final }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if avaliacao.observacoes %}
+                                        <span class="d-inline-block text-truncate" style="max-width: 200px;" 
+                                              title="{{ avaliacao.observacoes }}">
+                                            {{ avaliacao.observacoes|truncatechars:50 }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">Sem observações</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'detalhes_avaliacao' avaliacao.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Detalhes
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h4 class="fw-bold mb-3">Nenhuma avaliação encontrada</h4>
+                        <p class="text-muted">
+                            Ainda não existem avaliações de desempenho registradas para você.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.evolution-chart {
+    background: linear-gradient(to top, 
+        rgba(220, 53, 69, 0.1) 0%, 
+        rgba(220, 53, 69, 0.1) 20%,
+        rgba(255, 193, 7, 0.1) 20%,
+        rgba(255, 193, 7, 0.1) 40%,
+        rgba(23, 162, 184, 0.1) 40%,
+        rgba(23, 162, 184, 0.1) 60%,
+        rgba(40, 167, 69, 0.1) 60%,
+        rgba(40, 167, 69, 0.1) 100%);
+}
+.evolution-point {
+    transform: translateX(-50%);
+    transition: all 0.3s;
+}
+.evolution-point:hover .point {
+    transform: scale(1.5);
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+.point-label, .point-date {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.evolution-point:hover .point-label,
+.evolution-point:hover .point-date {
+    opacity: 1;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!-- templates/dfec/partials/breadcrumb.html -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'dfec:dashboard' %}">
+                <i class="fas fa-home"></i>
+            </a>
+        </li>
+        {% block breadcrumb %}
+        {% if request.resolver_match.url_name != 'dashboard' %}
+        <li class="breadcrumb-item active" aria-current="page">
+            {% block page_title %}{% endblock %}
+        </li>
+        {% endif %}
+        {% endblock %}
+    </ol>
+</nav>

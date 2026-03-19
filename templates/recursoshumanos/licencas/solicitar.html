@@ -1,0 +1,289 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Solicitar Licença • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Solicitar Licença</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:minhas_licencas' %}">Minhas Licenças</a></li>
+                <li class="breadcrumb-item active">Solicitar</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>Nova Solicitação de Licença
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Saldo de Férias -->
+                {% if saldo_atual %}
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                            <h6 class="mb-1">Seu Saldo de Férias</h6>
+                            <p class="mb-0">
+                                <strong>{{ saldo_atual.saldo_atual }} dias</strong> disponíveis para o ano de {{ saldo_atual.ano }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Tipo de Licença -->
+                        <div class="col-md-6">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                                Tipo de Licença *
+                            </label>
+                            {{ form.tipo }}
+                            {% if form.tipo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.tipo.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Data Início -->
+                        <div class="col-md-6">
+                            <label for="{{ form.data_inicio.id_for_label }}" class="form-label">
+                                Data de Início *
+                            </label>
+                            {{ form.data_inicio }}
+                            {% if form.data_inicio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.data_inicio.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Data Fim -->
+                        <div class="col-md-6">
+                            <label for="{{ form.data_fim.id_for_label }}" class="form-label">
+                                Data de Término *
+                            </label>
+                            {{ form.data_fim }}
+                            {% if form.data_fim.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.data_fim.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Dias Solicitados -->
+                        <div class="col-md-6">
+                            <label for="{{ form.dias_solicitados.id_for_label }}" class="form-label">
+                                Dias Solicitados *
+                            </label>
+                            {{ form.dias_solicitados }}
+                            <small class="form-text text-muted">
+                                Inclui finais de semana e feriados
+                            </small>
+                            {% if form.dias_solicitados.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.dias_solicitados.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Motivo -->
+                        <div class="col-12">
+                            <label for="{{ form.motivo.id_for_label }}" class="form-label">
+                                Motivo da Licença *
+                            </label>
+                            {{ form.motivo }}
+                            <small class="form-text text-muted">
+                                Descreva detalhadamente o motivo da licença
+                            </small>
+                            {% if form.motivo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.motivo.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Endereço Durante Licença -->
+                        <div class="col-md-6">
+                            <label for="{{ form.endereco_durante_licenca.id_for_label }}" class="form-label">
+                                Endereço Durante a Licença
+                            </label>
+                            {{ form.endereco_durante_licenca }}
+                            <small class="form-text text-muted">
+                                Obrigatório para férias acima de 7 dias
+                            </small>
+                        </div>
+                        
+                        <!-- Telefone de Contacto -->
+                        <div class="col-md-6">
+                            <label for="{{ form.telefone_contacto.id_for_label }}" class="form-label">
+                                Telefone de Contacto
+                            </label>
+                            {{ form.telefone_contacto }}
+                        </div>
+                        
+                        <!-- Documentos Anexos -->
+                        <div class="col-12">
+                            <label for="{{ form.documentos_anexos.id_for_label }}" class="form-label">
+                                Documentos Anexos
+                            </label>
+                            {{ form.documentos_anexos }}
+                            <small class="form-text text-muted">
+                                Anexe documentos comprovativos (máx. 10MB)
+                            </small>
+                        </div>
+                        
+                        <!-- Fluxo de Aprovação -->
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info bg-opacity-10 border-info">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-sitemap me-2"></i>Fluxo de Aprovação
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-around">
+                                        <div class="text-center">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-2" 
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <small class="text-muted">Você</small>
+                                            <p class="mb-0 small fw-bold">Solicitação</p>
+                                        </div>
+                                        
+                                        <div class="text-center">
+                                            <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center mx-auto mb-2" 
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <small class="text-muted">{{ funcionario.sector.chefe|default:"Chefe" }}</small>
+                                            <p class="mb-0 small fw-bold">Parecer</p>
+                                        </div>
+                                        
+                                        <div class="text-center">
+                                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-2" 
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <small class="text-muted">Diretor</small>
+                                            <p class="mb-0 small fw-bold">Autorização</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'recursoshumanos:minhas_licencas' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Enviar Solicitação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Informações Importantes -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-circle me-2"></i>Informações Importantes
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li class="mb-2">
+                        <small>As licenças devem ser solicitadas com <strong>antecedência mínima de 15 dias</strong>.</small>
+                    </li>
+                    <li class="mb-2">
+                        <small>Férias superiores a 30 dias necessitam de <strong>aprovação especial</strong>.</small>
+                    </li>
+                    <li class="mb-2">
+                        <small>Em caso de licença médica, os documentos comprovativos devem ser anexados.</small>
+                    </li>
+                    <li>
+                        <small>O não comparecimento após o término da licença pode resultar em <strong>medidas disciplinares</strong>.</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(26, 74, 114, 0.25);
+    }
+    
+    .is-invalid {
+        border-color: #dc3545;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            if (field.type !== 'checkbox' && field.type !== 'radio') {
+                field.classList.add('form-control');
+            }
+        });
+        
+        // Date pickers
+        const dateFields = ['data_inicio', 'data_fim'];
+        dateFields.forEach(fieldId => {
+            const field = document.getElementById('id_' + fieldId);
+            if (field) {
+                field.type = 'date';
+            }
+        });
+        
+        // Calculate days between dates
+        const dataInicio = document.getElementById('id_data_inicio');
+        const dataFim = document.getElementById('id_data_fim');
+        const diasField = document.getElementById('id_dias_solicitados');
+        
+        function calculateDays() {
+            if (dataInicio.value && dataFim.value) {
+                const inicio = new Date(dataInicio.value);
+                const fim = new Date(dataFim.value);
+                const diffTime = Math.abs(fim - inicio);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                
+                if (diffDays > 0) {
+                    diasField.value = diffDays;
+                }
+            }
+        }
+        
+        if (dataInicio && dataFim && diasField) {
+            dataInicio.addEventListener('change', calculateDays);
+            dataFim.addEventListener('change', calculateDays);
+        }
+        
+        // File input styling
+        const fileInput = document.getElementById('id_documentos_anexos');
+        if (fileInput) {
+            fileInput.classList.add('form-control-file');
+        }
+    });
+</script>
+{% endblock %}

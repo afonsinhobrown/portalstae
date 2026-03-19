@@ -1,0 +1,39 @@
+{% extends 'dfec/base.html' %}
+{% block title %}Relatório de Brigadas - DFEC{% endblock %}
+{% block page_title %}Estatísticas de Brigadas no Terreno{% endblock %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Mapa de Alocação de Brigadas</h6>
+        <button class="btn btn-sm btn-success" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> Imprimir Mapa
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered datatable">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Província</th>
+                        <th>Distrito</th>
+                        <th>Membros</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for brigada in brigadas %}
+                    <tr>
+                        <td>{{ brigada.codigo }}</td>
+                        <td>{{ brigada.get_provincia_display }}</td>
+                        <td>{{ brigada.distrito }}</td>
+                        <td>{{ brigada.membros.count }}</td>
+                        <td><span class="badge bg-success">{{ brigada.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

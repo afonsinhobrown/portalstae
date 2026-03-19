@@ -1,0 +1,96 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Minha Equipa</h5>
+            </div>
+            <div class="card-body">
+                <h1 class="display-4 text-center">{{ total_equipa }}</h1>
+                <p class="text-center text-muted">Funcionários</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Licenças Pendentes de Parecer</h5>
+                <span class="badge bg-warning">{{ licencas_pendentes.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if licencas_pendentes %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Tipo</th>
+                                <th>Período</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for licenca in licencas_pendentes %}
+                            <tr>
+                                <td>{{ licenca.funcionario.nome_completo }}</td>
+                                <td>{{ licenca.get_tipo_display }}</td>
+                                <td>{{ licenca.data_inicio|date:"d/m/Y" }} - {{ licenca.data_fim|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'recursoshumanos:dar_parecer_licenca' licenca.id %}" class="btn btn-sm btn-primary">
+                                        Dar Parecer
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">Não há licenças pendentes.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Presenças de Hoje</h5>
+            </div>
+            <div class="card-body">
+                {% if presencas_recentes %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Método</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for presenca in presencas_recentes %}
+                            <tr>
+                                <td>{{ presenca.funcionario.nome_completo }}</td>
+                                <td>{{ presenca.data_hora|time:"H:i" }}</td>
+                                <td>{{ presenca.get_tipo_display }}</td>
+                                <td>{{ presenca.get_metodo_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">Nenhum registro de presença hoje.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

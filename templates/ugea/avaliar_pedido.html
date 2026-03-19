@@ -1,0 +1,261 @@
+{% extends 'base_apps.html' %}
+{% block title %}Análise de Pedido #{{ pedido.id }} - UGEA{% endblock %}
+{% block module_name %}UGEA · Aprovações{% endblock %}
+{% block icon %}fas fa-search-dollar{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Análise Técnica de Pedido{% endblock %}
+
+{% block content %}
+<style>
+    .premium-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid #edf2f7;
+    }
+    .info-label {
+        font-weight: 700;
+        color: #4a5568;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+        display: block;
+    }
+    .info-value {
+        font-size: 1.1rem;
+        color: #1a202c;
+        margin-bottom: 20px;
+    }
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    .bg-pendente { background: #fff3cd; color: #856404; }
+    .bg-aprovado { background: #d4edda; color: #155724; }
+    .bg-rejeitado { background: #f8d7da; color: #721c24; }
+    
+    .timeline-ugea {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline-ugea::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .timeline-item-ugea {
+        position: relative;
+        margin-bottom: 25px;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #cbd5e0;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #cbd5e0;
+    }
+    .timeline-marker.active {
+        background: #3182ce;
+        box-shadow: 0 0 0 2px #3182ce;
+    }
+    
+    .btn-action {
+        border-radius: 10px;
+        padding: 15px;
+        font-weight: bold;
+        transition: all 0.3s;
+        border: none;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .btn-approve { background: #28a745; color: white; }
+    .btn-reject { background: #dc3545; color: white; }
+    .btn-approve:hover { background: #218838; transform: translateY(-2px); }
+    .btn-reject:hover { background: #c82333; transform: translateY(-2px); }
+</style>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- DETALHES GERAIS (UGEA) -->
+        <div class="premium-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="m-0 fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Resumo do Pedido #{{ pedido.id }}</h5>
+                <span class="status-badge bg-{{ pedido.status }}">
+                    {{ pedido.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="info-label">Solicitante</span>
+                    <div class="info-value"><strong>{{ pedido.solicitante }}</strong></div>
+                    
+                    <span class="info-label">Data do Registro</span>
+                    <div class="info-value">{{ pedido.data_pedido|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="col-md-6">
+                    <span class="info-label">Contrato Vinculado</span>
+                    <div class="info-value"><a href="{% url 'ugea:detalhe_contrato' pedido.contrato.id %}">{{ pedido.contrato.numero_contrato }}</a></div>
+                    
+                    <span class="info-label">Valor Estimado</span>
+                    <div class="info-value text-primary"><strong>{{ pedido.valor_estimado|floatformat:2 }} MT</strong></div>
+                </div>
+            </div>
+            
+            <span class="info-label">Descrição / Justificação</span>
+            <div class="p-3 rounded bg-light border mb-4">
+                {{ pedido.descricao|linebreaks }}
+            </div>
+        </div>
+
+        <!-- DETALHES TÉCNICOS ESPECÍFICOS (SE FOR COMBUSTÍVEL) -->
+        {% if tipo_analise == 'combustivel' and pedido_origem %}
+        <div class="premium-card" style="border-top: 5px solid #ffc107;">
+            <h5 class="fw-bold mb-4 text-warning"><i class="fas fa-gas-pump me-2"></i>Detalhes Técnicos de Combustível</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-4 p-3 rounded border">
+                        <i class="fas fa-car fa-2x text-muted me-3"></i>
+                        <div>
+                            <span class="info-label m-0">Viatura</span>
+                            <div class="info-value m-0"><strong>{{ pedido_origem.viatura.matricula }}</strong> ({{ pedido_origem.viatura.marca }} {{ pedido_origem.viatura.modelo }})</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-4 p-3 rounded border">
+                        <i class="fas fa-tachometer-alt fa-2x text-muted me-3"></i>
+                        <div>
+                            <span class="info-label m-0">Quilometragem Atual</span>
+                            <div class="info-value m-0"><strong>{{ pedido_origem.kilometragem_actual|floatformat:0 }} km</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <span class="info-label">Quantidade Solicitada</span>
+                    <div class="info-value">{{ pedido_origem.quantidade_litros }} L</div>
+                </div>
+                <div class="col-md-4">
+                    <span class="info-label">Preço Unitário (UGEA)</span>
+                    <div class="info-value">{{ pedido_origem.preco_por_litro }} MT/L</div>
+                </div>
+                <div class="col-md-4">
+                    <span class="info-label">Finalidade</span>
+                    <div class="info-value"><span class="badge bg-secondary">{{ pedido_origem.get_tipo_pedido_display }}</span></div>
+                </div>
+            </div>
+
+            {% if pedido_origem.destino %}
+            <span class="info-label">Destino Previsto</span>
+            <div class="info-value"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ pedido_origem.destino }}</div>
+            {% endif %}
+
+            {% if pedido.status == 'aprovado' %}
+            <div class="mt-4 p-3 bg-white border rounded shadow-sm d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1 fw-bold"><i class="fas fa-print me-2"></i>Requisição Gerada</h6>
+                    <small class="text-muted">A emissão da senha e impressão é gerida pelo módulo de Combustível.</small>
+                </div>
+                <a href="{% url 'gestaocombustivel:imprimir_requisicao' pedido_origem.id %}" target="_blank" class="btn btn-dark btn-sm px-3">
+                    <i class="fas fa-external-link-alt me-1"></i> Ver Requisição
+                </a>
+            </div>
+            {% endif %}
+
+            {% if pedido_origem.funcionarios_envolvidos.exists %}
+            <span class="info-label">Equipa Envolvida</span>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% for f in pedido_origem.funcionarios_envolvidos.all %}
+                <span class="badge rounded-pill bg-info text-dark px-3">{{ f.nome_completo }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="alert alert-warning border-0 shadow-sm mt-3">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Esta viatura tem uma capacidade de <strong>{{ pedido_origem.viatura.capacidade_tanque }}L</strong>. 
+                O pedido de <strong>{{ pedido_origem.quantidade_litros }}L</strong> está dentro dos limites.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- AÇÕES -->
+        {% if pedido.status == 'pendente' %}
+        <div class="premium-card">
+            <h5 class="fw-bold mb-4">Decisão da UGEA</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="info-label">Parecer do Analista (Opcional)</label>
+                    <textarea name="observacoes" class="form-control" rows="4" placeholder="Adicione observações técnicas para justificar a aprovação ou rejeição..."></textarea>
+                </div>
+                
+                <button type="submit" name="acao" value="aprovar" class="btn-action btn-approve">
+                    <i class="fas fa-check-circle me-2"></i> APROVAR PEDIDO
+                </button>
+                <button type="submit" name="acao" value="rejeitar" class="btn-action btn-reject">
+                    <i class="fas fa-times-circle me-2"></i> REJEITAR PEDIDO
+                </button>
+            </form>
+            <div class="mt-3 text-center">
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i>A aprovação abate automaticamente o saldo do contrato.</small>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- HISTÓRICO / TIMELINE -->
+        <div class="premium-card">
+            <h5 class="fw-bold mb-4">Fluxo do Processo</h5>
+            <div class="timeline-ugea">
+                <div class="timeline-item-ugea">
+                    <div class="timeline-marker active"></div>
+                    <div class="timeline-content">
+                        <div class="fw-bold">Pedido Submetido</div>
+                        <small class="text-muted">{{ pedido.data_pedido|date:"d/m/Y H:i" }}</small>
+                    </div>
+                </div>
+                <div class="timeline-item-ugea">
+                    <div class="timeline-marker {% if pedido.status != 'pendente' %}active{% endif %}"></div>
+                    <div class="timeline-content">
+                        <div class="fw-bold">Análise UGEA</div>
+                        {% if pedido.status != 'pendente' %}
+                        <small class="text-muted">Concluída em {% now "d/m/Y" %}</small>
+                        {% else %}
+                        <small class="text-muted">Aguardando decisão...</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="timeline-item-ugea">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="fw-bold opacity-50">Execução / Abastecimento</div>
+                        <small class="text-muted opacity-50">Logística de Combustíveis</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <a href="{% url 'ugea:aprovacoes' %}" class="btn btn-outline-secondary w-100 p-3 fw-bold shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i> VOLTAR À LISTA
+        </a>
+    </div>
+</div>
+{% endblock %}

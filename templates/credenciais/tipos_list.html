@@ -1,0 +1,71 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Tipos de Credencial • Credenciais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Tipos de Credencial</h4>
+        <p class="text-muted small mb-0">Defina as categorias de acesso e suas cores identificativas</p>
+    </div>
+    <a href="{% url 'credenciais:adicionar_tipo_credencial' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Tipo
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th style="width: 50px;">Ordem</th>
+                    <th>Nome do Tipo</th>
+                    <th>Cor</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo in tipos %}
+                <tr>
+                    <td class="text-center font-monospace">{{ tipo.ordem }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle me-3"
+                                style="width: 15px; height: 15px; background-color: {{ tipo.cor }}; border: 1px solid rgba(0,0,0,0.1);">
+                            </div>
+                            <h6 class="mb-0 fw-bold">{{ tipo.nome }}</h6>
+                        </div>
+                    </td>
+                    <td>
+                        <code class="small text-uppercase">{{ tipo.cor }}</code>
+                    </td>
+                    <td><span class="text-muted small">{{ tipo.descricao|default:"---"|truncatechars:100 }}</span></td>
+                    <td>
+                        {% if tipo.ativo %}
+                        <span class="badge bg-success bg-opacity-10 text-success">Ativo</span>
+                        {% else %}
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'credenciais:editar_tipo_credencial' tipo.id %}"
+                            class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fas fa-tags fa-3x mb-3 d-block"></i>
+                        Nenhum tipo de credencial configurado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

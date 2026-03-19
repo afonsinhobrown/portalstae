@@ -1,0 +1,197 @@
+<!-- templates/dfec/auth/login.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Login - DFEC{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-xl-5 col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <i class="fas fa-graduation-cap fa-3x me-3"></i>
+                        <div>
+                            <h2 class="fw-bold mb-0">DFEC</h2>
+                            <p class="mb-0">Sistema de Gestão de Educação Cívica</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-4">
+                            <label for="{{ form.username.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-user me-2"></i>Nome de Utilizador
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-lock me-2"></i>Palavra-passe
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                {{ form.password }}
+                                <button class="btn btn-outline-secondary" type="button"
+                                        id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                <label class="form-check-label" for="remember">
+                                    Manter sessão iniciada
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sessão
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="#" class="text-decoration-none">
+                            <i class="fas fa-question-circle me-1"></i>Problemas para aceder?
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Sistema seguro para gestão de educação cívica
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações do Sistema -->
+            <div class="row mt-4 text-center">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="fas fa-chart-line fa-2x text-primary mb-3"></i>
+                            <h6>Análise Inteligente</h6>
+                            <p class="small text-muted mb-0">Dados históricos e recomendações</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-2x text-success mb-3"></i>
+                            <h6>Gestão de Formações</h6>
+                            <p class="small text-muted mb-0">Brigadistas, MMV e Agentes EC</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="fas fa-calendar-alt fa-2x text-warning mb-3"></i>
+                            <h6>Planificação</h6>
+                            <p class="small text-muted mb-0">Atividades e orçamento</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+
+    if (togglePassword && passwordField) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+    }
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        form.classList.add('was-validated');
+    });
+});
+</script>
+
+<style>
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control:focus + .input-group-text {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+}
+
+#togglePassword:hover {
+    background-color: #e9ecef;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,547 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Criar Documento Institucional • Sistema RH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .campo-documento {
+        margin-bottom: 25px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .campo-documento label {
+        font-weight: 600;
+        color: #1a4a72;
+    }
+
+    .campo-documento .ajuda {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-style: italic;
+        margin-top: 5px;
+    }
+
+    .preview-documento {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 30px;
+        min-height: 500px;
+        font-family: 'Times New Roman', serif;
+    }
+
+    .cabecalho-institucional {
+        border-bottom: 2px solid #1a4a72;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .numero-oficio {
+        float: right;
+        font-weight: bold;
+        color: #1a4a72;
+    }
+
+    .data-documento {
+        float: left;
+    }
+
+    .rodape-documento {
+        margin-top: 50px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">📝 Criar Documento Institucional</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/rh/comunicacao/documentos/">Documentos</a></li>
+                    <li class="breadcrumb-item active">Novo Documento</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-primary me-2" onclick="gerarPreview()">
+                <i class="fas fa-eye me-2"></i>Pré-visualizar
+            </button>
+            <a href="/rh/comunicacao/documentos/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- FORMULÁRIO -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Conteúdo do Documento</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="documentoForm">
+                        {% csrf_token %}
+
+                        <!-- Tipo de Documento -->
+                        <div class="mb-4">
+                            <label class="form-label requerido">Tipo de Documento *</label>
+                            <select name="tipo_documento" class="form-select" required onchange="mudarTipoDocumento(this)">
+                                <option value="">Selecione o tipo...</option>
+                                <option value="relatorio_anual">Relatório Anual de Atividades</option>
+                                <option value="relatorio_mensal">Relatório Mensal</option>
+                                <option value="oficio_circulacao">Ofício de Circulação</option>
+                                <option value="memorando">Memorando Interno</option>
+                                <option value="ata_reuniao">Ata de Reunião</option>
+                                <option value="portaria">Portaria</option>
+                                <option value="despacho">Despacho</option>
+                            </select>
+                        </div>
+
+                        <!-- Campos Dinâmicos -->
+                        <div id="camposDocumento">
+                            <!-- Título (sempre presente) -->
+                            <div class="campo-documento">
+                                <label class="form-label requerido">Título do Documento *</label>
+                                <input type="text" name="titulo" class="form-control" required
+                                       placeholder="Ex: Relatório Anual de Atividades 2024">
+                                <div class="ajuda">Título oficial do documento</div>
+                            </div>
+
+                            <!-- Número do Ofício -->
+                            <div class="campo-documento" id="campoNumeroOficio" style="display: none;">
+                                <label class="form-label">Número do Ofício</label>
+                                <input type="text" name="numero_oficio" class="form-control"
+                                       placeholder="Ex: 001/STAE/2024">
+                                <div class="ajuda">Formato: NNN/SIGLA/ANO</div>
+                            </div>
+
+                            <!-- Destinatário -->
+                            <div class="campo-documento" id="campoDestinatario" style="display: none;">
+                                <label class="form-label">Destinatário</label>
+                                <input type="text" name="destinatario" class="form-control"
+                                       placeholder="Ex: Sr. Diretor do Departamento de RH">
+                                <div class="ajuda">Nome/cargo do destinatário</div>
+                            </div>
+
+                            <!-- Objetivos -->
+                            <div class="campo-documento" id="campoObjetivos">
+                                <label class="form-label">Objetivos</label>
+                                <textarea name="objetivos" class="form-control" rows="3"
+                                          placeholder="Descreva os objetivos deste documento..."></textarea>
+                                <div class="ajuda">Finalidade e metas a alcançar</div>
+                            </div>
+
+                            <!-- Introdução -->
+                            <div class="campo-documento" id="campoIntroducao">
+                                <label class="form-label">Introdução</label>
+                                <textarea name="introducao" class="form-control" rows="4"
+                                          placeholder="Contexto e fundamentação do documento..."></textarea>
+                                <div class="ajuda">Contextualização e justificativa</div>
+                            </div>
+
+                            <!-- Metodologia -->
+                            <div class="campo-documento" id="campoMetodologia" style="display: none;">
+                                <label class="form-label">Metodologia</label>
+                                <textarea name="metodologia" class="form-control" rows="3"
+                                          placeholder="Métodos e procedimentos utilizados..."></textarea>
+                                <div class="ajuda">Como o trabalho foi realizado</div>
+                            </div>
+
+                            <!-- Resultados -->
+                            <div class="campo-documento" id="campoResultados" style="display: none;">
+                                <label class="form-label">Resultados/Conclusões</label>
+                                <textarea name="resultados" class="form-control" rows="4"
+                                          placeholder="Principais resultados alcançados..."></textarea>
+                                <div class="ajuda">Resultados obtidos e conclusões</div>
+                            </div>
+
+                            <!-- Recomendações -->
+                            <div class="campo-documento" id="campoRecomendacoes" style="display: none;">
+                                <label class="form-label">Recomendações</label>
+                                <textarea name="recomendacoes" class="form-control" rows="3"
+                                          placeholder="Recomendações e sugestões..."></textarea>
+                                <div class="ajuda">Sugestões para ações futuras</div>
+                            </div>
+
+                            <!-- Assunto -->
+                            <div class="campo-documento" id="campoAssunto" style="display: none;">
+                                <label class="form-label">Assunto</label>
+                                <textarea name="assunto" class="form-control" rows="3"
+                                          placeholder="Assunto tratado no documento..."></textarea>
+                                <div class="ajuda">Resumo do conteúdo tratado</div>
+                            </div>
+
+                            <!-- Conteúdo (para memorandos/ofícios) -->
+                            <div class="campo-documento" id="campoConteudo" style="display: none;">
+                                <label class="form-label">Conteúdo</label>
+                                <textarea name="conteudo" class="form-control" rows="6"
+                                          placeholder="Texto completo do documento..."></textarea>
+                                <div class="ajuda">Desenvolva o conteúdo principal</div>
+                            </div>
+
+                            <!-- Participantes (para atas) -->
+                            <div class="campo-documento" id="campoParticipantes" style="display: none;">
+                                <label class="form-label">Participantes</label>
+                                <textarea name="participantes" class="form-control" rows="3"
+                                          placeholder="Lista de participantes da reunião..."></textarea>
+                                <div class="ajuda">Nome e cargo dos participantes</div>
+                            </div>
+
+                            <!-- Pauta (para atas) -->
+                            <div class="campo-documento" id="campoPauta" style="display: none;">
+                                <label class="form-label">Pauta</label>
+                                <textarea name="pauta" class="form-control" rows="4"
+                                          placeholder="Itens da pauta discutidos..."></textarea>
+                                <div class="ajuda">Tópicos discutidos na reunião</div>
+                            </div>
+
+                            <!-- Deliberações (para atas) -->
+                            <div class="campo-documento" id="campoDeliberacoes" style="display: none;">
+                                <label class="form-label">Deliberações</label>
+                                <textarea name="deliberacoes" class="form-control" rows="4"
+                                          placeholder="Decisões tomadas na reunião..."></textarea>
+                                <div class="ajuda">Resoluções e decisões</div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <div>
+                                <button type="button" class="btn btn-outline-danger" onclick="limparFormulario()">
+                                    <i class="fas fa-eraser me-2"></i>Limpar
+                                </button>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-file-word me-2"></i>Gerar Documento Word
+                                </button>
+                                <button type="button" class="btn btn-success btn-lg ms-2" onclick="gerarPDF()">
+                                    <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRÉ-VISUALIZAÇÃO -->
+        <div class="col-lg-6">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Pré-visualização</h5>
+                </div>
+                <div class="card-body">
+                    <div class="preview-documento" id="previewDocumento">
+                        <div class="cabecalho-institucional">
+                            <div class="numero-oficio" id="previewNumero">[Nº Ofício]</div>
+                            <div class="data-documento" id="previewData">{{ hoje|date:"d/m/Y" }}</div>
+                            <h4>SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</h4>
+                            <h5>STAE - SISTEMA DE GESTÃO DE RECURSOS HUMANOS</h5>
+                            <div id="previewTipoDocumento">[Tipo de Documento]</div>
+                        </div>
+
+                        <div id="previewDestinatario" style="display: none; margin-bottom: 20px;">
+                            <strong>Destinatário:</strong> <span id="previewDestinatarioText"></span>
+                        </div>
+
+                        <div id="previewAssunto" style="display: none; margin-bottom: 20px;">
+                            <strong>Assunto:</strong> <span id="previewAssuntoText"></span>
+                        </div>
+
+                        <h3 id="previewTitulo" class="text-center mb-4">[Título do Documento]</h3>
+
+                        <div id="previewConteudo">
+                            <div id="previewObjetivos" style="display: none;">
+                                <h5>1. OBJETIVOS</h5>
+                                <p id="previewObjetivosText">[Objetivos do documento]</p>
+                            </div>
+
+                            <div id="previewIntroducao" style="display: none;">
+                                <h5>2. INTRODUÇÃO</h5>
+                                <p id="previewIntroducaoText">[Introdução e contexto]</p>
+                            </div>
+
+                            <div id="previewMetodologia" style="display: none;">
+                                <h5>3. METODOLOGIA</h5>
+                                <p id="previewMetodologiaText">[Metodologia utilizada]</p>
+                            </div>
+
+                            <div id="previewResultados" style="display: none;">
+                                <h5>4. RESULTADOS E CONCLUSÕES</h5>
+                                <p id="previewResultadosText">[Resultados alcançados]</p>
+                            </div>
+
+                            <div id="previewRecomendacoes" style="display: none;">
+                                <h5>5. RECOMENDAÇÕES</h5>
+                                <p id="previewRecomendacoesText">[Recomendações e sugestões]</p>
+                            </div>
+
+                            <div id="previewConteudoTexto" style="display: none;">
+                                <p id="previewConteudoText">[Conteúdo do documento]</p>
+                            </div>
+
+                            <div id="previewParticipantes" style="display: none;">
+                                <h5>PARTICIPANTES</h5>
+                                <p id="previewParticipantesText">[Lista de participantes]</p>
+                            </div>
+
+                            <div id="previewPauta" style="display: none;">
+                                <h5>PAUTA</h5>
+                                <p id="previewPautaText">[Itens da pauta]</p>
+                            </div>
+
+                            <div id="previewDeliberacoes" style="display: none;">
+                                <h5>DELIBERAÇÕES</h5>
+                                <p id="previewDeliberacoesText">[Decisões tomadas]</p>
+                            </div>
+                        </div>
+
+                        <div class="rodape-documento">
+                            <p>Documento gerado automaticamente pelo Sistema de Gestão RH - STAE</p>
+                           <p>Data de geração: {{ hoje|date:"d/m/Y" }}</p>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configurações por tipo de documento
+    const configDocumentos = {
+        'relatorio_anual': {
+            nome: 'Relatório Anual de Atividades',
+            campos: ['titulo', 'objetivos', 'introducao', 'metodologia', 'resultados', 'recomendacoes'],
+            preview: ['titulo', 'objetivos', 'introducao', 'metodologia', 'resultados', 'recomendacoes']
+        },
+        'relatorio_mensal': {
+            nome: 'Relatório Mensal',
+            campos: ['titulo', 'objetivos', 'resultados', 'recomendacoes'],
+            preview: ['titulo', 'objetivos', 'resultados', 'recomendacoes']
+        },
+        'oficio_circulacao': {
+            nome: 'Ofício de Circulação',
+            campos: ['titulo', 'numero_oficio', 'destinatario', 'assunto', 'conteudo'],
+            preview: ['numero_oficio', 'destinatario', 'assunto', 'titulo', 'conteudo']
+        },
+        'memorando': {
+            nome: 'Memorando Interno',
+            campos: ['titulo', 'destinatario', 'assunto', 'conteudo'],
+            preview: ['titulo', 'destinatario', 'assunto', 'conteudo']
+        },
+        'ata_reuniao': {
+            nome: 'Ata de Reunião',
+            campos: ['titulo', 'participantes', 'pauta', 'deliberacoes'],
+            preview: ['titulo', 'participantes', 'pauta', 'deliberacoes']
+        },
+        'portaria': {
+            nome: 'Portaria',
+            campos: ['titulo', 'numero_oficio', 'conteudo'],
+            preview: ['numero_oficio', 'titulo', 'conteudo']
+        },
+        'despacho': {
+            nome: 'Despacho',
+            campos: ['titulo', 'numero_oficio', 'destinatario', 'conteudo'],
+            preview: ['numero_oficio', 'destinatario', 'titulo', 'conteudo']
+        }
+    };
+
+    // Mudar tipo de documento
+    function mudarTipoDocumento(select) {
+        const tipo = select.value;
+
+        // Esconder todos os campos
+        document.querySelectorAll('#camposDocumento .campo-documento').forEach(campo => {
+            campo.style.display = 'none';
+        });
+
+        // Mostrar título sempre
+        document.querySelector('input[name="titulo"]').parentElement.style.display = 'block';
+
+        // Mostrar campos específicos do tipo
+        if (tipo && configDocumentos[tipo]) {
+            const campos = configDocumentos[tipo].campos;
+
+            campos.forEach(campoNome => {
+                const elemento = document.querySelector(`[name="${campoNome}"]`);
+                if (elemento) {
+                    elemento.parentElement.style.display = 'block';
+                }
+            });
+
+            // Atualizar preview
+            document.getElementById('previewTipoDocumento').textContent = configDocumentos[tipo].nome;
+            document.getElementById('previewTitulo').textContent = '[Título do Documento]';
+        }
+
+        gerarPreview();
+    }
+
+    // Gerar pré-visualização
+    function gerarPreview() {
+        const tipoSelect = document.querySelector('select[name="tipo_documento"]');
+        const tipo = tipoSelect.value;
+
+        if (!tipo) return;
+
+        const config = configDocumentos[tipo];
+
+        // Esconder todas as seções do preview
+        document.querySelectorAll('#previewConteudo > div').forEach(div => {
+            div.style.display = 'none';
+        });
+
+        document.getElementById('previewDestinatario').style.display = 'none';
+        document.getElementById('previewAssunto').style.display = 'none';
+        document.getElementById('previewConteudoTexto').style.display = 'none';
+
+        // Mostrar seções conforme configuração
+        config.preview.forEach(item => {
+            switch(item) {
+                case 'titulo':
+                    const titulo = document.querySelector('[name="titulo"]').value || '[Título do Documento]';
+                    document.getElementById('previewTitulo').textContent = titulo;
+                    break;
+
+                case 'numero_oficio':
+                    const numero = document.querySelector('[name="numero_oficio"]').value || '[Nº Ofício]';
+                    document.getElementById('previewNumero').textContent = numero;
+                    break;
+
+                case 'destinatario':
+                    const destinatario = document.querySelector('[name="destinatario"]').value;
+                    if (destinatario) {
+                        document.getElementById('previewDestinatario').style.display = 'block';
+                        document.getElementById('previewDestinatarioText').textContent = destinatario;
+                    }
+                    break;
+
+                case 'assunto':
+                    const assunto = document.querySelector('[name="assunto"]').value;
+                    if (assunto) {
+                        document.getElementById('previewAssunto').style.display = 'block';
+                        document.getElementById('previewAssuntoText').textContent = assunto;
+                    }
+                    break;
+
+                case 'objetivos':
+                    const objetivos = document.querySelector('[name="objetivos"]').value;
+                    if (objetivos) {
+                        document.getElementById('previewObjetivos').style.display = 'block';
+                        document.getElementById('previewObjetivosText').textContent = objetivos.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'introducao':
+                    const introducao = document.querySelector('[name="introducao"]').value;
+                    if (introducao) {
+                        document.getElementById('previewIntroducao').style.display = 'block';
+                        document.getElementById('previewIntroducaoText').textContent = introducao.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'metodologia':
+                    const metodologia = document.querySelector('[name="metodologia"]').value;
+                    if (metodologia) {
+                        document.getElementById('previewMetodologia').style.display = 'block';
+                        document.getElementById('previewMetodologiaText').textContent = metodologia.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'resultados':
+                    const resultados = document.querySelector('[name="resultados"]').value;
+                    if (resultados) {
+                        document.getElementById('previewResultados').style.display = 'block';
+                        document.getElementById('previewResultadosText').textContent = resultados.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'recomendacoes':
+                    const recomendacoes = document.querySelector('[name="recomendacoes"]').value;
+                    if (recomendacoes) {
+                        document.getElementById('previewRecomendacoes').style.display = 'block';
+                        document.getElementById('previewRecomendacoesText').textContent = recomendacoes.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'conteudo':
+                    const conteudo = document.querySelector('[name="conteudo"]').value;
+                    if (conteudo) {
+                        document.getElementById('previewConteudoTexto').style.display = 'block';
+                        document.getElementById('previewConteudoText').innerHTML = conteudo.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'participantes':
+                    const participantes = document.querySelector('[name="participantes"]').value;
+                    if (participantes) {
+                        document.getElementById('previewParticipantes').style.display = 'block';
+                        document.getElementById('previewParticipantesText').textContent = participantes.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'pauta':
+                    const pauta = document.querySelector('[name="pauta"]').value;
+                    if (pauta) {
+                        document.getElementById('previewPauta').style.display = 'block';
+                        document.getElementById('previewPautaText').textContent = pauta.replace(/\n/g, '<br>');
+                    }
+                    break;
+
+                case 'deliberacoes':
+                    const deliberacoes = document.querySelector('[name="deliberacoes"]').value;
+                    if (deliberacoes) {
+                        document.getElementById('previewDeliberacoes').style.display = 'block';
+                        document.getElementById('previewDeliberacoesText').textContent = deliberacoes.replace(/\n/g, '<br>');
+                    }
+                    break;
+            }
+        });
+    }
+
+    // Atualizar preview quando campos mudam
+    document.querySelectorAll('#camposDocumento input, #camposDocumento textarea').forEach(campo => {
+        campo.addEventListener('input', gerarPreview);
+    });
+
+    // Limpar formulário
+    function limparFormulario() {
+        if (confirm('Tem certeza que deseja limpar todo o conteúdo?')) {
+            document.getElementById('documentoForm').reset();
+            document.querySelectorAll('#camposDocumento .campo-documento').forEach(campo => {
+                campo.style.display = 'none';
+            });
+            document.querySelector('input[name="titulo"]').parentElement.style.display = 'block';
+            gerarPreview();
+        }
+    }
+
+    // Gerar PDF (simulação)
+    function gerarPDF() {
+        alert('Funcionalidade de geração de PDF será implementada!');
+        // Aqui integraria com uma biblioteca de geração de PDF
+    }
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Atualizar data no preview
+        const hoje = new Date().toLocaleDateString('pt-MZ');
+        document.getElementById('previewData').textContent = hoje;
+    });
+</script>
+{% endblock %}

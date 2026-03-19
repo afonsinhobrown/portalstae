@@ -1,0 +1,110 @@
+{% extends 'base_apps.html' %}
+{% block title %}Central de Importação - STAE{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div id="upload-panel" class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-primary py-3 text-white d-flex align-items-center">
+                    <i class="fas fa-file-excel fa-2x me-3"></i>
+                    <div>
+                        <h4 class="mb-0">Central de Submissão Excel</h4>
+                        <small class="opacity-75">Partido: {{ inscricao.partido.sigla }} | {{ inscricao.eleicao.nome }}</small>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <div id="initial-state">
+                        <div class="alert alert-info border-0 bg-light-primary text-primary mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            O sistema processará os candidatos e formalizará a participação do partido no <strong>Círculo Eleitoral</strong> indicado na <strong>Célula B3</strong> do ficheiro.
+                        </div>
+
+                        <form id="import-form" method="post" enctype="multipart/form-data" action="{% url 'candidaturas:central_importacao' inscricao.id %}">
+                            {% csrf_token %}
+                            <div class="upload-zone border-dashed p-5 text-center mb-4 rounded-3" style="border: 2px dashed #cbd5e1; cursor: pointer;" onclick="document.getElementById('file-input').click()">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <h5>Clique para selecionar ou arraste o ficheiro</h5>
+                                <p class="text-muted small">Apenas ficheiros .xlsx (Template Oficial)</p>
+                                <input type="file" id="file-input" name="arquivo_excel" class="d-none" accept=".xlsx" required onchange="handleFileSelect(this)">
+                                <div id="selected-file-name" class="mt-2 text-primary fw-bold d-none"></div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg py-3 rounded-3 shadow-sm">
+                                    <i class="fas fa-check-circle me-1"></i> Iniciar Processamento
+                                </button>
+                                <a href="{% url 'candidaturas:gerenciar_listas' inscricao.id %}" class="btn btn-link text-muted">Cancelar e voltar</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="processing-state" class="d-none text-center py-5">
+                        <div class="spinner-border text-primary mb-4" style="width: 4rem; height: 4rem;" role="status"></div>
+                        <h3 class="fw-bold text-dark">Processando Submissão...</h3>
+                        <p class="text-muted lead">Validando soberania territorial e integridade biométrica.</p>
+                        
+                        <div class="progress mt-4" style="height: 10px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        
+                        <div class="mt-4 text-start bg-light p-3 rounded small text-secondary" style="max-height: 150px; overflow-y: auto;" id="processing-logs">
+                            <div><i class="fas fa-check text-success me-2"></i> Abrindo ficheiro...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-top">
+                    <p class="text-muted small mb-2"><i class="fas fa-flask me-2"></i><strong>Laboratório de Testes:</strong> Carregue um ficheiro validado para testes rápidos:</p>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'candidaturas:baixar_ficheiro_teste' 'maputo_p1' %}" class="btn btn-xs btn-outline-info rounded-pill">P1 Maputo (40)</a>
+                        <a href="{% url 'candidaturas:baixar_ficheiro_teste' 'maputo_p2' %}" class="btn btn-xs btn-outline-info rounded-pill">P2 Maputo (40)</a>
+                        <a href="{% url 'candidaturas:baixar_ficheiro_teste' 'xaixai_p2' %}" class="btn btn-xs btn-outline-info rounded-pill">P2 Xai-Xai (50)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            const fileNameDiv = document.getElementById('selected-file-name');
+            fileNameDiv.textContent = `Ficheiro: ${input.files[0].name}`;
+            fileNameDiv.classList.remove('d-none');
+        }
+    }
+
+    document.getElementById('import-form').addEventListener('submit', function(e) {
+        document.getElementById('initial-state').classList.add('d-none');
+        document.getElementById('processing-state').classList.remove('d-none');
+        
+        const bar = document.getElementById('progress-bar');
+        const logs = document.getElementById('processing-logs');
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5;
+            bar.style.width = progress + '%';
+            
+            if (progress === 30) {
+                logs.innerHTML += '<div><i class="fas fa-check text-success me-2"></i> Validando cabeçalho do partido...</div>';
+            }
+            if (progress === 60) {
+                logs.innerHTML += '<div><i class="fas fa-search text-primary me-2"></i> Localizando Unidade Territorial (Célula B3)...</div>';
+            }
+            if (progress === 85) {
+                logs.innerHTML += '<div><i class="fas fa-sync fa-spin text-info me-2"></i> Carregando candidatos para a base de dados...</div>';
+            }
+            
+            if (progress >= 95) clearInterval(interval);
+        }, 150);
+    });
+</script>
+
+<style>
+    .bg-light-primary { background-color: #f0f7ff; }
+    .border-dashed:hover { background-color: #f8fafc; border-color: #3b82f6 !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Promoções - Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-chart-line me-2"></i>Gestão de Promoções</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'recursoshumanos:nova_promocao' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nova Promoção
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Funcionário</th>
+                        <th>Data</th>
+                        <th>Cargo Anterior</th>
+                        <th>Cargo Novo</th>
+                        <th>Aprovado Por</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for promocao in promocoes %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if promocao.funcionario.foto %}
+                                <img src="{{ promocao.funcionario.foto.url }}" class="rounded-circle me-2" width="32" height="32">
+                                {% else %}
+                                <div class="avatar-placeholder rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                    {{ promocao.funcionario.nome_completo|first }}
+                                </div>
+                                {% endif %}
+                                {{ promocao.funcionario.nome_completo }}
+                            </div>
+                        </td>
+                        <td>{{ promocao.data_promocao|date:"d/m/Y" }}</td>
+                        <td>{{ promocao.cargo_anterior }}</td>
+                        <td><strong>{{ promocao.cargo_atual }}</strong></td>
+                        <td>{{ promocao.aprovado_por.get_full_name }}</td>
+                        <td>
+                            <a href="{% url 'recursoshumanos:detalhes_promocao' promocao.id %}" class="btn btn-sm btn-info text-white">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            Nenhuma promoção registrada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,947 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Detalhes do Contrato | UGEA{% endblock %}
+{% block module_name %}UGEA · Gestão de Contratos{% endblock %}
+{% block icon %}fas fa-file-contract{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Detalhes do Contrato{% endblock %}
+
+{% block content %}
+<!-- Bootstrap CSS para Modais -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+        --secondary-gradient: linear-gradient(135deg, #2ec4b6 0%, #20a394 100%);
+        --warning-gradient: linear-gradient(135deg, #ff9f1c 0%, #e68a00 100%);
+        --dark-bg: #1a1d28;
+        --card-bg: #ffffff;
+        --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        --border-light: #f0f3f8;
+        --text-primary: #2d3748;
+        --text-secondary: #718096;
+        --accent-color: #4361ee;
+        --success-color: #2ec4b6;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Card Premium */
+    .premium-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--border-light);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 2rem;
+    }
+
+    .premium-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header-premium {
+        background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+        border-bottom: 1px solid var(--border-light);
+        padding: 1.75rem 2rem;
+        position: relative;
+    }
+
+    .card-header-premium::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, var(--accent-color), transparent);
+    }
+
+    /* Tabela Premium */
+    .premium-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.95rem;
+    }
+
+    .premium-table thead th {
+        background: #f8fafc;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 2px solid var(--border-light);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .premium-table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .premium-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .premium-table tbody tr:hover {
+        background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+        transform: translateX(4px);
+    }
+
+    .premium-table td {
+        padding: 1.25rem 1.5rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .premium-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Badges Premium */
+    .badge-premium {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        border: 1px solid transparent;
+    }
+
+    .badge-approved {
+        background: linear-gradient(135deg, #2ec4b6 0%, #20a394 100%);
+        color: white;
+    }
+
+    .badge-pending {
+        background: linear-gradient(135deg, #ff9f1c 0%, #e68a00 100%);
+        color: white;
+    }
+
+    .badge-rejected {
+        background: linear-gradient(135deg, #ef476f 0%, #d43a5e 100%);
+        color: white;
+    }
+
+    /* Widget Financeiro Premium */
+    .finance-widget {
+        background: linear-gradient(135deg, var(--dark-bg) 0%, #2d3748 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 15px 40px rgba(67, 97, 238, 0.15);
+    }
+
+    .finance-widget::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(67, 97, 238, 0.1) 0%, transparent 70%);
+        z-index: 1;
+    }
+
+    .finance-widget > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Progress Bar Premium */
+    .progress-premium {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .progress-bar-premium {
+        background: linear-gradient(90deg, #ff9f1c 0%, #ffbf69 100%);
+        border-radius: 10px;
+        transition: width 1s ease;
+    }
+
+    /* Botões Premium */
+    .btn-premium {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        border: none;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-dark-premium {
+        background: linear-gradient(135deg, var(--dark-bg) 0%, #2d3748 100%);
+        color: white;
+    }
+
+    .btn-outline-premium {
+        background: white;
+        border: 2px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .btn-outline-premium:hover {
+        border-color: var(--accent-color);
+        background: white;
+    }
+
+    /* Formulário Premium */
+    .form-control-premium {
+        border: 2px solid var(--border-light);
+        border-radius: 12px;
+        padding: 0.875rem 1.25rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control-premium:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        background: white;
+    }
+
+    /* Avatar Premium */
+    .avatar-premium {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-right: 1rem;
+    }
+
+    .avatar-primary {
+        background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+        color: white;
+    }
+
+    /* Status Indicator */
+    .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+
+    .status-active {
+        background: var(--success-color);
+        box-shadow: 0 0 0 4px rgba(46, 196, 182, 0.2);
+    }
+
+    /* Responsividade */
+    @media (max-width: 992px) {
+        .premium-card {
+            border-radius: 16px;
+        }
+        
+        .card-header-premium {
+            padding: 1.5rem;
+        }
+        
+        .premium-table thead th,
+        .premium-table td {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="row g-4 mb-4">
+    <!-- VALOR TOTAL -->
+    <div class="col-md-3">
+        <div class="premium-card p-4 m-0 h-100" style="border-bottom: 4px solid var(--accent-color);">
+            <div class="card-title m-0 mb-1" style="font-size: 0.75rem;"><i class="fas fa-file-invoice-dollar me-2"></i>VALOR DO CONTRATO</div>
+            <div class="card-value" style="font-size: 1.5rem;">{{ valor_contrato|floatformat:2 }} <small class="text-muted">MT</small></div>
+            <div class="progress mt-2" style="height: 5px;">
+                <div class="progress-bar" style="width: 100%; background: var(--accent-color);"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PAGAMENTO EXECUTADO -->
+    <div class="col-md-3">
+        <div class="premium-card p-4 m-0 h-100" style="border-bottom: 4px solid var(--success-color);">
+            <div class="card-title m-0 mb-1" style="font-size: 0.75rem;"><i class="fas fa-check-double me-2"></i>PAGAMENTO EXECUTADO</div>
+            <div class="card-value text-success" style="font-size: 1.5rem;">{{ pagamento_executado|floatformat:2 }} <small class="text-muted">MT</small></div>
+            <div class="progress mt-2" style="height: 5px;">
+                {% with perc=pagamento_executado|divisibleby:valor_contrato %}
+                <div class="progress-bar bg-success" style="width: 25%;"></div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- CONSUMO CONFIRMADO -->
+    <div class="col-md-3">
+        <div class="premium-card p-4 m-0 h-100" style="border-bottom: 4px solid var(--warning-gradient);">
+            <div class="card-title m-0 mb-1" style="font-size: 0.75rem;"><i class="fas fa-gas-pump me-2"></i>CONSUMO CONFIRMADO</div>
+            <div class="card-value" style="font-size: 1.5rem;">{{ consumo_confirmado|floatformat:2 }} <small class="text-muted">MT</small></div>
+            <div class="progress mt-2" style="height: 5px;">
+                <div class="progress-bar bg-warning" style="width: 35%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VALOR DA DÍVIDA -->
+    <div class="col-md-3">
+        <div class="premium-card p-4 m-0 h-100" style="border-bottom: 4px solid #f56565;">
+            <div class="card-title m-0 mb-1" style="font-size: 0.75rem;"><i class="fas fa-exclamation-triangle me-2"></i>VALOR DA DÍVIDA</div>
+            <div class="card-value text-danger" style="font-size: 1.5rem;">{{ valor_divida|floatformat:2 }} <small class="text-muted">MT</small></div>
+            <div class="mt-2 small">
+                {% if valor_divida > 0 %}
+                <span class="text-danger"><i class="fas fa-arrow-up"></i> Valor pendente de pagamento</span>
+                {% else %}
+                <span class="text-success"><i class="fas fa-check"></i> Sem dívidas acumuladas</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BALANCE TABLE SUMMARY -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h6 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-balance-scale me-2 text-primary"></i>
+                    Balanço Consolidado do Contrato
+                </h6>
+            </div>
+            <div class="card-content p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 text-muted small text-uppercase">Descrição Financeira</th>
+                                <th class="text-center text-muted small text-uppercase">Valor (MT)</th>
+                                <th class="text-center text-muted small text-uppercase">Percentual</th>
+                                <th class="pe-4 text-end text-muted small text-uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="ps-4 fw-medium text-dark"><i class="fas fa-file-contract me-2 text-primary"></i> Valor Global do Contrato</td>
+                                <td class="text-center fw-bold">{{ valor_contrato|floatformat:2 }}</td>
+                                <td class="text-center">100%</td>
+                                <td class="pe-4 text-end"><span class="badge bg-secondary">Teto Máximo</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-medium text-dark"><i class="fas fa-shopping-cart me-2 text-warning"></i> Total Consumido e Confirmado</td>
+                                <td class="text-center fw-bold">{{ consumo_confirmado|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    {% widthratio consumo_confirmado valor_contrato 100 %}%
+                                </td>
+                                <td class="pe-4 text-end"><span class="badge bg-warning text-dark">Dívida Gerada</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-medium text-dark"><i class="fas fa-check-double me-2 text-success"></i> Pagamentos Realizados (Execução)</td>
+                                <td class="text-center fw-bold text-success">{{ pagamento_executado|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    {% widthratio pagamento_executado valor_contrato 100 %}%
+                                </td>
+                                <td class="pe-4 text-end"><span class="badge bg-success">Execução Real</span></td>
+                            </tr>
+                            <tr class="bg-light">
+                                <td class="ps-4 fw-bold text-dark"><i class="fas fa-exclamation-circle me-2 text-danger"></i> SALDO DEVEDOR / DÍVIDA ATUAL</td>
+                                <td class="text-center fw-bold text-danger fs-5">{{ valor_divida|floatformat:2 }}</td>
+                                <td class="text-center">--</td>
+                                <td class="pe-4 text-end">
+                                    {% if valor_divida > 0 %}
+                                    <span class="badge bg-danger">Pendente de Liquidação</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Regularizado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- COLUNA PRINCIPAL -->
+    <div class="col-lg-8">
+        
+        <!-- CABEÇALHO DO CONTRATO -->
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-premium bg-light text-primary border me-3" style="width:50px; height:50px; font-size:1.2rem;">
+                            <i class="fas fa-file-signature"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">{{ contrato.numero_contrato }}</h5>
+                            <div class="d-flex align-items-center text-muted small">
+                                <span class="me-3"><i class="fas fa-tag me-1"></i> {{ contrato.tipo_servico }}</span>
+                                <span><i class="fas fa-building me-1"></i> {{ contrato.sector.nome|default:"Geral" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        {% if contrato.ativo %}
+                            <span class="badge-premium badge-approved"><i class="fas fa-check-circle me-1"></i> ATIVO</span>
+                        {% else %}
+                            <span class="badge-premium badge-rejected">INATIVO</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DADOS DO FORNECEDOR E VIGÊNCIA -->
+            <div class="card-content p-0">
+                <div class="p-4">
+                    <h6 class="text-uppercase text-muted small fw-bold mb-3 border-bottom pb-2">
+                        <i class="fas fa-truck me-2"></i>Dados do Fornecedor
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #edf2f7;">
+                                <div class="avatar-premium bg-white shadow-sm text-dark me-3">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">
+                                        Razão Social 
+                                        {% if fornecedor_obj %}
+                                            <i class="fas fa-check-circle text-success ms-1" title="Fornecedor Verificado"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="fw-bold text-dark text-truncate">
+                                        {{ fornecedor_obj.nome|default:contrato.proposta_vencedora.fornecedor }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #edf2f7;">
+                                <div class="avatar-premium bg-white shadow-sm text-dark me-3">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">NUIT</div>
+                                    <div class="fw-bold text-dark">{{ fornecedor_obj.nuit|default:contrato.proposta_vencedora.nuit }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                             <div class="d-flex justify-content-between flex-wrap gap-3 p-3 rounded-3 border bg-white">
+                                 <div>
+                                    <div class="text-muted small fw-bold mb-1"><i class="fas fa-map-marker-alt me-2 text-danger"></i>Endereço</div>
+                                    <div class="fw-medium text-dark">{{ fornecedor_obj.endereco|default:"Endereço não disponível na proposta" }}</div>
+                                 </div>
+                                 <div>
+                                    <div class="text-muted small fw-bold mb-1"><i class="fas fa-phone me-2 text-primary"></i>Contacto</div>
+                                    <div class="fw-medium text-dark">{{ fornecedor_obj.telefone|default:"--" }}</div>
+                                 </div>
+                                 <div>
+                                    <div class="text-muted small fw-bold mb-1"><i class="fas fa-envelope me-2 text-warning"></i>Email</div>
+                                    <div class="fw-medium text-dark">{{ fornecedor_obj.email|default:"--" }}</div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-uppercase text-muted small fw-bold mb-3 border-bottom pb-2 pt-2">
+                        <i class="far fa-clock me-2"></i>Vigência e Prazos
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Início</label>
+                            <div class="fw-bold text-dark fs-5">{{ contrato.data_inicio|date:"d/m/Y" }}</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Término</label>
+                            <div class="fw-bold text-dark fs-5">{{ contrato.data_fim|date:"d/m/Y" }}</div>
+                        </div>
+                         <div class="col-12 col-md-6">
+                            <label class="text-muted small text-uppercase fw-bold mb-1">Status do Prazo</label>
+                            <div class="progress-premium mt-1 mb-1" style="height: 6px; background: #e2e8f0; margin:0;">
+                                <div class="progress-bar-premium" style="width: 45%; background: var(--primary-gradient);"></div>
+                            </div>
+                            <small class="text-muted">Contrato em vigência normal</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ITENS E SERVIÇOS DO CONTRATO -->
+        <div class="premium-card">
+            <div class="card-header-premium d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-list-ul me-2 text-info"></i>
+                    Itens e Serviços Contratados
+                </h5>
+                
+                <!-- Formulário de Adição Rápida -->
+                <form action="{% url 'ugea:adicionar_item_rapido' contrato.id %}" method="POST" class="d-flex gap-2 p-2 rounded shadow-sm" style="background: #f1f5f9; border: 1px solid #e2e8f0;">
+                    {% csrf_token %}
+                    <div class="d-flex align-items-center bg-white px-2 rounded border">
+                        <i class="fas fa-tag text-muted me-2"></i>
+                        <input type="text" name="descricao" class="form-control form-control-sm border-0 shadow-none ps-0" placeholder="Nome do Serviço (ex: Diesel)" required style="width: 200px;">
+                    </div>
+                    <div class="input-group input-group-sm bg-white rounded border" style="width: 160px;">
+                        <span class="input-group-text border-0 bg-white"><i class="fas fa-money-bill-wave text-muted"></i></span>
+                        <input type="number" name="preco_unitario" step="0.01" class="form-control border-0 shadow-none" placeholder="Preço" required>
+                        <span class="input-group-text border-0 bg-white fw-bold">MT</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4 rounded shadow-sm">
+                        <i class="fas fa-check me-1"></i> SALVAR SERVIÇO
+                    </button>
+                </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table premium-table align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 60%;">Descrição do Item / Serviço</th>
+                            <th style="width: 25%;" class="text-end">Preço Unitário</th>
+                            <th style="width: 15%;" class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in contrato.itens.all %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-premium bg-light text-secondary me-3" style="width:32px; height:32px; font-size:0.8rem;">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div class="fw-bold text-dark">{{ item.descricao }}</div>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-light text-dark border px-3 py-2 fw-bold" style="font-size: 0.95rem;">
+                                    {{ item.preco_unitario|floatformat:2 }} MT
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-link text-primary p-0" title="Editar Serviço" 
+                                            onclick="openEditItemModal('{{ item.id }}', '{{ item.descricao }}', '{{ item.preco_unitario|stringformat:'.2f' }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form action="{% url 'ugea:excluir_item_contrato' item.id %}" method="POST" onsubmit="return confirm('Tem certeza que deseja remover este serviço?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link text-danger p-0" title="Excluir Serviço">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5">
+                                <div class="text-muted mb-3">
+                                    <i class="fas fa-box-open fa-3x opacity-25"></i>
+                                </div>
+                                <h5 class="text-secondary fw-bold">Nenhum serviço registado neste contrato</h5>
+                                <p class="text-muted small mb-4">Importe os itens definidos no Caderno de Encargos para começar.</p>
+                                
+                                <a href="{% url 'ugea:sincronizar_itens_contrato' contrato.id %}" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm">
+                                    <i class="fas fa-sync-alt me-2"></i> IMPORTAR DO CADERNO DE ENCARGOS
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- HISTÓRICO DE REQUISIÇÕES (LAYOUT COMBUSTÍVEL) -->
+        <div class="premium-card">
+            <div class="card-header-premium d-flex justify-content-between align-items-center bg-white border-bottom-0 pb-0">
+                <h5 class="mb-0 fw-bold text-dark">Histórico de Requisições</h5>
+                <div class="d-flex gap-2">
+                     <select class="form-select form-select-sm bg-light border-0" style="width: 130px;">
+                         <option>Todos status</option>
+                     </select>
+                </div>
+            </div>
+            <div class="table-responsive p-3">
+                <table class="table table-hover align-middle" style="font-size: 0.9rem;">
+                    <thead class="bg-light text-muted text-uppercase small">
+                        <tr style="border-bottom: 2px solid #edf2f7;">
+                            <th class="ps-3 border-0 py-3">Pedido</th>
+                            <th class="border-0 py-3">Viatura / Detalhe</th>
+                            <th class="border-0 py-3">Solicitante</th>
+                            <th class="border-0 py-3">Quantidade</th>
+                            <th class="border-0 py-3 text-success">Custo</th>
+                            <th class="border-0 py-3">Data</th>
+                            <th class="border-0 py-3 text-center">Status</th>
+                            <th class="border-0 py-3 text-end pe-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for p in pedidos %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark">#{{ p.id }}</td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ p.descricao|truncatechars:40 }}</div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">{{ p.item_contrato.descricao|default:"Item Geral" }}</div>
+                            </td>
+                            <td>
+                                <div class="text-uppercase fw-bold text-dark" style="font-size: 0.85rem;">{{ p.solicitante|default:"N/A" }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ p.quantidade|floatformat:2 }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-success">{{ p.valor_estimado|floatformat:2 }} MT</div>
+                            </td>
+                            <td class="text-muted small">
+                                {{ p.data_pedido|date:"d/m/Y H:i" }}
+                            </td>
+                            <td class="text-center">
+                                {% if p.status == 'aprovado' %}
+                                    <span class="badge bg-success rounded-pill px-3">Abastecido</span>
+                                {% elif p.status == 'pendente' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-3">Pendente</span>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill px-3">Rejeitado</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary border-0" title="Ver"><i class="fas fa-eye"></i></button>
+                                    <button class="btn btn-outline-secondary border-0" title="Imprimir"><i class="fas fa-print"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                Nenhum registro encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- HISTÓRICO DE PAGAMENTOS -->
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-money-check-alt me-2 text-success"></i>
+                    Histórico de Pagamentos
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table premium-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Data</th>
+                            <th style="width: 25%;">Referência</th>
+                            <th style="width: 40%;">Notas</th>
+                            <th style="width: 20%;" class="text-end">Valor Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pagamento in pagamentos %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ pagamento.data_pagamento|date:"d/m/Y" }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-premium bg-success bg-opacity-10 text-success me-2" style="width:32px; height:32px; font-size:0.8rem;">
+                                        <i class="fas fa-receipt"></i>
+                                    </div>
+                                    <span class="fw-medium text-dark">{{ pagamento.referencia }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-muted text-truncate" style="max-width: 300px;">
+                                    {{ pagamento.descricao|default:"-" }}
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-bold text-success">{{ pagamento.valor|floatformat:2 }} MT</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="text-muted mb-3">
+                                    <i class="fas fa-wallet fa-2x opacity-50"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark mb-2">Sem pagamentos registrados</h6>
+                                <p class="text-muted small">Nenhum pagamento foi lançado para este contrato ainda.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUNA LATERAL (FINANCEIRO) -->
+    <div class="col-lg-4">
+        
+        <!-- CARD SALDO PREMIUM -->
+        <div class="finance-widget">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <p class="text-white-50 text-uppercase small fw-bold mb-1">Saldo Disponível (Real)</p>
+                    <h2 class="display-5 fw-bold mb-0 text-white">{{ contrato.saldo_disponivel|floatformat:2 }}</h2>
+                    <small class="text-white-50">Margem para novos pedidos</small>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-3 p-3 text-center">
+                    <i class="fas fa-check-circle text-white fa-lg d-block mb-1"></i>
+                    <small class="text-white" style="font-size: 0.6rem;">VALIDADO</small>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="d-flex justify-content-between text-white-80 mb-2 small">
+                    <span class="fw-bold">CONSUMO TOTAL</span>
+                    <span class="fw-bold text-warning">{{ consumo_confirmado|floatformat:2 }} MT</span>
+                </div>
+                <div class="progress-premium" style="height: 10px;">
+                    <div class="progress-bar-premium" role="progressbar" 
+                         style="width: {% widthratio consumo_confirmado valor_contrato 100 %}%; background: var(--warning-gradient);"></div>
+                </div>
+            </div>
+            
+            <div class="pt-4 border-top border-white border-opacity-20">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-start">
+                        <span class="text-white-50 small d-block">Saldo Contabilístico</span>
+                        <span class="fw-bold text-info fs-5">{{ contrato.saldo_financeiro|floatformat:2 }} MT</span>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-white-50 small d-block">Teto Global</span>
+                        <span class="fw-bold text-white small">{{ valor_contrato|floatformat:2 }} MT</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-white-50 small">PAGAMENTOS EFETUADOS</span>
+                    <span class="fw-bold text-success">{{ pagamento_executado|floatformat:2 }} MT</span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-2 rounded {% if valor_divida > 0 %}bg-danger bg-opacity-25{% endif %} mt-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2 {% if valor_divida > 0 %}text-white{% else %}text-white-50{% endif %}"></i>
+                        <span class="{% if valor_divida > 0 %}text-white{% else %}text-white-50{% endif %} small fw-bold">DÍVIDA ACTUAL</span>
+                    </div>
+                    <span class="fw-bold {% if valor_divida > 0 %}text-white{% else %}text-white-50{% endif %}">
+                        {{ valor_divida|floatformat:2 }} MT
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- AÇÕES RÁPIDAS -->
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h6 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-bolt me-2 text-warning"></i>
+                    Ações Rápidas
+                </h6>
+            </div>
+            <div class="p-3">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'ugea:editar_contrato' contrato.id %}" class="btn btn-premium btn-dark-premium">
+                        <i class="fas fa-edit me-2"></i> Editar Contrato
+                    </a>
+                    {% if contrato.documento %}
+                    <a href="{{ contrato.documento.url }}" target="_blank" class="btn btn-premium btn-outline-premium">
+                        <i class="fas fa-file-pdf text-danger me-2"></i> Ver PDF Anexo
+                    </a>
+                    {% endif %}
+                    <a href="#" class="btn btn-premium btn-outline-premium">
+                        <i class="fas fa-download me-2"></i> Exportar Relatório
+                    </a>
+                    <a href="#" class="btn btn-premium btn-outline-premium">
+                        <i class="fas fa-share-alt me-2"></i> Compartilhar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOVO PAGAMENTO -->
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h6 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-plus-circle me-2 text-success"></i>
+                    Registrar Pagamento
+                </h6>
+            </div>
+            <div class="p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted mb-2">Valor (MT)</label>
+                        <input type="number" name="valor" step="0.01" 
+                               class="form-control form-control-premium" 
+                               placeholder="0.00" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted mb-2">Referência</label>
+                        <input type="text" name="referencia" 
+                               class="form-control form-control-premium" 
+                               placeholder="Documento nº..." required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted mb-2">Notas</label>
+                        <textarea name="descricao" rows="3" 
+                                  class="form-control form-control-premium"
+                                  placeholder="Adicione observações sobre este pagamento..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-premium w-100" 
+                            style="background: linear-gradient(135deg, var(--success-color) 0%, #20a394 100%); color: white;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Confirmar Pagamento
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- INFO ADICIONAL -->
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h6 class="mb-0 fw-bold text-dark">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    Informações do Contrato
+                </h6>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="small text-uppercase text-muted fw-bold mb-1">ID do Contrato</div>
+                    <div class="fw-bold text-dark">{{ contrato.id|stringformat:"06d" }}</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-uppercase text-muted fw-bold mb-1">Última Atualização</div>
+                    <div class="fw-bold text-dark">{{ contrato.updated_at|date:"d/m/Y H:i"|default:"Não disponível" }}</div>
+                </div>
+                <div class="mb-0">
+                    <div class="small text-uppercase text-muted fw-bold mb-1">Dias Restantes</div>
+                    <div class="fw-bold text-dark">
+                        {% if contrato.dias_restantes > 0 %}
+                            {{ contrato.dias_restantes }} dias
+                        {% else %}
+                            <span class="text-danger">Expirado</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Animação de entrada dos cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.premium-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 * index);
+        });
+
+        // Efeito hover nas linhas da tabela
+        const tableRows = document.querySelectorAll('.premium-table tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.05)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.boxShadow = 'none';
+            });
+        });
+    });
+</script>
+
+<!-- MODAL EDITAR ITEM -->
+<div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-bottom-0 p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit text-primary me-2"></i>Editar Serviço</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editItemForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4 pt-0">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Descrição do Serviço</label>
+                        <input type="text" name="descricao" id="editItemDescricao" class="form-control form-control-premium" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Preço Unitário (MT)</label>
+                        <div class="input-group">
+                            <input type="number" name="preco_unitario" id="editItemPreco" step="0.01" class="form-control form-control-premium" required>
+                            <span class="input-group-text bg-light fw-bold">MT</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 p-4">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function openEditItemModal(id, descricao, preco) {
+        const url = "{% url 'ugea:editar_item_contrato' 0 %}".replace('0', id);
+        document.getElementById('editItemForm').setAttribute('action', url);
+        document.getElementById('editItemDescricao').value = descricao;
+        document.getElementById('editItemPreco').value = preco;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editItemModal'));
+        modal.show();
+    }
+</script>
+{% endblock %}

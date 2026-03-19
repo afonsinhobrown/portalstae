@@ -1,0 +1,1997 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Chat • Sistema RH{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Container principal do chat */
+    .chat-container {
+        height: calc(100vh - 200px);
+        display: flex;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background-color: white;
+    }
+
+    /* Sidebar de canais */
+    .channels-sidebar {
+        width: 320px;
+        background: linear-gradient(180deg, #1a4a72 0%, #153a5e 100%);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Área principal do chat */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #f8f9fa;
+    }
+
+    /* Cabeçalho do chat */
+    .chat-header {
+        background-color: white;
+        border-bottom: 1px solid #dee2e6;
+        padding: 15px 20px;
+    }
+
+    /* Lista de canais */
+    .channels-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    /* Item de canal */
+    .channel-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .channel-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .channel-item.active {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Avatar do canal */
+    .channel-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .channel-item.active .channel-avatar {
+        background-color: white;
+        color: #1a4a72;
+    }
+
+    /* Informações do canal */
+    .channel-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .channel-name {
+        font-weight: 500;
+        font-size: 0.95rem;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .channel-last-message {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .channel-item.active .channel-last-message {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Badge de notificações */
+    .channel-badge {
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 10px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    /* Container de mensagens */
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background-color: #f5f7fa;
+        background-image:
+            radial-gradient(#e3e6e9 1px, transparent 1px),
+            radial-gradient(#e3e6e9 1px, transparent 1px);
+        background-size: 30px 30px;
+        background-position: 0 0, 15px 15px;
+    }
+
+    /* Mensagens */
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.received {
+        justify-content: flex-start;
+    }
+
+    .message.sent {
+        justify-content: flex-end;
+    }
+
+    /* Conteúdo da mensagem */
+    .message-content {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+        line-height: 1.4;
+    }
+
+    .message.received .message-content {
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 18px 18px 18px 5px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.sent .message-content {
+        background: linear-gradient(135deg, #1a4a72 0%, #2c7da0 100%);
+        color: white;
+        border-radius: 18px 18px 5px 18px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Remetente da mensagem */
+    .message-sender {
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #495057;
+        display: flex;
+        align-items: center;
+    }
+
+    .message.sent .message-sender {
+        justify-content: flex-end;
+        color: #6c757d;
+    }
+
+    /* Avatar do remetente */
+    .sender-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: #1a4a72;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: 8px;
+    }
+
+    /* Tempo da mensagem */
+    .message-time {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 5px;
+    }
+
+    .message.sent .message-time {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Input de mensagem */
+    .message-input-container {
+        padding: 15px 20px;
+        background-color: white;
+        border-top: 1px solid #dee2e6;
+    }
+
+    /* Indicador de digitação */
+    .typing-indicator {
+        padding: 5px 20px;
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-style: italic;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* Arquivos anexados */
+    .message-file {
+        margin-top: 10px;
+        padding: 8px 12px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .message-file a {
+        color: inherit;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .message-file a:hover {
+        text-decoration: underline;
+    }
+
+    /* Status da mensagem */
+    .message-status {
+        font-size: 0.7rem;
+    }
+
+    /* Data separadora */
+    .message-date {
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+    }
+
+    .message-date::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: #dee2e6;
+        z-index: 1;
+    }
+
+    .message-date span {
+        background-color: #f8f9fa;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #6c757d;
+        position: relative;
+        z-index: 2;
+        border: 1px solid #dee2e6;
+    }
+
+    /* Conversas Diretas - Estilos específicos */
+    .direct-chat-item {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-left: 3px solid #4CAF50;
+    }
+
+    .direct-chat-avatar {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    }
+
+    .direct-chat-badge {
+        background-color: #4CAF50;
+    }
+
+    /* Usuário Online */
+    .online-status {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #28a745;
+        border: 2px solid white;
+    }
+
+    /* Responsividade */
+    @media (max-width: 992px) {
+        .channels-sidebar {
+            width: 280px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .chat-container {
+            flex-direction: column;
+            height: calc(100vh - 150px);
+        }
+
+        .channels-sidebar {
+            width: 100%;
+            height: 200px;
+        }
+
+        .message-content {
+            max-width: 85%;
+        }
+    }
+
+    /* Scrollbar personalizada */
+    .messages-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Botão de rolagem para baixo */
+    .scroll-to-bottom {
+        position: absolute;
+        bottom: 80px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #1a4a72;
+        color: white;
+        border: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        transition: all 0.3s;
+    }
+
+    .scroll-to-bottom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Comunicação Interna</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Chat</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'recursoshumanos:lista_usuarios_chat' %}" class="btn btn-success">
+            <i class="fas fa-user-plus me-2"></i>Conversas Diretas
+        </a>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novoCanalModal">
+            <i class="fas fa-plus-circle me-2"></i>Novo Canal
+        </button>
+        <button class="btn btn-outline-secondary" onclick="refreshChat()">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+
+<div class="chat-container">
+    <!-- Sidebar de Canais -->
+    <div class="channels-sidebar">
+        <!-- Cabeçalho da Sidebar -->
+        <div class="p-3 border-bottom border-white-10">
+            <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-3"
+                    style="width: 45px; height: 45px;">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0">Comunicação</h5>
+                    <small class="text-white-50">{{ canais.count }} canais disponíveis</small>
+                </div>
+            </div>
+
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-dark border-dark">
+                    <i class="fas fa-search text-white-50"></i>
+                </span>
+                <input type="text" class="form-control bg-dark border-dark text-white" placeholder="Pesquisar canais..."
+                    id="searchChannels">
+            </div>
+        </div>
+
+        <!-- Lista de Canais -->
+        <div class="channels-list">
+            <!-- Canal Geral -->
+            <div class="channel-item active" data-channel-id="{{ canal_geral.id }}" data-channel-type="geral"
+                data-channel-name="Geral">
+                <div class="channel-avatar">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="channel-info">
+                    <div class="channel-name">Geral</div>
+                    <div class="channel-last-message">Canal institucional</div>
+                </div>
+                {% if canal_geral.unread_count %}
+                <span class="channel-badge">{{ canal_geral.unread_count }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Canais do Usuário -->
+            {% for canal in canais %}
+            {% if canal.id != canal_geral.id %}
+            <div class="channel-item {% if canal.tipo == 'direto' %}direct-chat-item{% endif %}"
+                data-channel-id="{{ canal.id }}" data-channel-type="{{ canal.tipo }}"
+                data-channel-name="{{ canal.nome }}" {% if canal.tipo == 'direto' %}data-is-direct="true" {% endif %}>
+                <div class="channel-avatar {% if canal.tipo == 'direto' %}direct-chat-avatar{% endif %}" {% if
+                    canal.tipo != 'direto'
+                    %}style="background-color: {% cycle '#28a745' '#17a2b8' '#ffc107' '#dc3545' '#6c757d' %}" {% endif
+                    %}>
+                    {% if canal.tipo == 'direto' %}
+                    <i class="fas fa-user"></i>
+                    {% else %}
+                    {{ canal.nome|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div class="channel-info">
+                    <div class="channel-name">{{ canal.nome }}</div>
+                    <div class="channel-last-message">
+                        {% if canal.tipo == 'departamento' %}
+                        <i class="fas fa-building me-1"></i>{{ canal.setor.codigo|default:"Setor" }}
+                        {% elif canal.tipo == 'projeto' %}
+                        <i class="fas fa-project-diagram me-1"></i>Projeto
+                        {% elif canal.tipo == 'direto' %}
+                        <i class="fas fa-user me-1"></i>Conversa privada
+                        {% else %}
+                        <i class="fas fa-comments me-1"></i>{{ canal.get_tipo_display }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% if canal.unread_count %}
+                <span class="channel-badge {% if canal.tipo == 'direto' %}direct-chat-badge{% endif %}">{{
+                    canal.unread_count }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% empty %}
+            <div class="text-center p-4 text-white-50">
+                <i class="fas fa-comments fa-2x mb-3"></i>
+                <p class="mb-0">Nenhum canal disponível</p>
+                <small>Crie um novo canal para começar</small>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Rodapé da Sidebar -->
+        <div class="p-3 border-top border-white-10">
+            <div class="d-flex align-items-center">
+                {% if user.funcionario.foto %}
+                <div style="position: relative;">
+                    <img src="{{ user.funcionario.foto.url }}" alt="{{ user.get_full_name }}"
+                        class="rounded-circle me-2" width="36" height="36">
+                    <span class="online-status"></span>
+                </div>
+                {% else %}
+                <div style="position: relative;">
+                    <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center me-2"
+                        style="width: 36px; height: 36px; font-size: 0.9rem; font-weight: 600;">
+                        {{ user.get_full_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+                    </div>
+                    <span class="online-status"></span>
+                </div>
+                {% endif %}
+                <div class="flex-grow-1">
+                    <div class="small fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="small text-white-50">
+                        <span class="online-dot"></span> Online
+                    </div>
+                </div>
+                <span class="badge bg-success">Ativo</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área Principal do Chat -->
+    <div class="chat-main">
+        <!-- Cabeçalho do Canal Ativo -->
+        <div class="chat-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1" id="currentChannelName">Geral</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <small class="text-muted" id="currentChannelDescription">
+                            <i class="fas fa-users me-1"></i>Canal institucional
+                        </small>
+                        <span class="badge bg-primary" id="currentChannelType">Geral</span>
+                        <small class="text-muted" id="membersCount">
+                            <i class="fas fa-user-friends me-1"></i>Todos os usuários
+                        </small>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" id="channelInfoBtn" data-bs-toggle="tooltip"
+                        title="Informações do canal">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="channelMembersBtn" data-bs-toggle="tooltip"
+                        title="Membros do canal">
+                        <i class="fas fa-users"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" id="clearChatBtn" data-bs-toggle="tooltip"
+                        title="Limpar conversa">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container de Mensagens -->
+        <div class="messages-container" id="messagesContainer">
+            <!-- Mensagens serão carregadas aqui dinamicamente -->
+            <div class="text-center py-5" id="noMessages">
+                <div class="mb-3">
+                    <i class="fas fa-comments fa-3x text-muted"></i>
+                </div>
+                <h5 class="text-muted mb-2">Nenhuma mensagem</h5>
+                <p class="text-muted mb-0">Seja o primeiro a enviar uma mensagem neste canal!</p>
+            </div>
+        </div>
+
+        <!-- Botão de rolagem para baixo -->
+        <button class="scroll-to-bottom" id="scrollToBottom" style="display: none;">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+
+        <!-- Indicador de Digitação -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            <i class="fas fa-pencil-alt me-2"></i>
+            <span id="typingUsers"></span> está digitando...
+        </div>
+
+        <!-- Input de Mensagem -->
+        <div class="message-input-container">
+            <form id="messageForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="currentChannelId" value="{{ canal_geral.id }}">
+
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary" id="emojiBtn" data-bs-toggle="tooltip"
+                        title="Emojis">
+                        <i class="far fa-smile"></i>
+                    </button>
+
+                    <button type="button" class="btn btn-outline-secondary" id="attachFileBtn" data-bs-toggle="tooltip"
+                        title="Anexar arquivo">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+
+                    <input type="file" id="fileInput" style="display: none;"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+
+                    <input type="text" class="form-control" placeholder="Digite sua mensagem..." id="messageInput"
+                        autocomplete="off" autofocus>
+
+                    <button type="submit" class="btn btn-primary" id="sendMessageBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <!-- Preview do arquivo -->
+                <div class="mt-2" id="filePreview" style="display: none;">
+                    <div class="alert alert-light d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file me-2"></i>
+                            <div>
+                                <div id="fileName" class="fw-bold"></div>
+                                <small class="text-muted" id="fileSize"></small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" id="removeFileBtn"></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Conversas Diretas -->
+<div class="modal fade" id="directChatModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Conversas Diretas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Lista de usuários -->
+                    <div class="col-md-5 border-end">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Buscar usuários..."
+                                id="searchDirectUsers">
+                        </div>
+                        <div class="list-group" style="max-height: 400px; overflow-y: auto;" id="directUsersList">
+                            {% for usuario in usuarios_chat %}
+                            <a href="#"
+                                class="list-group-item list-group-item-action d-flex align-items-center direct-user-item"
+                                data-user-id="{{ usuario.id }}"
+                                data-user-name="{{ usuario.get_full_name|default:usuario.username }}">
+                                {% if usuario.funcionario.foto %}
+                                <img src="{{ usuario.funcionario.foto.url }}" class="rounded-circle me-2" width="40"
+                                    height="40" alt="{{ usuario.get_full_name }}">
+                                {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                    style="width: 40px; height: 40px; font-size: 1rem; font-weight: 600;">
+                                    {{ usuario.get_full_name|slice:":1"|upper|default:usuario.username|slice:":1"|upper
+                                    }}
+                                </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ usuario.get_full_name|default:usuario.username }}</div>
+                                    <small class="text-muted">{{ usuario.funcionario.sector.codigo|default:"Sem setor"
+                                        }}</small>
+                                </div>
+                                <span class="badge bg-success">Online</span>
+                            </a>
+                            {% empty %}
+                            <div class="text-center p-4">
+                                <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                <p class="text-muted">Nenhum usuário disponível</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Área da conversa -->
+                    <div class="col-md-7">
+                        <div id="directChatArea" style="height: 400px;">
+                            <div class="text-center h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Selecione um usuário</h5>
+                                <p class="text-muted">Selecione um usuário da lista para iniciar uma conversa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Informações do Canal -->
+<div class="modal fade" id="channelInfoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalChannelName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <p id="modalChannelDescription" class="text-muted"></p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <div id="modalChannelType" class="fw-bold"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Criado em</label>
+                            <div id="modalChannelCreated" class="fw-bold"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Criado por</label>
+                    <div id="modalChannelCreator" class="fw-bold"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Total de mensagens</label>
+                    <div id="modalChannelMessages" class="fw-bold"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                {% if perms.recursoshumanos.change_canalcomunicacao %}
+                <button type="button" class="btn btn-primary" id="editChannelBtn">Editar Canal</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Membros do Canal -->
+<div class="modal fade" id="channelMembersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Membros do Canal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="membersList">
+                    <!-- Membros serão carregados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Novo Canal -->
+<div class="modal fade" id="novoCanalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Criar Novo Canal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="novoCanalForm" method="post" action="{% url 'recursoshumanos:criar_canal' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Canal *</label>
+                        <input type="text" class="form-control" name="nome" required
+                            placeholder="Ex: Projeto Alpha, Reunião Semanal">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="descricao" rows="3"
+                            placeholder="Descreva o propósito deste canal..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Canal *</label>
+                        <select class="form-select" name="tipo" id="tipoCanal" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="departamento">Departamental</option>
+                            <option value="projeto">Projeto</option>
+                            <option value="equipa">Equipa</option>
+                            <option value="geral">Geral</option>
+                            <option value="privado">Privado</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="setorField" style="display: none;">
+                        <label class="form-label">Setor</label>
+                        <select class="form-select" name="setor">
+                            <option value="">Selecione o setor</option>
+                            {% for sector in sectores %}
+                            <option value="{{ sector.id }}">{{ sector.codigo }} - {{ sector.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="membrosField" style="display: none;">
+                        <label class="form-label">Adicionar Membros</label>
+                        <select class="form-select" name="membros" multiple size="5">
+                            {% for funcionario in funcionarios %}
+                            <option value="{{ funcionario.user.id }}">
+                                {{ funcionario.nome_completo }} ({{ funcionario.sector.codigo }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Mantenha Ctrl pressionado para selecionar múltiplos membros</small>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="enviar_para_todos" id="enviarTodos">
+                        <label class="form-check-label" for="enviarTodos">
+                            Canal público (todos podem ver e participar)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Canal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .online-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #28a745;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .member-item {
+        padding: 10px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .member-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+    // Sistema de Chat em Tempo Real
+    class ChatSystem {
+        constructor() {
+            this.currentChannelId = "{{ canal_geral.id }}";
+            this.currentChannelType = 'geral';
+            this.userId = parseInt("{{ user.id|default:'0' }}"); // ID do usuário atual
+            this.ws = null;
+            this.reconnectAttempts = 0;
+            this.maxReconnectAttempts = 5;
+            this.typingTimeout = null;
+            this.fileToUpload = null;
+            this.messageHistory = {};
+            this.typingUsers = new Set();
+            this.directConversations = {};
+
+            this.init();
+        }
+
+        init() {
+            this.setupEventListeners();
+            this.connectWebSocket();
+            this.loadInitialMessages();
+            this.setupTooltips();
+            this.loadDirectConversations();
+        }
+
+        setupEventListeners() {
+            // Formulário de mensagem
+            document.getElementById('messageForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.sendMessage();
+            });
+
+            // Anexar arquivo
+            document.getElementById('attachFileBtn').addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                this.handleFileSelect(e);
+            });
+
+            // Remover arquivo
+            document.getElementById('removeFileBtn').addEventListener('click', () => {
+                this.removeFile();
+            });
+
+            // Detectar digitação
+            const messageInput = document.getElementById('messageInput');
+            messageInput.addEventListener('input', () => {
+                this.handleTyping();
+            });
+
+            // Trocar de canal
+            document.querySelectorAll('.channel-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    this.switchChannel(item);
+                });
+            });
+
+            // Pesquisar canais
+            document.getElementById('searchChannels').addEventListener('input', (e) => {
+                this.filterChannels(e.target.value);
+            });
+
+            // Informações do canal
+            document.getElementById('channelInfoBtn').addEventListener('click', () => {
+                this.showChannelInfo();
+            });
+
+            // Membros do canal
+            document.getElementById('channelMembersBtn').addEventListener('click', () => {
+                this.showChannelMembers();
+            });
+
+            // Limpar chat
+            document.getElementById('clearChatBtn').addEventListener('click', () => {
+                this.clearChat();
+            });
+
+            // Rolagem para baixo
+            document.getElementById('scrollToBottom').addEventListener('click', () => {
+                this.scrollToBottom();
+            });
+
+            // Tipo de canal no modal
+            document.getElementById('tipoCanal').addEventListener('change', (e) => {
+                this.toggleChannelFields(e.target.value);
+            });
+
+            // Monitorar rolagem
+            document.getElementById('messagesContainer').addEventListener('scroll', () => {
+                this.handleScroll();
+            });
+
+            // Conversas diretas
+            document.querySelectorAll('.direct-user-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.startDirectChat(item.dataset.userId, item.dataset.userName);
+                });
+            });
+
+            // Pesquisar usuários
+            document.getElementById('searchDirectUsers').addEventListener('input', (e) => {
+                this.filterDirectUsers(e.target.value);
+            });
+        }
+
+        async loadDirectConversations() {
+            // TODO: Implementar API para carregar conversas diretas
+            // try {
+            //     const response = await fetch('{% url "recursoshumanos:lista_usuarios_chat" %}');
+            //     if (response.ok) {
+            //         const data = await response.json();
+            //         this.directConversations = data.conversations || {};
+            //     }
+            // } catch (error) {
+            //     console.error('Erro ao carregar conversas diretas:', error);
+            // }
+        }
+
+        async startDirectChat(userId, userName) {
+            try {
+                const formData = new FormData();
+                formData.append('usuario_id', userId);
+
+                const response = await fetch('{% url "recursoshumanos:iniciar_conversa_direta" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': this.getCSRFToken()
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.action === 'created') {
+                        // Criar novo item na sidebar
+                        this.addDirectChatToSidebar(data.canal_id, userName);
+                        alert(`Conversa iniciada com ${userName}!`);
+                    }
+                    // Mudar para o canal
+                    this.switchToDirectChat(data.canal_id);
+                    // Fechar modal
+                    bootstrap.Modal.getInstance(document.getElementById('directChatModal')).hide();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro ao iniciar conversa:', error);
+                alert('Erro ao iniciar conversa');
+            }
+        }
+
+        addDirectChatToSidebar(channelId, userName) {
+            const channelsList = document.querySelector('.channels-list');
+
+            const newChannelItem = document.createElement('div');
+            newChannelItem.className = 'channel-item direct-chat-item';
+            newChannelItem.dataset.channelId = channelId;
+            newChannelItem.dataset.channelType = 'direto';
+            newChannelItem.dataset.channelName = userName;
+            newChannelItem.dataset.isDirect = 'true';
+
+            newChannelItem.innerHTML = `
+                <div class="channel-avatar direct-chat-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="channel-info">
+                    <div class="channel-name">${userName}</div>
+                    <div class="channel-last-message">
+                        <i class="fas fa-user me-1"></i>Conversa privada
+                    </div>
+                </div>
+            `;
+
+            // Adicionar evento de clique
+            newChannelItem.addEventListener('click', () => {
+                this.switchChannel(newChannelItem);
+            });
+
+            channelsList.appendChild(newChannelItem);
+        }
+
+        switchToDirectChat(channelId) {
+            const channelItem = document.querySelector(`.channel-item[data-channel-id="${channelId}"]`);
+            if (channelItem) {
+                this.switchChannel(channelItem);
+            }
+        }
+
+        filterDirectUsers(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            document.querySelectorAll('.direct-user-item').forEach(item => {
+                const userName = item.dataset.userName.toLowerCase();
+                if (userName.includes(term)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        connectWebSocket() {
+            if (this.ws) {
+                this.ws.close();
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/chat/${this.currentChannelId}/`;
+
+            this.ws = new WebSocket(wsUrl);
+
+            this.ws.onopen = () => {
+                console.log('✅ WebSocket conectado ao canal', this.currentChannelId);
+                this.reconnectAttempts = 0;
+                this.updateConnectionStatus(true);
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.handleWebSocketMessage(data);
+                } catch (error) {
+                    console.error('Erro ao processar mensagem WebSocket:', error);
+                }
+            };
+
+            this.ws.onclose = () => {
+                console.log('❌ WebSocket desconectado');
+                this.updateConnectionStatus(false);
+                this.attemptReconnect();
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'chat_message':
+                    this.addMessageToChat(data);
+                    break;
+
+                case 'user_typing':
+                    this.updateTypingIndicator(data);
+                    break;
+
+                case 'user_joined':
+                    this.showUserJoined(data);
+                    break;
+
+                case 'user_left':
+                    this.showUserLeft(data);
+                    break;
+
+                case 'system_message':
+                    this.showSystemMessage(data);
+                    break;
+
+                case 'message_updated':
+                    this.updateMessage(data);
+                    break;
+
+                case 'message_deleted':
+                    this.deleteMessage(data);
+                    break;
+
+                case 'direct_message':
+                    this.handleDirectMessage(data);
+                    break;
+            }
+        }
+
+        handleDirectMessage(data) {
+            // Verificar se é uma mensagem direta para o usuário atual
+            if (data.recipient_id === this.userId) {
+                // Mostrar notificação
+                this.showNotification(data.sender_name, data.message);
+
+                // Se estiver no canal correto, mostrar mensagem
+                if (parseInt(this.currentChannelId) === data.channel_id) {
+                    this.addMessageToChat(data);
+                } else {
+                    // Atualizar badge na sidebar
+                    this.updateDirectChatBadge(data.channel_id);
+                }
+            }
+        }
+
+        updateDirectChatBadge(channelId) {
+            const channelItem = document.querySelector(`.channel-item[data-channel-id="${channelId}"]`);
+            if (channelItem) {
+                let badge = channelItem.querySelector('.channel-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'channel-badge direct-chat-badge';
+                    channelItem.appendChild(badge);
+                }
+                const currentCount = parseInt(badge.textContent) || 0;
+                badge.textContent = currentCount + 1;
+                badge.style.display = 'block';
+            }
+        }
+
+        showNotification(sender, message) {
+            // Verificar se o navegador suporta notificações
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(`Nova mensagem de ${sender}`, {
+                    body: message.length > 50 ? message.substring(0, 50) + '...' : message,
+                    icon: '/static/img/logo.png'
+                });
+            }
+
+            // Mostrar notificação na interface
+            this.showToastNotification(sender, message);
+        }
+
+        showToastNotification(sender, message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast show position-fixed bottom-0 end-0 m-3';
+            toast.style.zIndex = '1050';
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <strong class="me-auto">${sender}</strong>
+                    <small>Agora mesmo</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+
+            // Fechar ao clicar no botão
+            toast.querySelector('.btn-close').addEventListener('click', () => {
+                toast.remove();
+            });
+        }
+
+        async sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message && !this.fileToUpload) {
+                return;
+            }
+
+            // Se tiver arquivo, fazer upload primeiro
+            let fileData = null;
+            let fileName = null;
+
+            if (this.fileToUpload) {
+                try {
+                    const result = await this.uploadFile(this.fileToUpload);
+                    if (result.success) {
+                        fileData = result.file_data;
+                        fileName = result.file_name;
+                    } else {
+                        alert('Erro ao enviar arquivo: ' + result.error);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Erro no upload:', error);
+                    alert('Erro ao enviar arquivo');
+                    return;
+                }
+            }
+
+            // Enviar via WebSocket
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                const messageData = {
+                    type: this.currentChannelType === 'direto' ? 'direct_message' : 'chat_message',
+                    message: message,
+                    file_data: fileData,
+                    file_name: fileName,
+                    channel_id: this.currentChannelId,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.ws.send(JSON.stringify(messageData));
+
+                // Limpar inputs
+                input.value = '';
+                if (this.fileToUpload) {
+                    this.removeFile();
+                }
+
+                // Parar de digitar
+                this.stopTyping();
+            } else {
+                // Fallback para AJAX se WebSocket falhar
+                this.sendMessageViaAJAX(message, fileData, fileName);
+            }
+        }
+
+        async sendMessageViaAJAX(message, fileData, fileName) {
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('channel_id', this.currentChannelId);
+
+            if (fileData && fileName) {
+                formData.append('file_data', fileData);
+                formData.append('file_name', fileName);
+            }
+
+            try {
+                const url = this.currentChannelType === 'direto'
+                    ? `/rh/comunicacao/iniciar-conversa/`
+                    : `{% url "recursoshumanos:enviar_mensagem" 0 %}`.replace('0', this.currentChannelId);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': this.getCSRFToken()
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        this.addMessageToChat(result.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                alert('Erro ao enviar mensagem. Tente novamente.');
+            }
+        }
+
+        async uploadFile(file) {
+            const formData = new FormData();
+            formData.append('arquivo', file);
+
+            const response = await fetch('{% url "recursoshumanos:upload_arquivo" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': this.getCSRFToken()
+                }
+            });
+
+            return await response.json();
+        }
+
+        addMessageToChat(data) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const noMessages = document.getElementById('noMessages');
+
+            // Esconder "nenhuma mensagem" se for a primeira
+            if (noMessages.style.display !== 'none') {
+                noMessages.style.display = 'none';
+            }
+
+            const isSent = data.sender_id === this.userId;
+            const messageDate = new Date(data.timestamp);
+            const formattedTime = messageDate.toLocaleTimeString('pt-PT', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            let fileHtml = '';
+            if (data.has_file && data.file_name) {
+                fileHtml = `
+                    <div class="message-file">
+                        <a href="${data.file_url || '#'}" target="_blank">
+                            <i class="fas fa-file-${this.getFileIcon(data.file_name)} me-1"></i>
+                            ${data.file_name}
+                        </a>
+                    </div>
+                `;
+            }
+
+            // Verificar se precisa de separador de data
+            const lastMessage = messagesContainer.lastElementChild;
+            let needsDateSeparator = false;
+
+            if (lastMessage && lastMessage.classList.contains('message')) {
+                const lastMessageTime = lastMessage.querySelector('.message-time');
+                if (lastMessageTime) {
+                    const lastDate = new Date(lastMessageTime.dataset.timestamp || Date.now());
+                    needsDateSeparator = messageDate.toDateString() !== lastDate.toDateString();
+                }
+            }
+
+            // Adicionar separador de data se necessário
+            if (needsDateSeparator) {
+                const dateSeparator = document.createElement('div');
+                dateSeparator.className = 'message-date';
+                dateSeparator.innerHTML = `
+                    <span>${messageDate.toLocaleDateString('pt-PT', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                })}</span>
+                `;
+                messagesContainer.appendChild(dateSeparator);
+            }
+
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isSent ? 'sent' : 'received'}`;
+            messageElement.dataset.messageId = data.message_id;
+
+            messageElement.innerHTML = `
+                ${!isSent ? `
+                    <div class="message-sender">
+                        <div class="sender-avatar" style="background-color: ${this.stringToColor(data.sender_name)}">
+                            ${data.sender_name.charAt(0).toUpperCase()}
+                        </div>
+                        ${data.sender_name}
+                    </div>
+                ` : ''}
+
+                <div class="message-content">
+                    ${this.formatMessageText(data.message)}
+                    ${fileHtml}
+                </div>
+
+                <div class="message-time" data-timestamp="${data.timestamp}">
+                    ${formattedTime}
+                    ${isSent ? `
+                        <span class="message-status">
+                            <i class="fas fa-check${data.read ? '-double text-info' : ''}"></i>
+                        </span>
+                    ` : ''}
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageElement);
+            this.scrollToBottom();
+
+            // Enviar confirmação de leitura se não for sua mensagem
+            if (!isSent) {
+                this.sendReadReceipt(data.message_id);
+            }
+        }
+
+        handleTyping() {
+            if (!this.typingTimeout) {
+                this.sendTypingIndicator(true);
+            }
+
+            clearTimeout(this.typingTimeout);
+            this.typingTimeout = setTimeout(() => {
+                this.stopTyping();
+            }, 1000);
+        }
+
+        sendTypingIndicator(isTyping) {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    type: 'typing',
+                    is_typing: isTyping,
+                    channel_id: this.currentChannelId
+                }));
+            }
+        }
+
+        stopTyping() {
+            if (this.typingTimeout) {
+                clearTimeout(this.typingTimeout);
+                this.typingTimeout = null;
+                this.sendTypingIndicator(false);
+            }
+        }
+
+        updateTypingIndicator(data) {
+            const typingIndicator = document.getElementById('typingIndicator');
+            const typingUsersElement = document.getElementById('typingUsers');
+
+            if (data.is_typing && data.user_id !== this.userId) {
+                this.typingUsers.add(data.username);
+                typingUsersElement.textContent = Array.from(this.typingUsers).join(', ');
+                typingIndicator.style.display = 'block';
+
+                // Auto-esconder após 3 segundos
+                setTimeout(() => {
+                    this.typingUsers.delete(data.username);
+                    if (this.typingUsers.size === 0) {
+                        typingIndicator.style.display = 'none';
+                    } else {
+                        typingUsersElement.textContent = Array.from(this.typingUsers).join(', ');
+                    }
+                }, 3000);
+            } else {
+                this.typingUsers.delete(data.username);
+                if (this.typingUsers.size === 0) {
+                    typingIndicator.style.display = 'none';
+                } else {
+                    typingUsersElement.textContent = Array.from(this.typingUsers).join(', ');
+                }
+            }
+        }
+
+        async loadInitialMessages() {
+            try {
+                const response = await fetch(`{% url "recursoshumanos:api_chat_mensagens" canal_id=0 %}`.replace('0', this.currentChannelId));
+                const data = await response.json();
+
+                if (data.messages && data.messages.length > 0) {
+                    this.messageHistory[this.currentChannelId] = data.messages;
+                    this.renderMessageHistory(data.messages);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+
+        renderMessageHistory(messages) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const noMessages = document.getElementById('noMessages');
+
+            if (messages.length === 0) {
+                noMessages.style.display = 'block';
+                return;
+            }
+
+            noMessages.style.display = 'none';
+            messagesContainer.innerHTML = '';
+
+            let currentDate = null;
+
+            messages.forEach((msg, index) => {
+                const messageDate = new Date(msg.timestamp);
+                const dateString = messageDate.toDateString();
+
+                // Adicionar separador de data se mudou
+                if (dateString !== currentDate) {
+                    currentDate = dateString;
+                    const dateSeparator = document.createElement('div');
+                    dateSeparator.className = 'message-date';
+                    dateSeparator.innerHTML = `
+                        <span>${messageDate.toLocaleDateString('pt-PT', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    })}</span>
+                    `;
+                    messagesContainer.appendChild(dateSeparator);
+                }
+
+                this.addMessageToChat(msg);
+            });
+
+            this.scrollToBottom();
+        }
+
+        switchChannel(channelElement) {
+            const channelId = parseInt(channelElement.dataset.channelId);
+            const channelType = channelElement.dataset.channelType;
+
+            if (channelId !== this.currentChannelId || channelType !== this.currentChannelType) {
+                // Atualizar UI
+                document.querySelectorAll('.channel-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                channelElement.classList.add('active');
+
+                // Atualizar cabeçalho
+                this.updateChannelHeader(channelElement);
+
+                // Atualizar canal atual
+                this.currentChannelId = channelId;
+                this.currentChannelType = channelType;
+                document.getElementById('currentChannelId').value = channelId;
+
+                // Reconectar WebSocket ao novo canal
+                this.connectWebSocket();
+
+                // Carregar mensagens do novo canal
+                if (this.messageHistory[channelId]) {
+                    this.renderMessageHistory(this.messageHistory[channelId]);
+                } else {
+                    this.loadInitialMessages();
+                }
+
+                // Marcar como lido
+                this.markChannelAsRead(channelId);
+            }
+        }
+
+        updateChannelHeader(channelElement) {
+            const channelName = channelElement.dataset.channelName;
+            const channelType = channelElement.dataset.channelType;
+            const isDirect = channelElement.dataset.isDirect === 'true';
+
+            document.getElementById('currentChannelName').textContent = channelName;
+
+            // Atualizar tipo
+            const typeBadge = document.getElementById('currentChannelType');
+            typeBadge.textContent = this.getChannelTypeLabel(channelType);
+            typeBadge.className = `badge bg-${this.getChannelTypeColor(channelType)}`;
+
+            // Atualizar descrição
+            let description = '';
+            if (isDirect) {
+                description = 'Conversa privada';
+            } else {
+                description = channelElement.querySelector('.channel-last-message').textContent;
+            }
+
+            document.getElementById('currentChannelDescription').innerHTML = `
+                <i class="fas fa-${this.getChannelIcon(channelType)} me-1"></i>${description}
+            `;
+
+            // Atualizar contador de membros
+            this.updateMembersCount();
+        }
+
+        async updateMembersCount() {
+            if (this.currentChannelType === 'direto') {
+                document.getElementById('membersCount').innerHTML = `
+                    <i class="fas fa-user-friends me-1"></i>2 pessoas
+                `;
+            } else {
+                // Em sistema real, buscaria do backend
+                document.getElementById('membersCount').innerHTML = `
+                    <i class="fas fa-user-friends me-1"></i>Vários membros
+                `;
+            }
+        }
+
+        // Funções auxiliares
+        getChannelTypeLabel(type) {
+            const labels = {
+                'geral': 'Geral',
+                'departamento': 'Departamento',
+                'projeto': 'Projeto',
+                'equipa': 'Equipa',
+                'privado': 'Privado',
+                'direto': 'Privado'
+            };
+            return labels[type] || type;
+        }
+
+        getChannelTypeColor(type) {
+            const colors = {
+                'geral': 'primary',
+                'departamento': 'success',
+                'projeto': 'warning',
+                'equipa': 'info',
+                'privado': 'danger',
+                'direto': 'danger'
+            };
+            return colors[type] || 'secondary';
+        }
+
+        getChannelIcon(type) {
+            const icons = {
+                'geral': 'users',
+                'departamento': 'building',
+                'projeto': 'project-diagram',
+                'equipa': 'user-friends',
+                'privado': 'lock',
+                'direto': 'user'
+            };
+            return icons[type] || 'comments';
+        }
+
+        getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': 'pdf',
+                'doc': 'word',
+                'docx': 'word',
+                'xls': 'excel',
+                'xlsx': 'excel',
+                'ppt': 'powerpoint',
+                'pptx': 'powerpoint',
+                'jpg': 'image',
+                'jpeg': 'image',
+                'png': 'image',
+                'gif': 'image',
+                'txt': 'alt',
+                'zip': 'archive',
+                'rar': 'archive'
+            };
+            return icons[ext] || 'file';
+        }
+
+        formatMessageText(text) {
+            // Converter URLs em links
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, url => `<a href="${url}" target="_blank">${url}</a>`);
+        }
+
+        stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+
+            const colors = [
+                '#1a4a72', '#2c7da0', '#28a745', '#17a2b8',
+                '#ffc107', '#dc3545', '#6c757d', '#343a40',
+                '#6610f2', '#e83e8c', '#fd7e14', '#20c997'
+            ];
+
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        scrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+
+            // Esconder botão de rolagem
+            document.getElementById('scrollToBottom').style.display = 'none';
+        }
+
+        handleScroll() {
+            const container = document.getElementById('messagesContainer');
+            const scrollButton = document.getElementById('scrollToBottom');
+
+            // Mostrar botão se não estiver no final
+            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+            scrollButton.style.display = isAtBottom ? 'none' : 'block';
+
+            // Carregar mais mensagens se estiver no topo
+            if (container.scrollTop === 0) {
+                this.loadMoreMessages();
+            }
+        }
+
+        async loadMoreMessages() {
+            const messages = this.messageHistory[this.currentChannelId] || [];
+            if (messages.length === 0) return;
+
+            const oldestMessage = messages[0];
+
+            try {
+                const response = await fetch(
+                    `{% url "recursoshumanos:api_chat_mensagens" canal_id=0 %}?before=${oldestMessage.timestamp}&limit=20`.replace('0', this.currentChannelId)
+                );
+                const data = await response.json();
+
+                if (data.messages && data.messages.length > 0) {
+                    // Adicionar novas mensagens no início
+                    this.messageHistory[this.currentChannelId] = [
+                        ...data.messages,
+                        ...messages
+                    ];
+
+                    // Renderizar novamente
+                    this.renderMessageHistory(this.messageHistory[this.currentChannelId]);
+
+                    // Manter a posição de rolagem
+                    const container = document.getElementById('messagesContainer');
+                    const newMessageHeight = container.firstElementChild?.offsetHeight || 0;
+                    container.scrollTop = data.messages.length * newMessageHeight;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mais mensagens:', error);
+            }
+        }
+
+        getCSRFToken() {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            return csrfToken ? csrfToken.value : '';
+        }
+
+        attemptReconnect() {
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.reconnectAttempts++;
+                const delay = Math.min(1000 * this.reconnectAttempts, 10000);
+
+                console.log(`Tentando reconectar em ${delay}ms... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+
+                setTimeout(() => {
+                    this.connectWebSocket();
+                }, delay);
+            } else {
+                console.error('❌ Máximo de tentativas de reconexão atingido');
+                this.showDisconnectionWarning();
+            }
+        }
+
+        updateConnectionStatus(connected) {
+            const statusElement = document.querySelector('.online-dot');
+            if (statusElement) {
+                statusElement.style.backgroundColor = connected ? '#28a745' : '#dc3545';
+                statusElement.style.animation = connected ? 'pulse 2s infinite' : 'none';
+            }
+        }
+
+        showDisconnectionWarning() {
+            // Mostrar alerta de desconexão
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-warning alert-dismissible fade show m-3';
+            alert.innerHTML = `
+                <i class="fas fa-wifi-slash me-2"></i>
+                <strong>Conexão perdida!</strong> Reconectando...
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+        }
+
+        showSystemMessage(data) {
+            this.showSystemNotification(data.message);
+        }
+
+        showSystemNotification(message) {
+            const messagesContainer = document.getElementById('messagesContainer');
+
+            const notification = document.createElement('div');
+            notification.className = 'text-center my-3';
+            notification.innerHTML = `
+                <span class="badge bg-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    ${message}
+                </span>
+            `;
+
+            messagesContainer.appendChild(notification);
+            this.scrollToBottom();
+        }
+
+        updateMessage(data) {
+            const messageElement = document.querySelector(`[data-message-id="${data.message_id}"]`);
+            if (messageElement) {
+                const contentElement = messageElement.querySelector('.message-content');
+                if (contentElement) {
+                    contentElement.innerHTML = this.formatMessageText(data.new_content);
+                }
+            }
+        }
+
+        deleteMessage(data) {
+            const messageElement = document.querySelector(`[data-message-id="${data.message_id}"]`);
+            if (messageElement) {
+                messageElement.innerHTML = `
+                    <div class="message-content text-muted">
+                        <i class="fas fa-trash-alt me-1"></i>
+                        Mensagem excluída
+                    </div>
+                `;
+                messageElement.classList.add('deleted');
+            }
+        }
+
+        sendReadReceipt(messageId) {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    type: 'read_receipt',
+                    message_id: messageId,
+                    channel_id: this.currentChannelId
+                }));
+            }
+        }
+
+        markChannelAsRead(channelId) {
+            const channelItem = document.querySelector(`.channel-item[data-channel-id="${channelId}"]`);
+            const badge = channelItem.querySelector('.channel-badge');
+            if (badge) {
+                badge.remove();
+            }
+        }
+
+        // --- Restaurando Métodos Perdidos ---
+
+        showUserJoined(data) {
+            if (data.user_id !== this.userId) {
+                this.showSystemNotification(`${data.username} entrou no chat`);
+            }
+        }
+
+        showUserLeft(data) {
+            this.showSystemNotification(`${data.username} saiu do chat`);
+        }
+
+        showSystemMessage(data) {
+            this.showSystemMessage(data.message);
+        }
+
+        playSound() {
+            try {
+                const audio = new Audio('/static/audio/notification.mp3');
+                audio.play().catch(e => console.log('Audio autoplay blocked'));
+            } catch (e) {
+                console.warn("Audio unavailable");
+            }
+        }
+
+        init() {
+            this.connectWebSocket();
+            this.setupEventListeners();
+            this.handleScroll();
+
+            // Inicializar badges
+            if (this.currentChannelType !== 'direto') {
+                this.markChannelAsRead(this.currentChannelId);
+            }
+        }
+
+        setupEventListeners() {
+            // Send button
+            document.getElementById('sendButton')?.addEventListener('click', () => this.sendMessage());
+
+            // Enter key
+            document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+
+            // File input
+            document.getElementById('fileInput')?.addEventListener('change', (e) => this.handleFileSelect(e));
+            document.getElementById('attachButton')?.addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+
+            // Scroll
+            document.getElementById('messagesContainer')?.addEventListener('scroll', () => this.handleScroll());
+
+            // Connection status
+            window.addEventListener('online', () => this.updateConnectionStatus(true));
+            window.addEventListener('offline', () => this.updateConnectionStatus(false));
+        }
+
+        connectWebSocket() {
+            if (this.ws) {
+                this.ws.close();
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/chat/${this.currentChannelId}/`;
+
+            this.ws = new WebSocket(wsUrl);
+
+            this.ws.onopen = () => {
+                console.log('WebSocket Conectado');
+                this.reconnectAttempts = 0;
+                this.updateConnectionStatus(true);
+            };
+
+            this.ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                this.handleWebSocketMessage(data);
+            };
+
+            this.ws.onclose = () => {
+                console.log('WebSocket Desconectado');
+                this.updateConnectionStatus(false);
+                this.attemptReconnect();
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('Erro no WebSocket:', error);
+            };
+        }
+
+        handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'chat_message':
+                case 'direct_message':
+                    if (data.channel_id === this.currentChannelId) {
+                        this.addMessageToChat(data);
+                        this.playSound();
+                    } else {
+                        // Notificação de outro canal
+                        this.showNotification(data.sender_name, data.message);
+                    }
+                    break;
+                case 'typing':
+                    if (data.channel_id === this.currentChannelId) {
+                        this.updateTypingIndicator(data);
+                    }
+                    break;
+                case 'user_joined':
+                    this.showUserJoined(data);
+                    break;
+                case 'user_left':
+                    this.showUserLeft(data);
+                    break;
+            }
+        }
+    }
+
+    // Inicializar o sistema quando a página carregar
+    document.addEventListener('DOMContentLoaded', () => {
+        window.chatSystem = new ChatSystem();
+
+        // Função global para refresh
+        window.refreshChat = () => {
+            window.chatSystem.loadInitialMessages();
+        };
+
+        // Solicitar permissão para notificações
+        if ("Notification" in window) {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!-- credenciais/templates/credenciais/debug_form_html.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Form HTML</title>
+    <style>
+        .code-block {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug do HTML do Formulário</h1>
+
+    <h2>1. Formulário Completo:</h2>
+    <div class="code-block">{{ form_html }}</div>
+
+    <h2>2. Campo EVENTO isolado:</h2>
+    <div class="code-block">{{ evento_html }}</div>
+
+    <h2>3. Teste Manual:</h2>
+    <form>
+        <h3>Dropdown do Django:</h3>
+        {{ form.evento }}
+
+        <h3>Dropdown manual (para comparar):</h3>
+        <select name="evento_manual" id="evento_manual">
+            <option value="">-- Selecione --</option>
+            {% for evento in form.evento.field.queryset %}
+            <option value="{{ evento.id }}">{{ evento.nome }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <h2>4. Todos os campos:</h2>
+    {% for field_name, html in campos_html.items %}
+    <h3>{{ field_name }}:</h3>
+    <div class="code-block">{{ html|escape }}</div>
+    {% endfor %}
+</body>
+</html>

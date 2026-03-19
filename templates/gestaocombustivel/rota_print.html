@@ -1,0 +1,227 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de Rota - {{ rota.nome_rota }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #005a8d;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #005a8d;
+            font-size: 24px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #666;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .point-name {
+            font-weight: bold;
+            color: #005a8d;
+        }
+
+        .passenger-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 12px;
+        }
+
+        .passenger-list li {
+            margin-bottom: 3px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
+
+        .signature-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .signature-box {
+            border-top: 1px solid #333;
+            padding-top: 5px;
+            font-size: 12px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+            }
+        }
+
+        .no-print {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #005a8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print">Imprimir Documento</button>
+
+    <div class="header">
+        <h1>MAPA DE ROTA DE TRANSPORTE</h1>
+        <p>Portal STAE - Gestão de Frotas</p>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-box">
+            <h3>Dados da Rota</h3>
+            <p>Nome: {{ rota.nome_rota }}</p>
+            <p>Dias: {{ rota.dias_semana }}</p>
+            <p>Horário: {{ rota.hora_partida|time:"H:i" }} - {{ rota.hora_chegada|time:"H:i" }}</p>
+        </div>
+        <div class="info-box">
+            <h3>Recursos Alocados</h3>
+            <p>Viatura: {{ rota.viatura.matricula }} ({{ rota.viatura.marca }} {{ rota.viatura.modelo }})</p>
+            <p>Motorista: {{ rota.motorista.nome_completo }}</p>
+            <p>Distância Est.: {{ rota.distancia_total|default:"0" }} KM</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50px;">Ordem</th>
+                <th style="width: 250px;">Ponto / Localização</th>
+                <th>Hora Est.</th>
+                <th>Funcionários (Recolha/Embarque)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ponto in pontos %}
+            <tr>
+                <td style="text-align: center; font-weight: bold;">{{ ponto.ordem }}</td>
+                <td>
+                    <span class="point-name">{{ ponto.nome_ponto }}</span>
+                    <br>
+                    <small style="color: #666;">{{ ponto.localizacao }}</small>
+                    {% if ponto.tipo_ponto != 'paragem' %}
+                    <br><span style="font-size: 10px; background: #eee; padding: 2px 5px; border-radius: 3px;">{{
+                        ponto.get_tipo_ponto_display }}</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">{{ ponto.hora_estimada|time:"H:i" }}</td>
+                <td>
+                    {% with passageiros=passageiros_por_ponto|get_item:ponto.id %}
+                    {% if passageiros %}
+                    <ul class="passenger-list">
+                        {% for p in passageiros %}
+                        <li>{{ p.funcionario.nome_completo }} <small>({{ p.funcionario.numero_agente }})</small></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <small style="color: #ccc;">Nenhum passageiro neste ponto</small>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="signature-area">
+        <div class="signature-box">
+            Responsável pelos Transportes
+        </div>
+        <div class="signature-box">
+            Motorista ({{ rota.motorista.nome_completo }})
+        </div>
+    </div>
+
+    <div class="footer">
+        Documento gerado em {{ now|date:"d/m/Y H:i" }} pelo Portal STAE
+    </div>
+</body>
+
+</html>

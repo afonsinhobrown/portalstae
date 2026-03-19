@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-pt" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portal STAE • Admin{% endblock %}</title>
+
+    <!-- Bootstrap 5.3 + Dark mode -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --sidebar-width: 280px;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary-gradient);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-brand {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.8rem 1rem;
+            margin: 0.2rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 1rem;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .stat-card.gradient-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .stat-card.gradient-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .stat-card.gradient-warning {
+            background: var(--warning-gradient);
+            color: white;
+        }
+
+        .btn-modern {
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .table-modern {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .table-modern th {
+            border: none;
+            background: #f8f9fa;
+            font-weight: 600;
+            padding: 1rem;
+        }
+
+        .table-modern td {
+            padding: 1rem;
+            border-color: #f1f3f4;
+            vertical-align: middle;
+        }
+
+        .badge-modern {
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -var(--sidebar-width);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-chart-network fa-2x me-3"></i>
+                <div>
+                    <h4 class="mb-0 fw-bold">Portal STAE</h4>
+                    <small class="opacity-75">Sistema Integrado</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-content pt-3">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_admin' %}active{% endif %}"
+                       href="{% url 'admin_portal:dashboard_admin' %}">
+                        <i class="fas fa-grid-2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'template' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'admin_portal:lista_templates' %}">
+                        <i class="fas fa-layer-group"></i> Templates
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'importacao' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'admin_portal:lista_importacoes' %}">
+                        <i class="fas fa-cloud-upload"></i> Importações
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'configuracao' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'admin_portal:configuracao_sistema' %}">
+                        <i class="fas fa-sliders"></i> Configurações
+                    </a>
+                </li>
+
+                <li class="nav-item mt-4 pt-3 border-top border-white-10">
+                    <a class="nav-link text-warning" href="/admin/">
+                        <i class="fas fa-shield-check"></i> Admin Django
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="{% url 'logout' %}">
+                        <i class="fas fa-sign-out-alt"></i> Terminar Sessão
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <nav class="navbar navbar-light glass-effect mb-4">
+            <div class="container-fluid">
+                <button class="btn btn-outline-primary d-md-none" type="button">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <small class="text-muted">Bem-vindo,</small>
+                        <br>
+                        <strong>{{ user.username }}</strong>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sair
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 fw-bold text-primary mb-1">{% block page_title %}Admin Portal{% endblock %}</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'admin_portal:dashboard_admin' %}">Home</a></li>
+                            <li class="breadcrumb-item active">{% block breadcrumb %}{% endblock %}</li>
+                        </ol>
+                    </nav>
+                </div>
+                {% block header_actions %}{% endblock %}
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Main Content -->
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle sidebar on mobile
+        document.querySelector('.navbar-toggler').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

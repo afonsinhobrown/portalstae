@@ -1,0 +1,282 @@
+{% extends 'dfec/base.html' %}
+<!-- Assumindo herdar do base principal por enquanto, ajustarei se necessário -->
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Cabeçalho -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard de Análise Eleitoral</h1>
+        <div>
+            <a href="{% url 'dfec:upload_resultados' %}" class="btn btn-sm btn-primary shadow-sm me-2">
+                <i class="fas fa-upload fa-sm text-white-50 me-1"></i> Importar Dados
+            </a>
+            <a href="{% url 'dfec:relatorio_pdf' %}?{{ request.GET.urlencode }}"
+                class="btn btn-sm btn-secondary shadow-sm">
+                <i class="fas fa-download fa-sm text-white-50 me-1"></i> Relatório PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros de Análise -->
+    <div class="card shadow mb-4 border-bottom-primary">
+        <div class="card-body py-3">
+            <form method="get" class="row align-items-end">
+                <div class="col-md-4 mb-2 mb-md-0">
+                    <label class="font-weight-bold text-primary small text-uppercase mb-1">Ano Eleitoral</label>
+                    <select name="ano" class="form-control">
+                        {% for a in anos_disponiveis %}
+                        <option value="{{ a }}" {% if a==ano_selecionado %}selected{% endif %}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2 mb-md-0">
+                    <label class="font-weight-bold text-primary small text-uppercase mb-1">Província</label>
+                    <select name="provincia" class="form-control">
+                        <option value="">Todas as Províncias</option>
+                        {% for p in provincias %}
+                        <option value="{{ p.id }}" {% if request.GET.provincia|add:"0"==p.id %}selected{% endif %}>{{
+                            p.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-filter fa-sm text-white-50 me-1"></i> Atualizar Análise
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- KPIs Cards -->
+    <div class="row">
+        <!-- Taxa de Abstenção Global -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Abstenção Global</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ kpis.taxa_abstencao }}%</div>
+                            <small class="text-muted">{{ kpis.abstencoes|floatformat:0 }} eleitores ausentes</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-minus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taxa de Nulos Global -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Votos Nulos (Global)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ kpis.taxa_nulos }}%</div>
+                            <small class="text-muted">{{ kpis.nulos|floatformat:0 }} votos inválidos</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ban fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Eleitores -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Inscritos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ kpis.inscritos|floatformat:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Votantes -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Votos Válidos + Brancos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ kpis.votantes|floatformat:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-vote-yea fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recomendações Inteligentes -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Recomendações Geradas pelo Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recomendacoes %}
+                    <div class="row">
+                        {% for rec in recomendacoes %}
+                        <div class="list-group-item d-flex align-items-center">
+                            <div class="me-3">
+                                {% if rec.tipo == 'mobilizacao' %}
+                                <i class="fas fa-bullhorn fa-2x text-danger"></i>
+                                {% elif rec.tipo == 'educacao' %}
+                                <i class="fas fa-chalkboard-teacher fa-2x text-warning"></i>
+                                {% else %}
+                                <i class="fas fa-info-circle fa-2x text-primary"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ rec.titulo }}</h6>
+                                <p class="mb-0 text-muted">{{ rec.texto }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Rankings Lado a Lado -->
+    <div class="row">
+        <!-- Top Abstenção -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Top 10 Distritos com Maior Abstenção</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Província</th>
+                                    <th>Distrito</th>
+                                    <th class="text-end">Taxa (%)</th>
+                                    <th class="text-center">Risco</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking_abstencao %}
+                                <tr>
+                                    <td>{{ item.provincia }}</td>
+                                    <td>{{ item.distrito }}</td>
+                                    <td class="text-end fw-bold">{{ item.taxa_abstencao }}%</td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge {% if item.risco == 'Crítico' %}bg-danger{% elif item.risco == 'Médio' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                            {{ item.risco }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Sem dados suficientes</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Nulos -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Top 10 Distritos com Mais Votos Nulos</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Província</th>
+                                    <th>Distrito</th>
+                                    <th class="text-end">Taxa (%)</th>
+                                    <th class="text-center">Risco</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking_nulos %}
+                                <tr>
+                                    <td>{{ item.provincia }}</td>
+                                    <td>{{ item.distrito }}</td>
+                                    <td class="text-end fw-bold">{{ item.taxa_nulos }}%</td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge {% if item.risco == 'Crítico' %}bg-danger{% elif item.risco == 'Médio' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                            {{ item.risco }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Sem dados suficientes</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: .25rem solid #4e73df !important;
+    }
+
+    .border-left-success {
+        border-left: .25rem solid #1cc88a !important;
+    }
+
+    .border-left-info {
+        border-left: .25rem solid #36b9cc !important;
+    }
+
+    .border-left-warning {
+        border-left: .25rem solid #f6c23e !important;
+    }
+
+    .border-left-danger {
+        border-left: .25rem solid #e74a3b !important;
+    }
+
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+</style>
+{% endblock %}

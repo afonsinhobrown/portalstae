@@ -1,0 +1,431 @@
+{% extends 'base_apps.html' %}
+{% load candidaturas_extras %}
+
+{% block title %}Intelligence Center: {{ eleicao.nome }}{% endblock %}
+{% block module_name %}ESTRATÉGIA E SOBERANIA ELEITORAL{% endblock %}
+{% block icon %}fas fa-shield-halved{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- 1. HEADER BI PREMIUM -->
+<div class="card bg-dark text-white border-0 rounded-4 overflow-hidden mb-4 shadow-lg position-relative">
+    <div class="card-body p-5 z-index-1">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{% url 'candidaturas:dashboard' %}" class="text-warning text-decoration-none">Candidaturas</a></li>
+                        <li class="breadcrumb-item active text-white opacity-50">{{ eleicao.nome }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-5 fw-bold mb-2">Painel de Soberania</h1>
+                <p class="fs-5 opacity-75">Soberania nacional através de dados precisos e monitorização em tempo real.</p>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="{% url 'candidaturas:exportar_relatorio_pdf' eleicao.id %}" class="btn btn-warning fw-bold px-4 py-2 rounded-3 shadow text-dark border-0">
+                        <i class="fas fa-file-pdf me-2"></i> Dossier de Auditoria
+                    </a>
+                    <a href="{% url 'candidaturas:exportar_relatorio_excel' eleicao.id %}" class="btn btn-outline-light px-4 py-2 rounded-3">
+                        <i class="fas fa-file-excel me-2"></i> Dados Brutos (Excel)
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-5 text-end d-none d-md-block">
+                <div class="p-4 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-10 backdrop-blur">
+                    <div class="row g-4 text-center">
+                        <div class="col-6 border-end border-white border-opacity-25">
+                            <h2 class="mb-0 fw-bold">{{ grande_total }}</h2>
+                            <small class="text-uppercase opacity-50 smaller">Listas</small>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="mb-0 fw-bold text-warning">{{ fraudes }}</h2>
+                            <small class="text-uppercase opacity-50 smaller">Alertas Fraude</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="position-absolute top-0 end-0 opacity-10 p-5" style="font-size: 15rem;">
+        <i class="fas fa-chart-line"></i>
+    </div>
+</div>
+
+<!-- 2. NAVEGAÇÃO ANALÍTICA -->
+<div class="card shadow-sm border-0 rounded-4 mb-5 overflow-hidden">
+    <div class="card-header bg-white p-0 border-0 shadow-sm">
+        <ul class="nav nav-pills nav-fill p-2 gap-2" id="biTabs" role="tablist" style="background: #f1f5f9;">
+            <li class="nav-item">
+                <button class="nav-link active fw-bold py-3 rounded-3" data-bs-toggle="tab" data-bs-target="#tab-geo">
+                    <i class="fas fa-map-location-dot me-2"></i> Geopolítica
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold py-3 rounded-3" data-bs-toggle="tab" data-bs-target="#tab-parties">
+                    <i class="fas fa-flag me-2"></i> Performance Partidária
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold py-3 rounded-3" data-bs-toggle="tab" data-bs-target="#tab-demo">
+                    <i class="fas fa-fingerprint me-2"></i> Raio-X Demográfico
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold py-3 rounded-3" data-bs-toggle="tab" data-bs-target="#tab-official">
+                    <i class="fas fa-list-ol me-2"></i> Ordenamento Oficial
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold py-3 rounded-3 text-danger" data-bs-toggle="tab" data-bs-target="#tab-audit">
+                    <i class="fas fa-shield-virus me-2"></i> Integridade & Antifraude
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="tab-content">
+            
+            <!-- ABA 1: GEOPOLÍTICA -->
+            <div class="tab-pane fade show active p-4" id="tab-geo">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="bg-light p-3 rounded-4 border sticky-top" style="top: 20px;">
+                            <h6 class="fw-bold text-uppercase text-muted mb-3 smaller">Províncias</h6>
+                            <div class="nav flex-column nav-pills gap-1" id="v-pills-tab" role="tablist">
+                                {% for prov_data in mapa_por_provincia %}
+                                {% with slug=prov_data.provincia|slugify %}
+                                <button class="nav-link {% if forloop.first %}active{% endif %} text-start d-flex justify-content-between align-items-center py-2 px-3 border-0 transition-all" 
+                                        data-bs-toggle="pill" data-bs-target="#v-pills-{{ slug }}">
+                                    <span class="small fw-bold">{{ prov_data.provincia }}</span>
+                                    <span class="badge bg-dark rounded-pill">{{ prov_data.provincia_total }}</span>
+                                </button>
+                                {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="tab-content" id="v-pills-tabContent">
+                            {% for prov_data in mapa_por_provincia %}
+                            {% with slug=prov_data.provincia|slugify %}
+                            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="v-pills-{{ slug }}">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-location-crosshairs me-2"></i>{{ prov_data.provincia }}</h5>
+                                    <div class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">Total: {{ prov_data.provincia_total }} Listas</div>
+                                </div>
+                                <div class="table-responsive rounded-4 border shadow-sm">
+                                    <table class="table table-hover align-middle mb-0 text-center">
+                                        <thead class="bg-dark text-white">
+                                            <tr>
+                                                <th class="text-start ps-3" style="width: 140px;">CÍRCULO</th>
+                                                {% for p in prov_data.partidos_colunas %}
+                                                    <th class="small">{{ p.sigla }}</th>
+                                                {% endfor %}
+                                                <th class="bg-primary text-white">Σ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in prov_data.matriz_linhas %}
+                                            <tr>
+                                                <td class="text-start fw-bold ps-3 bg-light-subtle border-end truncate-text" title="{{ row.circulo.nome }}">
+                                                    {{ row.circulo.nome }}
+                                                    <div class="smaller text-muted fw-normal">{{ row.circulo.num_mandatos }}M</div>
+                                                </td>
+                                                {% for item in row.status_partidos %}
+                                                    <td>{% if item.existe %}<i class="fas fa-check-circle text-success"></i>{% else %}<span class="text-muted opacity-25">·</span>{% endif %}</td>
+                                                {% endfor %}
+                                                <td class="fw-bold bg-primary-subtle text-primary">{{ row.total_no_circulo }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 2: PERFORMANCE PARTIDÁRIA -->
+            <div class="tab-pane fade p-4" id="tab-parties">
+                <div class="row g-4">
+                    {% for p_stat in partidos_estat %}
+                    <div class="col-xl-6">
+                        <div class="card border rounded-4 shadow-sm h-100">
+                            <div class="card-header bg-light py-3 border-0 d-flex justify-content-between align-items-center">
+                                 <div class="d-flex align-items-center gap-3">
+                                    {% if p_stat.partido.simbolo %}
+                                        <img src="{{ p_stat.partido.simbolo.url }}" alt="{{ p_stat.partido.sigla }}" style="width: 50px; height: 50px; object-fit: contain;" class="rounded border bg-white p-1">
+                                    {% else %}
+                                        <div class="bg-white border rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;"><i class="fas fa-flag text-muted"></i></div>
+                                    {% endif %}
+                                    <div>
+                                        <h4 class="fw-bold mb-0 text-dark">{{ p_stat.partido.sigla }}</h4>
+                                        <small class="text-muted">{{ p_stat.partido.nome_completo }}</small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fs-4 fw-bold text-primary">{{ p_stat.cobertura }}%</div>
+                                    <small class="text-muted text-uppercase smaller">Cobertura</small>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4 mb-4">
+                                    <div class="col-4 border-end">
+                                        <div class="small text-muted mb-1">Membros</div>
+                                        <h5 class="fw-bold mb-0">{{ p_stat.total_candidatos }}</h5>
+                                    </div>
+                                    <div class="col-4 border-end text-center">
+                                        <div class="small text-muted mb-1">Círculos</div>
+                                        <h5 class="fw-bold mb-0 text-info">{{ p_stat.total_listas }}</h5>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <div class="small text-muted mb-1">H / M</div>
+                                        <div class="fw-bold small">
+                                            <span class="text-primary">{{ p_stat.homens }}H</span> / 
+                                            <span class="text-success">{{ p_stat.mulheres }}M</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ABA 3: PERFIL DEMOGRÁFICO E EXTREMOS -->
+            <div class="tab-pane fade p-5" id="tab-demo">
+                <h4 class="fw-bold mb-5 text-center text-dark"><i class="fas fa-users-viewfinder me-2 text-primary"></i>Destaques Demográficos Nacionais</h4>
+                
+                <div class="row g-4 mb-5">
+                    <!-- Cards de Extremos -->
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-dark text-white p-4 rounded-4 shadow h-100">
+                            <small class="text-uppercase opacity-50 fw-bold smaller mb-2 d-block">Homem Mais Velho</small>
+                            <h5 class="fw-bold mb-1">
+                                {% if demografia.extremos.velho_h %}{{ demografia.extremos.velho_h.nome_completo }}{% else %}---{% endif %}
+                            </h5>
+                            {% if demografia.extremos.velho_h %}
+                            <div class="text-warning fw-bold">{{ demografia.extremos.velho_h.data_nascimento|date:"d/m/Y" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-primary text-white p-4 rounded-4 shadow h-100">
+                            <small class="text-uppercase opacity-50 fw-bold smaller mb-2 d-block">Mulher Mais Velha</small>
+                            <h5 class="fw-bold mb-1">
+                                {% if demografia.extremos.velho_m %}{{ demografia.extremos.velho_m.nome_completo }}{% else %}---{% endif %}
+                            </h5>
+                            {% if demografia.extremos.velho_m %}
+                            <div class="text-light fw-bold">{{ demografia.extremos.velho_m.data_nascimento|date:"d/m/Y" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-info text-white p-4 rounded-4 shadow h-100">
+                            <small class="text-uppercase opacity-50 fw-bold smaller mb-2 d-block">Homem Mais Novo</small>
+                            <h5 class="fw-bold mb-1">
+                                {% if demografia.extremos.novo_h %}{{ demografia.extremos.novo_h.nome_completo }}{% else %}---{% endif %}
+                            </h5>
+                            {% if demografia.extremos.novo_h %}
+                            <div class="text-dark fw-bold">{{ demografia.extremos.novo_h.data_nascimento|date:"d/m/Y" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 bg-success text-white p-4 rounded-4 shadow h-100">
+                            <small class="text-uppercase opacity-50 fw-bold smaller mb-2 d-block">Mulher Mais Nova</small>
+                            <h5 class="fw-bold mb-1">
+                                {% if demografia.extremos.novo_m %}{{ demografia.extremos.novo_m.nome_completo }}{% else %}---{% endif %}
+                            </h5>
+                            {% if demografia.extremos.novo_m %}
+                            <div class="text-light fw-bold">{{ demografia.extremos.novo_m.data_nascimento|date:"d/m/Y" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-5 align-items-start">
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold mb-4">Participação por Faixa Etária e Género</h5>
+                        <div class="list-group list-group-flush">
+                            {% for group, data in demografia.piramide.items %}
+                            <div class="list-group-item d-flex align-items-center gap-3 border-0 px-0 mb-3">
+                                <div class="p-3 {% if group == 'jovens' %}bg-info{% elif group == 'adultos' %}bg-primary{% else %}bg-dark{% endif %} rounded-4 text-white">
+                                    <i class="fas {% if group == 'jovens' %}fa-child-reaching{% elif group == 'adultos' %}fa-user-tie{% else %}fa-person-cane{% endif %} fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-end">
+                                        <div>
+                                            <div class="fw-bold fs-4">{{ data.total }}</div>
+                                            <div class="text-muted small fw-bold text-uppercase">{{ data.faixa }}</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary px-2">{{ data.M }} Homens</span>
+                                            <span class="badge bg-success-subtle text-success border border-success px-2">{{ data.F }} Mulheres</span>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 6px;"><div class="progress-bar {% if group == 'jovens' %}bg-info{% elif group == 'adultos' %}bg-primary{% else %}bg-dark{% endif %}" style="width: {% widthratio data.total demografia.total 100 %}%"></div></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-6 border-start ps-5">
+                        <h5 class="fw-bold mb-4 text-center">Geral de Liderança (Nº 1)</h5>
+                        <div class="row text-center g-4">
+                            <div class="col-6">
+                                <div class="p-4 bg-primary-subtle rounded-4">
+                                    <h1 class="display-3 fw-bold text-primary">{{ demografia.lideres_homens }}</h1>
+                                    <span class="badge bg-primary fs-6">Homens</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-4 bg-success-subtle rounded-4">
+                                    <h1 class="display-3 fw-bold text-success">{{ demografia.lideres_mulheres }}</h1>
+                                    <span class="badge bg-success fs-6">Mulheres</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 4: ORDENAMENTO OFICIAL -->
+            <div class="tab-pane fade p-4" id="tab-official">
+                <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4">
+                    <i class="fas fa-info-circle me-2"></i> Esta listagem reflete a **posição oficial no boletim de voto**, cruzada com a presença de cada partido no círculo.
+                </div>
+                <div class="accordion accordion-flush rounded-4 overflow-hidden border" id="accOficial">
+                    {% for item in listagem_oficial %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed py-3 fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ item.circulo.id }}">
+                                <i class="fas fa-location-dot me-3 text-primary"></i> {{ item.circulo.nome }} ({{ item.circulo.provincia }})
+                                <span class="badge bg-light text-dark ms-auto me-3">{{ item.listas|length }} Partidos</span>
+                            </button>
+                        </h2>
+                        <div id="collapse-{{ item.circulo.id }}" class="accordion-collapse collapse" data-bs-parent="#accOficial">
+                            <div class="accordion-body bg-light">
+                                <div class="row g-4">
+                                    <div class="col-md-8">
+                                        <div class="list-group rounded-4 shadow-sm">
+                                            {% for lista in item.listas %}
+                                            <div class="list-group-item d-flex align-items-center p-3">
+                                                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-4" style="width: 35px; height: 35px;">
+                                                    {{ lista.inscricao.posicao_boletim|default:"N/A" }}
+                                                </div>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    {% if lista.inscricao.partido.simbolo %}
+                                                        <img src="{{ lista.inscricao.partido.simbolo.url }}" alt="{{ lista.inscricao.partido.sigla }}" style="width: 40px; height: 40px; object-fit: contain;">
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="fw-bold fs-5">{{ lista.inscricao.partido.sigla }}</div>
+                                                        <div class="small text-muted">{{ lista.inscricao.partido.nome_completo }}</div>
+                                                    </div>
+                                                </div>
+                                                <div class="ms-auto text-end">
+                                                    <span class="badge {% if lista.verificar_conformidade.conforme %}bg-success{% else %}bg-danger{% endif %}">Status: {{ lista.verificar_conformidade.conforme|yesno:"APTO,PENDENTE" }}</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card border-0 rounded-4 shadow-sm h-100">
+                                            <div class="card-body">
+                                                <h6 class="fw-bold text-uppercase mb-3 smaller">Extremos do Círculo</h6>
+                                                <div class="mb-3">
+                                                    <div class="smaller text-muted">Mais Velho(a)</div>
+                                                    <div class="fw-bold">
+                                                        {% if item.extremos.velho_h %}{{ item.extremos.velho_h.nome_completo }}{% elif item.extremos.velho_m %}{{ item.extremos.velho_m.nome_completo }}{% else %}---{% endif %}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="smaller text-muted">Mais Novo(a)</div>
+                                                    <div class="fw-bold">
+                                                        {% if item.extremos.novo_m %}{{ item.extremos.novo_m.nome_completo }}{% elif item.extremos.novo_h %}{{ item.extremos.novo_h.nome_completo }}{% else %}---{% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ABA 5: INTEGRIDADE & ANTIFRAUDE -->
+            <div class="tab-pane fade p-4" id="tab-audit">
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="p-4 border rounded-4 bg-light text-center shadow-sm">
+                            <i class="fas fa-user-check fa-2x text-primary mb-3"></i>
+                            <h3 class="fw-bold mb-1">{{ demografia.rs_confirmados }}</h3>
+                            <div class="text-muted small text-uppercase">Validados no RS</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 border rounded-4 bg-danger bg-opacity-10 text-center shadow-sm border-danger">
+                            <i class="fas fa-clone fa-2x text-danger mb-3"></i>
+                            <h3 class="fw-bold mb-1 text-danger">{{ fraudes }}</h3>
+                            <div class="text-danger small text-uppercase fw-bold">Duplicidades Críticas</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 border rounded-4 bg-dark text-white text-center shadow-sm">
+                            <i class="fas fa-fingerprint fa-2x text-warning mb-3"></i>
+                            <h3 class="fw-bold mb-1">{{ grande_total }}</h3>
+                            <div class="opacity-75 small text-uppercase">Total Listas Auditadas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-4"><i class="fas fa-history me-2"></i>Rastreabilidade de Operadores (Usuários)</h5>
+                <div class="table-responsive rounded-4 border shadow-sm">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th class="ps-3">DATA / HORA</th>
+                                <th>PARTIDO / CÍRCULO</th>
+                                <th>USUÁRIO (OPERADOR)</th>
+                                <th>STATUS CONFORMIDADE</th>
+                                <th class="text-end pe-3">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in listas_audit %}
+                            <tr>
+                                <td class="ps-3 small text-muted">{{ item.lista.data_submissao|date:"d/m/Y H:i" }}</td>
+                                <td><div class="fw-bold">{{ item.lista.inscricao.partido.sigla }}</div><div class="small text-muted">{{ item.lista.circulo.nome }}</div></td>
+                                <td><div class="fw-bold small">{{ item.operador }}</div></td>
+                                <td>{% if item.status.conforme %}<span class="badge bg-success-subtle text-success border border-success">Conforme</span>{% else %}<span class="badge bg-danger-subtle text-danger border border-danger">Irregular</span>{% endif %}</td>
+                                <td class="text-end pe-3"><a href="{% url 'candidaturas:detalhe_lista' item.lista.id %}" class="btn btn-sm btn-outline-dark rounded-pill">Audit</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-pills .nav-link { color: #64748b; transition: all 0.3s; border: 1px solid transparent; }
+    .nav-pills .nav-link.active { background: #003366 !important; color: white !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .truncate-text { max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .backdrop-blur { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'credenciais/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>🔍 Verificação Offline</h2>
+    <p>Verifique credenciais sem internet usando códigos offline.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label>Código Offline:</label>
+            <input type="text" name="codigo_offline" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Verificar</button>
+    </form>
+</div>
+{% endblock %}

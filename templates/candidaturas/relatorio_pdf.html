@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: a3 landscape;
+            margin: 1cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 0cm;
+                margin-left: 1cm;
+                margin-right: 1cm;
+                height: 1cm;
+            }
+        }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 8pt; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #003366; padding-bottom: 10px; }
+        .header h1 { font-size: 22pt; margin: 0; color: #003366; }
+        .header h2 { font-size: 14pt; margin: 5px 0; color: #666; }
+        
+        .section-title { background: #003366; color: white; padding: 10px; font-size: 14pt; font-weight: bold; margin: 30px 0 15px 0; border-radius: 5px; }
+        
+        .kpi-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .kpi-box { border: 1pt solid #ccc; padding: 15px; text-align: center; background: #f9f9f9; }
+        .kpi-value { font-size: 24pt; font-weight: bold; color: #003366; }
+        .kpi-label { font-size: 9pt; color: #666; text-transform: uppercase; }
+
+        .data-table { width: 100%; border-collapse: collapse; border: 0.1pt solid #ccc; }
+        .data-table th { background: #eee; padding: 8px; border: 0.1pt solid #ccc; font-weight: bold; }
+        .data-table td { padding: 6px; border: 0.1pt solid #ccc; text-align: center; }
+        
+        .status-apt { color: green; font-weight: bold; }
+        .status-irr { color: red; font-weight: bold; }
+        
+        #footerContent { text-align: right; font-size: 8pt; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>REPÚBLICA DE MOÇAMBIQUE</h1>
+        <h2>Secretariado Técnico de Administração Eleitoral (STAE)</h2>
+        <h3>DOSSIER DE INTELIGÊNCIA E AUDITORIA - {{ eleicao.nome }}</h3>
+    </div>
+
+    <!-- 1. RESUMO EXECUTIVO -->
+    <div class="section-title">1. RESUMO DE AUDITORIA NACIONAL</div>
+    <table style="width: 100%;">
+        <tr>
+            <td class="kpi-box">
+                <div class="kpi-value">{{ grande_total }}</div>
+                <div class="kpi-label">Submissões Ativas</div>
+            </td>
+            <td class="kpi-box">
+                <div class="kpi-value">{{ demografia.total }}</div>
+                <div class="kpi-label">Candidatos Registados</div>
+            </td>
+            <td class="kpi-box">
+                <div class="kpi-value">{{ fraudes }}</div>
+                <div class="kpi-label">Alertas de Duplicidade</div>
+            </td>
+            <td class="kpi-box">
+                <div class="kpi-value">{{ demografia.rs_confirmados }}</div>
+                <div class="kpi-label">Validados no RS</div>
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 5px;">
+        <div style="font-weight: bold; margin-bottom: 10px;">Destaques de Longevidade e Juventude (Nacional):</div>
+        <table style="width: 100%; font-size: 7pt;">
+            <tr>
+                <td><strong>Homem Mais Velho:</strong> {{ demografia.extremos.velho_h.nome_completo|default:"---" }} ({{ demografia.extremos.velho_h.data_nascimento|date:"d/m/Y" }})</td>
+                <td><strong>Mulher Mais Velha:</strong> {{ demografia.extremos.velho_m.nome_completo|default:"---" }} ({{ demografia.extremos.velho_m.data_nascimento|date:"d/m/Y" }})</td>
+            </tr>
+            <tr>
+                <td><strong>Homem Mais Novo:</strong> {{ demografia.extremos.novo_h.nome_completo|default:"---" }} ({{ demografia.extremos.novo_h.data_nascimento|date:"d/m/Y" }})</td>
+                <td><strong>Mulher Mais Nova:</strong> {{ demografia.extremos.novo_m.nome_completo|default:"---" }} ({{ demografia.extremos.novo_m.data_nascimento|date:"d/m/Y" }})</td>
+            </tr>
+        </table>
+    </div>
+
+    <pdf:nextpage />
+
+    <!-- 2. PERFORMANCE PARTIDÁRIA -->
+    <div class="section-title">2. ANÁLISE COMPETITIVA POR FORÇA POLÍTICA</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ORDEM</th>
+                <th>PARTIDO (SIGLA)</th>
+                <th>CÍRCULOS</th>
+                <th>MEMBROS</th>
+                <th>HOMENS / MULHERES</th>
+                <th>QUOTA (F)</th>
+                <th>STATUS (A/I)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in partidos_estat %}
+            <tr>
+                <td style="font-weight: bold;">{{ p.partido.posicao_boletim|default:"-" }}</td>
+                <td style="text-align: left; font-weight: bold;">
+                    <div style="display: flex; align-items: center;">
+                        {% if p.partido.simbolo %}
+                            <img src="{{ p.partido.simbolo.path }}" style="width: 20px; height: 20px; margin-right: 10px;">
+                        {% endif %}
+                        {{ p.partido.sigla }}
+                    </div>
+                </td>
+                <td>{{ p.total_listas }}</td>
+                <td>{{ p.total_candidatos }}</td>
+                <td>{{ p.homens }}H / {{ p.mulheres }}M</td>
+                <td>{{ p.mulheres_perc }}%</td>
+                <td>{{ p.conformidade.apto }} / {{ p.conformidade.irregular }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <pdf:nextpage />
+
+    <!-- 3. MAPA DE CRUZAMENTO TERRITORIAL -->
+    <div class="section-title">3. DETALHE TERRITORIAL POR PROVÍNCIA</div>
+    {% for prov in mapa_por_provincia %}
+        <div style="background: #eee; padding: 5px; font-weight: bold; margin-top: 20px;">PROVÍNCIA: {{ prov.provincia|upper }} (Total Submissões: {{ prov.provincia_total }})</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; width: 120px;">CÍRCULO</th>
+                    {% for part in prov.partidos_colunas %}
+                        <th style="font-size: 6pt;">{{ part.sigla }}</th>
+                    {% endfor %}
+                    <th style="background: #ddd;">SUMA</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in prov.matriz_linhas %}
+                <tr>
+                    <td style="text-align: left;">{{ row.circulo.nome }}</td>
+                    {% for item in row.status_partidos %}
+                        <td>{% if item.existe %}X{% else %}-{% endif %}</td>
+                    {% endfor %}
+                    <td style="font-weight: bold;">{{ row.total_no_circulo }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not forloop.last %}<pdf:nextpage />{% endif %}
+    {% endfor %}
+
+    <!-- 4. ORDENAMENTO OFICIAL POR CÍRCULO -->
+    <div class="section-title">4. ORDENAMENTO OFICIAL E EXTREMOS POR CÍRCULO</div>
+    {% for item in listagem_oficial %}
+        <div style="background: #003366; color: white; padding: 5px; font-weight: bold; margin-top: 15px;">{{ item.circulo.nome }} ({{ item.circulo.provincia }})</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 30px;">POS</th>
+                    <th style="text-align: left;">PARTIDO</th>
+                    <th style="width: 150px;">STATUS LISTA</th>
+                    <th>MAIS VELHO(A)</th>
+                    <th>MAIS NOVO(A)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lista in item.listas %}
+                <tr>
+                    <td>{{ lista.inscricao.posicao_boletim|default:"-" }}</td>
+                    <td style="text-align: left;">{{ lista.inscricao.partido.sigla }} - {{ lista.inscricao.partido.nome_completo }}</td>
+                    <td class="{% if lista.verificar_conformidade.conforme %}status-apt{% else %}status-irr{% endif %}">
+                        {{ lista.verificar_conformidade.conforme|yesno:"APTO,PENDENTE/IRREGULAR" }}
+                    </td>
+                    {% if forloop.first %}
+                    <td rowspan="{{ item.listas|length }}" style="font-size: 6pt;">
+                        {{ item.extremos.velho_h.nome_completo|default:item.extremos.velho_m.nome_completo|default:"---" }}
+                    </td>
+                    <td rowspan="{{ item.listas|length }}" style="font-size: 6pt;">
+                        {{ item.extremos.novo_m.nome_completo|default:item.extremos.novo_h.nome_completo|default:"---" }}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+
+    <div id="footerContent">
+        Documento Oficial STAE | SIPS - Módulo de Candidaturas e Logística (RS) | Emitido em {{ data_emissao|date:"d/m/Y H:i" }}
+    </div>
+</body>
+</html>

@@ -1,0 +1,175 @@
+{% extends 'base_apps.html' %}
+{% block title %}Venda de Cadernos{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-money-check-alt{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}{{ concurso.numero }} - Inscrições & Vendas{% endblock %}
+
+{% block content %}
+<style>
+    .vendas-container { display: grid; grid-template-columns: 380px 1fr; gap: 30px; }
+    
+    .premium-side-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); height: fit-content;}
+    .premium-main-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-weight: 700; font-size: 0.85rem; color: #4a5568; text-transform: uppercase; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; transition: all 0.2s; background: #f8fafc; }
+    .form-control:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1); outline: none;}
+
+    .btn-validate { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2); }
+    .btn-validate:hover { background: #218838; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3); }
+
+    .receipt-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f1f5f9; color: #003366; border: 1px solid #e2e8f0; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 700; transition: all 0.2s; }
+    .receipt-btn:hover { background: #003366; color: white; border-color: #003366; }
+
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+    .status-delivered { background: #dcfce7; color: #166534; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+
+    .table-vendas { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+    .table-vendas th { padding: 12px; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; border-bottom: 2px solid #f1f5f9; }
+    .table-vendas tr td { padding: 15px 12px; background: white; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+    .table-vendas tr td:first-child { border-left: 1px solid #f1f5f9; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+    .table-vendas tr td:last-child { border-right: 1px solid #f1f5f9; border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+    
+    .empty-state { text-align: center; padding: 40px; color: #94a3b8; }
+</style>
+
+<div class="vendas-container">
+    <!-- Formulário de Nova Venda -->
+    <div class="premium-side-card">
+        <div style="margin-bottom: 20px;">
+            <h4 style="margin: 0; color: #1a202c; font-weight: 800;">Registar Venda</h4>
+            <div style="font-size: 0.8rem; color: #718096; margin-top: 4px;">Validação de pagamento e entrega</div>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Nome da Empresa / Entidade</label>
+                {{ form.empresa_nome }}
+            </div>
+            <div class="form-group">
+                <label>NUIT</label>
+                {{ form.nuit }}
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Representante</label>
+                    {{ form.representante_nome }}
+                </div>
+                <div class="form-group">
+                    <label>Contacto</label>
+                    {{ form.representante_contacto }}
+                </div>
+            </div>
+            
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 18px;">
+                <div class="form-group">
+                    <label>Montante Pago (MT)</label>
+                    {{ form.valor_pago }}
+                </div>
+                <div class="form-group mb-0">
+                    <label>Evidência (PDF/IMG)</label>
+                    {{ form.comprovativo_pagamento }}
+                </div>
+            </div>
+            
+            <div style="background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fef3c7; margin-bottom: 20px;">
+                <label style="display:flex; align-items:center; cursor: pointer;">
+                    {{ form.caderno_entregue }}
+                    <span style="margin-left: 10px; font-weight: bold; font-size: 0.85rem; color: #92400e;">Caderno entregue no acto</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-validate">
+                <i class="fas fa-check-double"></i> VALIDAR E GERAR RECIBO
+            </button>
+        </form>
+    </div>
+
+    <!-- Lista de Inscrições -->
+    <div class="premium-main-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 style="margin: 0; color: #1a202c; font-weight: 800;">
+                <i class="fas fa-list-ul me-2 text-primary"></i> Empresas Interessadas
+            </h4>
+            <span class="badge bg-primary px-3 rounded-pill">{{ inscricoes.count }} Concorrentes</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-vendas">
+                <thead>
+                    <tr>
+                        <th>Entidade / Fornecedor</th>
+                        <th>Valor Pago</th>
+                        <th>Estado</th>
+                        <th>Operação</th>
+                        <th class="text-end">Faturação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in inscricoes %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ i.empresa_nome }}</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">NUIT: {{ i.nuit }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ i.valor_pago|floatformat:2 }} MT</div>
+                        </td>
+                        <td>
+                            {% if i.caderno_entregue %}
+                                <span class="status-badge status-delivered">Entregue</span>
+                            {% else %}
+                                <span class="status-badge status-pending">Pendente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="font-size: 0.8rem; font-weight: 600;">{{ i.data_inscricao|date:"d M Y" }}</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">{{ i.data_inscricao|date:"H:i" }}</div>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'ugea:imprimir_recibo' i.id %}" target="_blank" class="receipt-btn" title="Gerar Recibo Oficial">
+                                    <i class="fas fa-file-invoice"></i> RECIBO
+                                </a>
+                                {% if i.comprovativo_pagamento %}
+                                    <a href="{{ i.comprovativo_pagamento.url }}" target="_blank" class="receipt-btn" style="background: white;" title="Ver Comprovativo Bancário">
+                                        <i class="fas fa-receipt"></i> DOC
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-receipt fa-4x mb-3 opacity-20" style="color: var(--primary);"></i>
+                                <h5 class="text-dark">Nenhuma venda registada</h5>
+                                <p>Preencha o formulário ao lado e clique em <strong>"Validar e Gerar Recibo"</strong>.<br>
+                                O recibo oficial em formato A4 aparecerá automaticamente nesta lista após o registo.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Aplicar classes Bootstrap automaticamente aos campos do Django Form
+    document.querySelectorAll('input, select').forEach(el => {
+        if (el.type !== 'checkbox' && el.type !== 'file') {
+            el.classList.add('form-control');
+        } else if (el.type === 'file') {
+            el.classList.add('form-control');
+            el.style.fontSize = '0.8rem';
+        }
+    });
+</script>
+{% endblock %}

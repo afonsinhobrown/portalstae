@@ -1,0 +1,41 @@
+{% extends 'base_apps.html' %}
+{% block title %}Importação Territorial Direta{% endblock %}
+{% block module_name %}CANDIDATURAS - CARREGAMENTO EXCEL{% endblock %}
+{% block icon %}fas fa-file-upload{% endblock %}
+
+{% block content %}
+<div class="card shadow" style="max-width: 700px; margin: auto;">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-file-excel me-2"></i>Submissão de Candidaturas por Ficheiro</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <h6>⚠️ Atenção: Integridade de Dados</h6>
+            <p class="small mb-0">O sistema criará automaticamente a associação do partido ao <strong>Círculo Eleitoral</strong> que estiver selecionado na <strong>célula B3</strong> do seu ficheiro Excel.</p>
+        </div>
+
+        <div class="mb-4 text-center">
+            <p>Ainda não tem o modelo oficial para o partido {{ inscricao.partido.sigla }}?</p>
+            <a href="{% url 'candidaturas:baixar_modelo_vazio' inscricao.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-download me-1"></i> Descarregar Template Oficial
+            </a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="border p-4 rounded bg-light">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <label class="fw-bold mb-2">Selecione o Ficheiro Excel (.xlsx)</label>
+                <input type="file" name="arquivo_csv" class="form-control" accept=".xlsx" required>
+                <small class="text-muted">Apenas ficheiros descarregados do sistema são aceites para garantir a soberania dos dados.</small>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-cloud-upload-alt me-1"></i> Iniciar Processamento
+                </button>
+                <a href="{% url 'candidaturas:gerenciar_listas' inscricao.id %}" class="btn btn-link">Voltar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

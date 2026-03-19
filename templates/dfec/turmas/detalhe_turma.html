@@ -1,0 +1,143 @@
+{% extends 'dfec/base.html' %}
+
+{% block title %}{{ turma.nome }} - {{ turma.formacao.nome }}{% endblock %}
+{% block page_title %}{{ turma.nome }}{% endblock %}
+{% block page_subtitle %}{{ turma.formacao.nome }} | {{ turma.formacao.local_realizacao }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'dfec:formacao_detalhe' turma.formacao.id %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar à Formação
+    </a>
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-cog me-2"></i> Ações
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#">
+                <i class="fas fa-edit me-2"></i>Editar Turma
+            </a></li>
+        <li><a class="dropdown-item" href="#">
+                <i class="fas fa-file-excel me-2"></i>Lista de Presença
+            </a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item text-danger" href="#">
+                <i class="fas fa-trash me-2"></i>Excluir Turma
+            </a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Informações da Turma -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Detalhes da Turma</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Formador:</dt>
+                    <dd class="col-sm-8">
+                        {% if turma.formador_principal %}
+                        {{ turma.formador_principal.get_full_name }}
+                        {% else %}
+                        <span class="text-muted">Não atribuído</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4">Período:</dt>
+                    <dd class="col-sm-8">
+                        {{ turma.data_inicio|date:"d/m/Y" }} - {{ turma.data_fim|date:"d/m/Y" }}
+                    </dd>
+
+                    <dt class="col-sm-4">Sala:</dt>
+                    <dd class="col-sm-8">{{ turma.sala|default:"Não definida" }}</dd>
+
+                    <dt class="col-sm-4">Alunos:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-primary">{{ turma.participantes_atribuidos.count }}</span>
+                    </dd>
+                </dl>
+
+                <hr>
+
+                <h6 class="fw-bold text-secondary mb-2">Composição por Gênero</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span><i class="fas fa-mars text-primary me-2"></i>Masculino</span>
+                    <span class="fw-bold">{{ turma.homens_count }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span><i class="fas fa-venus text-danger me-2"></i>Feminino</span>
+                    <span class="fw-bold">{{ turma.mulheres_count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Participantes -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Participantes da Turma</h6>
+                <button class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-user-plus me-1"></i>Adicionar
+                </button>
+            </div>
+            <div class="card-body">
+                {% if turma.participantes_atribuidos.exists %}
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Gênero</th>
+                                <th>BI</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participante in turma.participantes_atribuidos.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ participante.nome_completo }}</strong>
+                                    <br><small class="text-muted">{{ participante.telefone }}</small>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if participante.genero == 'M' %}primary{% elif participante.genero == 'F' %}danger{% else %}secondary{% endif %}">
+                                        {{ participante.get_genero_display }}
+                                    </span>
+                                </td>
+                                <td>{{ participante.bilhete_identidade }}</td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if participante.status == 'APROVADO' %}success{% elif participante.status == 'REPROVADO' %}danger{% elif participante.status == 'SUPLENTE' %}warning{% else %}secondary{% endif %}">
+                                        {{ participante.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" title="Remover da Turma">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Turma Vazia</h5>
+                    <p class="text-muted">Esta turma ainda não tem participantes atribuídos.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base_apps.html' %}
+{% block title %}Cadernos de Encargos{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-book{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h3><i class="fas fa-book"></i> Cadernos de Encargos Existentes</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Concurso</th>
+                <th>Objeto</th>
+                <th>Prazo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in cadernos %}
+            <tr>
+                <td><strong>{{ c.concurso.numero }}</strong><br>{{ c.concurso.titulo }}</td>
+                <td>{{ c.objeto_concurso|truncatewords:10|default:"-" }}</td>
+                <td>{{ c.prazo_execucao_dias }} dias</td>
+                <td>
+                    <a href="{% url 'ugea:editar_caderno' c.concurso.id %}" class="btn-xs primary">Editar</a>
+                    <a href="{% url 'ugea:imprimir_caderno' c.concurso.id %}" target="_blank" class="btn-xs secondary">Imprimir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align:center; padding:20px;">Nenhum caderno criado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card" style="margin-top: 20px; border-left: 5px solid #dc3545;">
+    <h3><i class="fas fa-exclamation-triangle"></i> Pendentes (Concursos sem Caderno)</h3>
+    <p style="color: #666; margin-bottom: 15px;">Estes concursos precisam de um Caderno de Encargos para receber propostas.</p>
+    
+    <table class="data-table">
+        <tbody>
+            {% for cp in concursos_pendentes %}
+            <tr>
+                <td><strong>{{ cp.numero }}</strong></td>
+                <td>{{ cp.titulo }}</td>
+                <td style="text-align: right;">
+                    <a href="{% url 'ugea:editar_caderno' cp.id %}" class="action-btn small">Criar Caderno Agora</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align:center; color: green;"><i class="fas fa-check"></i> Tudo em dia! Todos os concursos têm cadernos.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th, .data-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+    .btn-xs { padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; display: inline-block; }
+    .primary { background: var(--primary); color: white; }
+    .secondary { background: #6c757d; color: white; }
+</style>
+{% endblock %}

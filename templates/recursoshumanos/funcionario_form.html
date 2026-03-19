@@ -1,0 +1,152 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}{{ titulo }} • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    {% if form.instance.id %}
+                        <i class="fas fa-edit me-2 text-warning"></i>
+                    {% else %}
+                        <i class="fas fa-user-plus me-2 text-success"></i>
+                    {% endif %}
+                    {{ titulo }}
+                </h5>
+            </div>
+
+            <div class="card-body">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <!-- Número de Identificação -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Número de Identificação *</label>
+                            {{ form.numero_identificacao }}
+                            {% if form.numero_identificacao.errors %}
+                            <div class="text-danger small">{{ form.numero_identificacao.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Nome Completo -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Nome Completo *</label>
+                            {{ form.nome_completo }}
+                            {% if form.nome_completo.errors %}
+                            <div class="text-danger small">{{ form.nome_completo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Data Nascimento -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data de Nascimento *</label>
+                            {{ form.data_nascimento }}
+                            {% if form.data_nascimento.errors %}
+                            <div class="text-danger small">{{ form.data_nascimento.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Data Ingresso -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data de Ingresso *</label>
+                            {{ form.data_ingresso }}
+                            {% if form.data_ingresso.errors %}
+                            <div class="text-danger small">{{ form.data_ingresso.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger small">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Telefone -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Telefone</label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}
+                            <div class="text-danger small">{{ form.telefone.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sector -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Sector *</label>
+                            {{ form.sector }}
+                            {% if form.sector.errors %}
+                            <div class="text-danger small">{{ form.sector.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Categoria -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Categoria *</label>
+                            {{ form.categoria }}
+                            {% if form.categoria.errors %}
+                            <div class="text-danger small">{{ form.categoria.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Função -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Função *</label>
+                            {{ form.funcao }}
+                            {% if form.funcao.errors %}
+                            <div class="text-danger small">{{ form.funcao.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'recursoshumanos:lista_funcionarios' %}"
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    {% if form.instance.id %}
+                                        <i class="fas fa-save me-2"></i>Actualizar
+                                    {% else %}
+                                        <i class="fas fa-plus me-2"></i>Adicionar
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adiciona classes Bootstrap aos campos do formulário
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        if (!input.classList.contains('form-control')) {
+            input.classList.add('form-control');
+        }
+    });
+});
+</script>
+{% endblock %}

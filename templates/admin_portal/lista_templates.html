@@ -1,0 +1,225 @@
+{% extends 'admin_portal/base.html' %}
+
+{% block title %}Templates • Portal STAE{% endblock %}
+{% block page_title %}Gestão de Templates{% endblock %}
+{% block breadcrumb %}Templates{% endblock %}
+
+{% block header_actions %}
+<div class="d-flex gap-2">
+    <a href="{% url 'admin_portal:importar_dados' %}" class="btn btn-success">
+        <i class="fas fa-cloud-upload me-2"></i>Importar Dados
+    </a>
+    <a href="{% url 'admin_portal:criar_template' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>Novo Template
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stat-card animate__animated animate__fadeIn">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-layer-group me-2 text-primary"></i>
+            Templates de Importação
+        </h5>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" placeholder="Pesquisar templates..." id="searchInput">
+            <select class="form-select form-select-sm" style="width: auto;" id="statusFilter">
+                <option value="">Todos os status</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-modern table-hover" id="templatesTable">
+                <thead>
+                    <tr>
+                        <th width="25%">
+                            <i class="fas fa-tag me-1"></i>Template
+                        </th>
+                        <th width="20%">
+                            <i class="fas fa-cube me-1"></i>Aplicação
+                        </th>
+                        <th width="20%">
+                            <i class="fas fa-database me-1"></i>Modelo
+                        </th>
+                        <th width="15%">
+                            <i class="fas fa-calendar me-1"></i>Criado em
+                        </th>
+                        <th width="10%">
+                            <i class="fas fa-circle me-1"></i>Status
+                        </th>
+                        <th width="10%" class="text-center">
+                            <i class="fas fa-cog me-1"></i>Ações
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr class="template-row" data-status="{% if template.activo %}active{% else %}inactive{% endif %}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                    <i class="fas fa-file-alt text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ template.nome }}</h6>
+                                    {% if template.ficheiro_template %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-paperclip me-1"></i>
+                                        {{ template.ficheiro_template.name|truncatechars:30 }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ template.get_app_destino_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <code class="text-muted">{{ template.modelo_destino }}</code>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ template.data_criacao|date:"d/m/Y" }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                {{ template.data_criacao|date:"H:i" }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if template.activo %}
+                            <span class="badge badge-modern bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Ativo
+                            </span>
+                            {% else %}
+                            <span class="badge badge-modern bg-secondary">
+                                <i class="fas fa-pause-circle me-1"></i>Inativo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle"
+                                        type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="{% url 'admin_portal:editar_template' template.id %}">
+                                            <i class="fas fa-edit me-2"></i>Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="{% url 'admin_portal:importar_dados' %}?template={{ template.id }}">
+                                            <i class="fas fa-upload me-2"></i>Usar para Importar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#">
+                                            <i class="fas fa-trash me-2"></i>Eliminar
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação Moderna -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Paginação" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <!-- Estado Vazio -->
+        <div class="text-center py-5 animate__animated animate__fadeIn">
+            <div class="empty-state">
+                <i class="fas fa-layer-group fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted mb-3">Nenhum template criado</h4>
+                <p class="text-muted mb-4">Comece criando seu primeiro template de importação para o sistema.</p>
+                <a href="{% url 'admin_portal:criar_template' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Criar Primeiro Template
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filtro e pesquisa em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const templateRows = document.querySelectorAll('.template-row');
+
+    function filterTemplates() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+
+        templateRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const status = row.getAttribute('data-status');
+
+            const matchesSearch = text.includes(searchTerm);
+            const matchesStatus = statusValue === '' || status === statusValue;
+
+            if (matchesSearch && matchesStatus) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterTemplates);
+    statusFilter.addEventListener('change', filterTemplates);
+});
+</script>
+{% endblock %}

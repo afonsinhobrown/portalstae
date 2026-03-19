@@ -1,0 +1,300 @@
+<!-- templates/dfec/partials/sidebar.html -->
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <!-- Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                    href="{% url 'dfec:dashboard' %}">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <!-- Módulo 1: Planificação -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#collapsePlanificacao" role="button">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Planificação
+                    <i class="fas fa-chevron-down float-end mt-1"></i>
+                </a>
+                <div class="collapse {% if 'planificacao' in request.path %}show{% endif %}" id="collapsePlanificacao">
+                    <ul class="nav flex-column ms-4">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'objetivos_lista' %}active{% endif %}"
+                                href="{% url 'dfec:objetivos_lista' %}">
+                                <i class="fas fa-bullseye me-2"></i>Objetivos Institucionais
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'planos_lista' %}active{% endif %}"
+                                href="{% url 'dfec:planos_lista' %}">
+                                <i class="fas fa-list me-2"></i>Diretório de Planos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'plano_criar' %}active{% endif %}"
+                                href="{% url 'dfec:plano_criar' %}">
+                                <i class="fas fa-plus-circle me-2"></i>Novo Plano
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-calendar me-2"></i>Calendário
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-pie me-2"></i>Relatórios
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Módulo 2: Formações -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#collapseFormacoes" role="button">
+                    <i class="fas fa-users me-2"></i>
+                    Formações
+                    <i class="fas fa-chevron-down float-end mt-1"></i>
+                </a>
+                <div class="collapse {% if 'formacoes' in request.path %}show{% endif %}" id="collapseFormacoes">
+                    <ul class="nav flex-column ms-4">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'formacoes_lista' %}active{% endif %}"
+                                href="{% url 'dfec:formacoes_lista' %}">
+                                <i class="fas fa-list me-2"></i>Todas Formações
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'participantes_lista' and request.GET.categoria == 'BRIGADISTA' %}active{% endif %}"
+                                href="{% url 'dfec:participantes_lista' %}?categoria=BRIGADISTA">
+                                <i class="fas fa-user-graduate me-2"></i>Brigadistas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'participantes_lista' and request.GET.categoria == 'MMV' %}active{% endif %}"
+                                href="{% url 'dfec:participantes_lista' %}?categoria=MMV">
+                                <i class="fas fa-vote-yea me-2"></i>Membros MMV
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'participantes_lista' and request.GET.categoria == 'AGENTE_EC' %}active{% endif %}"
+                                href="{% url 'dfec:participantes_lista' %}?categoria=AGENTE_EC">
+                                <i class="fas fa-megaphone me-2"></i>Agentes EC
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://stae.gov.mz/validar-qr/" target="_blank">
+                                <i class="fas fa-qrcode me-2"></i>Validação QR
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Módulo 3: Análise -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#collapseAnalise" role="button">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Análise Inteligente
+                    <i class="fas fa-chevron-down float-end mt-1"></i>
+                </a>
+                <div class="collapse {% if 'analise' in request.path %}show{% endif %}" id="collapseAnalise">
+                    <ul class="nav flex-column ms-4">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'upload_resultados' %}active{% endif %}"
+                                href="{% url 'dfec:upload_resultados' %}">
+                                <i class="fas fa-file-import me-2"></i>Importar Dados
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_analise_eleitoral' %}active{% endif %}"
+                                href="{% url 'dfec:dashboard_analise_eleitoral' %}">
+                                <i class="fas fa-search me-2"></i>Analisar Região
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'comparar_eleicoes' %}active{% endif %}"
+                                href="{% url 'dfec:comparar_eleicoes' %}">
+                                <i class="fas fa-exchange-alt me-2"></i>Comparar Eleições
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'mapa_interativo' %}active{% endif %}"
+                                href="{% url 'dfec:mapa_interativo' %}">
+                                <i class="fas fa-map-marked-alt me-2"></i>Mapa Interativo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'recomendacoes' %}active{% endif %}"
+                                href="{% url 'dfec:recomendacoes' %}">
+                                <i class="fas fa-lightbulb me-2"></i>Recomendações
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Módulo 4: Relatórios -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#collapseRelatorios" role="button">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Relatórios
+                    <i class="fas fa-chevron-down float-end mt-1"></i>
+                </a>
+                <div class="collapse {% if 'relatorios' in request.path %}show{% endif %}" id="collapseRelatorios">
+                    <ul class="nav flex-column ms-4">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'relatorio_planos' %}active{% endif %}"
+                                href="{% url 'dfec:relatorio_planos' %}">
+                                <i class="fas fa-plus me-2"></i>Relatório de Planos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'relatorio_manuais' %}active{% endif %}"
+                                href="{% url 'dfec:relatorio_manuais' %}">
+                                <i class="fas fa-history me-2"></i>Status de Manuais
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'relatorio_brigadas' %}active{% endif %}"
+                                href="{% url 'dfec:relatorio_brigadas' %}">
+                                <i class="fas fa-print me-2"></i>Mapa de Brigadas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'relatorio_atividades' %}active{% endif %}"
+                                href="{% url 'dfec:relatorio_atividades' %}">
+                                <i class="fas fa-file-export me-2"></i>Atividades Executadas
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- NOVO Módulo: Logística e Materiais -->
+            <li class="nav-item">
+                <a class="nav-link {% if 'logistica' in request.path %}active{% endif %}"
+                    href="#">
+                    <i class="fas fa-truck-loading me-2"></i>
+                    Logística e Materiais
+                </a>
+            </li>
+
+            <!-- Módulo 5: Manuais -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#collapseManuais" role="button">
+                    <i class="fas fa-book me-2"></i>
+                    Manuais
+                    <i class="fas fa-chevron-down float-end mt-1"></i>
+                </a>
+                <div class="collapse {% if 'manuais' in request.path %}show{% endif %}" id="collapseManuais">
+                    <ul class="nav flex-column ms-4">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                                href="{% url 'dfec:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'manuais_lista' %}active{% endif %}"
+                                href="{% url 'dfec:manuais_lista' %}">
+                                <i class="fas fa-list me-2"></i>Todos os Manuais
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'manual_novo' %}active{% endif %}"
+                                href="{% url 'dfec:manual_criar' %}">
+                                <i class="fas fa-plus-circle me-2"></i>Novo Manual
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'biblioteca_imagens' %}active{% endif %}"
+                                href="{% url 'dfec:biblioteca_imagens' %}">
+                                <i class="fas fa-images me-2"></i>Biblioteca de Imagens
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-download me-2"></i>Templates
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-print me-2"></i>Impressão
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Sistema -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#collapseSistema" role="button">
+                    <i class="fas fa-cogs me-2"></i>
+                    Sistema
+                    <i class="fas fa-chevron-down float-end mt-1"></i>
+                </a>
+                <div class="collapse" id="collapseSistema">
+                    <ul class="nav flex-column ms-4">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-bell me-2"></i>Alertas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-database me-2"></i>Backup
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-users-cog me-2"></i>Utilizadores
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dfec:configuracoes' %}">
+                                <i class="fas fa-sliders-h me-2"></i>Configurações
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+
+        <!-- Quick Stats -->
+        <div class="sidebar-stats mt-4 p-3 border-top">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-0 mb-2">
+                <span>Estatísticas Rápidas</span>
+            </h6>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="stat-card bg-info text-white p-2 rounded text-center">
+                        <small>Atividades Ativas</small>
+                        <h5 class="mb-0">0</h5>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card bg-success text-white p-2 rounded text-center">
+                        <small>Formandos</small>
+                        <h5 class="mb-0">0</h5>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card bg-warning text-dark p-2 rounded text-center">
+                        <small>Análises Críticas</small>
+                        <h5 class="mb-0">0</h5>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card bg-danger text-white p-2 rounded text-center">
+                        <small>Alertas</small>
+                        <h5 class="mb-0">0</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

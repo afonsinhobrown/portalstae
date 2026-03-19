@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido de Férias</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm;
+        }
+
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 2cm;
+            text-transform: uppercase;
+        }
+
+        .content {
+            text-align: justify;
+            margin-bottom: 1cm;
+        }
+
+        .field-line {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            min-width: 2cm;
+            padding: 0 5px;
+        }
+
+        .signature-block {
+            margin-top: 2cm;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 60%;
+            margin: 0 auto;
+            margin-top: 1.5cm;
+            padding-top: 5px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 1cm;
+            margin-bottom: 0.5cm;
+        }
+
+        .info-block {
+            margin-top: 0.5cm;
+        }
+
+        .opinion-box {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+        }
+
+        .timestamp {
+            font-size: 10pt;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        REQUERIMENTO PARA CONCESSÃO<br>
+        DAS FÉRIAS ANUAIS
+    </div>
+
+    <table
+        style="width: 100%; border: 1px solid #000; border-collapse: collapse; margin-bottom: 0.5cm; font-size: 8pt;">
+        <tr>
+            <td style="width: 50%; border-right: 1px solid #000; padding: 5px; vertical-align: top; height: 3cm;">
+                <strong>DIRECÇÃO: {{ licenca.funcionario.sector.direcao.nome|upper|default:"____________________"
+                    }}</strong><br><br>
+                <strong>PARECER DO DIRECTOR:</strong><br>
+                {{
+                licenca.parecer_diretor|default:"_____________________________________________________________________"
+                }}<br><br>
+                <div style="margin-top: 1cm;">
+                    Assinatura: _____________________________________<br>
+                    Data: {{ licenca.data_parecer_diretor|date:"d/m/Y"|default:"___/___/_____" }}
+                </div>
+            </td>
+            <td style="width: 50%; padding: 5px; vertical-align: top; height: 3cm;">
+                <strong>DEPARTAMENTO: {{ licenca.funcionario.sector.nome|upper }}</strong><br><br>
+                <strong>PARECER DO CHEFE:</strong><br>
+                {{ licenca.parecer_chefe|default:"_____________________________________________________________________" }}<br><br>
+                <div style="margin-top: 1cm;">
+                    Assinatura: _____________________________________<br>
+                    Data: {{ licenca.data_parecer_chefe|date:"d/m/Y"|default:"___/___/_____" }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="content">
+        <p>Exmo Senhor Director de {{ licenca.funcionario.sector.direcao.nome|default:"____________________" }}</p>
+        <br>
+        <p>
+            (a) <strong>{{ licenca.funcionario.nome_completo }}</strong>
+            (b) <strong>{{ licenca.funcionario.funcao|default:"Funcionário" }}</strong>
+            colocado em <strong>{{ licenca.funcionario.sector.nome }}</strong>,
+            requer à V. Exª. A concessão das férias anuais a que se refere o artigo 63 do EGFAE.
+        </p>
+        <br>
+        <p>Pede deferimento</p>
+    </div>
+
+    <div class="signature-block">
+        <p>____________________, {{ licenca.data_criacao|date:"d" }} de {{ licenca.data_criacao|date:"F" }} de {{
+            licenca.data_criacao|date:"Y" }}</p>
+        <div class="signature-line">
+            Assinatura do funcionário
+        </div>
+    </div>
+
+    <div class="section-title">INFORMAÇÃO</div>
+
+    <div class="info-block">
+        <p>
+            No ano anterior o requerente gozou 30 dias de licença anual e deu as seguintes faltas:
+        </p>
+        <ul>
+            <li>Justificadas ao abrigo da alínea a) do nº.1 do artigo 91 do REGFAE: 0</li>
+            <li>Justificadas ao abrigo da alínea b) do nº.1 e do nº. 2 do artigo 91 do REGFAE: 0</li>
+            <li>Licença por doença: 0</li>
+            <li>Injustificadas: 0</li>
+        </ul>
+        <p>
+            O requerente tem direito a <strong>{{ licenca.dias_utilizados }}</strong> dias de licença anual.
+        </p>
+
+        <div class="opinion-box">
+            <strong>Parecer do RH:</strong><br>
+            {{ licenca.observacoes_rh|default:"Sem observações."|linebreaksbr }}
+            {% if licenca.dias_autorizados_rh %}
+            <br>Dias Autorizados: {{ licenca.dias_autorizados_rh }}
+            {% endif %}
+            <div class="timestamp">
+                Data: {{ licenca.data_analise_rh|date:"d/m/Y"|default:"___/___/____" }}<br>
+                Assinatura: _____________________________
+            </div>
+        </div>
+    </div>
+
+    {% if licenca.parecer_chefe %}
+    <div class="section-title">PARECER DA CHEFIA</div>
+    <div class="opinion-box">
+        <strong>Decisão:</strong> {{ licenca.get_status_chefia_display|upper }}<br>
+        <strong>Parecer:</strong><br>
+        {{ licenca.parecer_chefe|linebreaksbr }}
+        <div class="timestamp">
+            Data: {{ licenca.data_parecer_chefe|date:"d/m/Y" }}<br>
+            Chefe: {{ licenca.chefe_aprovador.funcionario.nome_completo }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if licenca.parecer_diretor %}
+    <div class="section-title">DESPACHO DO DIRETOR</div>
+    <div class="opinion-box">
+        <strong>Decisão:</strong> {{ licenca.get_status_display|upper }}<br>
+        <strong>Parecer:</strong><br>
+        {{ licenca.parecer_diretor|linebreaksbr }}
+        <div class="timestamp">
+            Data: {{ licenca.data_parecer_diretor|date:"d/m/Y" }}<br>
+            Diretor: {{ licenca.diretor_aprovador.funcionario.nome_completo }}
+        </div>
+    </div>
+    {% endif %}
+
+</body>
+
+</html>

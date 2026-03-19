@@ -1,0 +1,261 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}{{ viatura.matricula }} • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">{{ viatura.matricula }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'gestaocombustivel:dashboard_combustivel' %}">Combustível</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'gestaocombustivel:lista_viaturas' %}">Viaturas</a></li>
+                <li class="breadcrumb-item active">Detalhes</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'gestaocombustivel:pedir_combustivel' %}?viatura={{ viatura.id }}" class="btn btn-danger">
+            <i class="fas fa-gas-pump me-2"></i>Pedir Combustível
+        </a>
+        <a href="{% url 'gestaocombustivel:solicitar_manutencao' %}?viatura={{ viatura.id }}" class="btn btn-warning">
+            <i class="fas fa-tools me-2"></i>Solicitar Manutenção
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informações da Viatura -->
+    <div class="col-lg-6">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    Informações da Viatura
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Matrícula:</strong>
+                        <p class="mb-2">{{ viatura.matricula }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Marca/Modelo:</strong>
+                        <p class="mb-2">{{ viatura.marca }} {{ viatura.modelo }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Ano de Fabrico:</strong>
+                        <p class="mb-2">{{ viatura.ano_fabrico }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Cor:</strong>
+                        <p class="mb-2">{{ viatura.cor }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Tipo de Combustível:</strong>
+                        <p class="mb-2">{{ viatura.get_tipo_combustivel_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Tipo de Viatura:</strong>
+                        <p class="mb-2">{{ viatura.get_tipo_viatura_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Kilometragem Actual:</strong>
+                        <p class="mb-2"><strong>{{ viatura.kilometragem_actual }} km</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Estado:</strong>
+                        <p class="mb-2">
+                            {% if viatura.estado == 'excelente' %}
+                            <span class="badge bg-success">Excelente</span>
+                            {% elif viatura.estado == 'bom' %}
+                            <span class="badge bg-primary">Bom</span>
+                            {% elif viatura.estado == 'regular' %}
+                            <span class="badge bg-warning">Regular</span>
+                            {% else %}
+                            <span class="badge bg-danger">Manutenção</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-12">
+                        <strong>Funcionário Afecto:</strong>
+                        <p class="mb-2">
+                            {% if viatura.funcionario_afecto %}
+                            {{ viatura.funcionario_afecto.nome_completo }}
+                            {% else %}
+                            <span class="text-muted">Não afectada</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seguros -->
+        <div class="combustivel-card mt-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-shield-alt me-2 text-success"></i>
+                    Seguros
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if seguros %}
+                    {% for seguro in seguros %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold">{{ seguro.companhia_seguros }}</h6>
+                                <small class="text-muted">Apólice: {{ seguro.numero_apolice }}</small>
+                                <br>
+                                <small class="text-muted">Tipo: {{ seguro.get_tipo_seguro_display }}</small>
+                            </div>
+                            <span class="badge {% if seguro.esta_activo %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if seguro.esta_activo %}Activo{% else %}Expirado{% endif %}
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <small><strong>Válido até:</strong> {{ seguro.data_fim|date:"d/m/Y" }}</small>
+                            <br>
+                            <small><strong>Prémio:</strong> {{ seguro.premio_seguro }} MT</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">Nenhum seguro registado</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <!-- Últimos Pedidos de Combustível -->
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-gas-pump me-2 text-warning"></i>
+                    Últimos Abastecimentos
+                </h5>
+                <a href="{% url 'gestaocombustivel:pedir_combustivel' %}?viatura={{ viatura.id }}" 
+                   class="btn btn-sm btn-outline-danger">
+                    Novo Pedido
+                </a>
+            </div>
+            <div class="card-body">
+                {% if pedidos %}
+                <div class="list-group list-group-flush">
+                    {% for pedido in pedidos %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ pedido.data_pedido|date:"d/m/Y" }}</strong>
+                                <br>
+                                <small class="text-muted">{{ pedido.quantidade_litros }}L - {{ pedido.custo_total }} MT</small>
+                                <br>
+                                <small class="text-primary">{{ pedido.get_tipo_pedido_display }}</small>
+                            </div>
+                            <span class="badge {% if pedido.status == 'abastecido' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ pedido.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-gas-pump fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhum abastecimento registado</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Histórico de Manutenções -->
+        <div class="combustivel-card mt-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-tools me-2 text-warning"></i>
+                    Histórico de Manutenções
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if manutencoes %}
+                <div class="list-group list-group-flush">
+                    {% for manutencao in manutencoes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold">{{ manutencao.get_tipo_manutencao_display }}</h6>
+                                <small class="text-muted">{{ manutencao.data_agendada|date:"d/m/Y" }}</small>
+                                <br>
+                                <small class="text-muted">{{ manutencao.oficina }}</small>
+                            </div>
+                            <span class="badge {% if manutencao.status == 'concluida' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ manutencao.get_status_display }}
+                            </span>
+                        </div>
+                        {% if manutencao.custo_real %}
+                        <div class="mt-2">
+                            <small><strong>Custo:</strong> {{ manutencao.custo_real }} MT</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-tools fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhuma manutenção registada</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div class="combustivel-card mt-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-bell me-2 text-danger"></i>
+                    Alertas
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if viatura.precisa_manutencao %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Manutenção Necessária</strong>
+                    <br>
+                    <small>Kilometragem actual: {{ viatura.kilometragem_actual }} km</small>
+                </div>
+                {% endif %}
+
+                {% if viatura.seguro_vencido %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Seguro Vencido</strong>
+                    <br>
+                    <small>Data de validade: {{ viatura.data_proximo_seguro|date:"d/m/Y" }}</small>
+                </div>
+                {% elif viatura.dias_para_proximo_seguro < 30 %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Seguro a Vencer</strong>
+                    <br>
+                    <small>Vence em {{ viatura.dias_para_proximo_seguro }} dias</small>
+                </div>
+                {% endif %}
+
+                {% if not viatura.precisa_manutencao and not viatura.seguro_vencido and viatura.dias_para_proximo_seguro >= 30 %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Sem alertas</strong>
+                    <br>
+                    <small>Tudo em ordem com a viatura</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

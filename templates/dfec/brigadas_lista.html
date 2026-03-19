@@ -1,0 +1,140 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Brigadas - DFEC{% endblock %}
+{% block page_title %}Brigadas de Educação Cívica{% endblock %}
+{% block page_subtitle %}Gestão das equipas de terreno em todos os círculos eleitorais{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dfec:brigada_criar' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-2"></i>Nova Brigada
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-light">
+        <h6 class="m-0 font-weight-bold text-primary">Mapa de Alocação de Brigadas</h6>
+        <div class="dropdown no-arrow">
+            <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v text-gray-400"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in">
+                <li><a class="dropdown-item" href="{% url 'dfec:relatorio_brigadas' %}"><i
+                            class="fas fa-file-pdf me-2"></i>Exportar PDF</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Exportar Excel</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered datatable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Cód. Brigada</th>
+                        <th>Província</th>
+                        <th>Distrito</th>
+                        <th>Supervisor</th>
+                        <th>Progresso</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for brigada in brigadas %}
+                    <tr>
+                        <td><strong>{{ brigada.codigo }}</strong></td>
+                        <td>{{ brigada.get_provincia_display }}</td>
+                        <td>{{ brigada.distrito }}</td>
+                        <td>
+                            {% if brigada.supervisor %}
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-2">
+                                    <span class="avatar-title rounded-circle bg-light text-primary">
+                                        {{ brigada.supervisor.first_name|first }}{{ brigada.supervisor.last_name|first
+                                        }}
+                                    </span>
+                                </div>
+                                <span>{{ brigada.supervisor.get_full_name }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">Não atribuído</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar {% if brigada.completa %}bg-success{% else %}bg-warning{% endif %}"
+                                    role="progressbar"
+                                    style="width: {% if brigada.completa %}100{% else %}65{% endif %}%">
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if brigada.ativa %}
+                            <span class="badge bg-success-soft text-success border border-success">ATIVA</span>
+                            {% else %}
+                            <span class="badge bg-danger-soft text-danger border border-danger">INATIVA</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'dfec:brigada_detalhe' brigada.pk %}"
+                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'dfec:brigada_editar' brigada.pk %}"
+                                    class="btn btn-sm btn-outline-secondary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dfec:brigada_membros' brigada.pk %}"
+                                    class="btn btn-sm btn-outline-info" title="Gerenciar Membros">
+                                    <i class="fas fa-users"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-users fa-3x mb-3 opacity-25"></i>
+                                <p>Nenhuma brigada registada no sistema.</p>
+                                <a href="{% url 'dfec:brigada_criar' %}"
+                                    class="btn btn-sm btn-outline-primary mt-2">Criar Primeira Brigada</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-title {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

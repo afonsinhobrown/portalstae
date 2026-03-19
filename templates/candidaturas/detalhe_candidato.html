@@ -1,0 +1,99 @@
+{% extends 'base_apps.html' %}
+{% block title %}Perfil: {{ candidato.nome_completo }}{% endblock %}
+{% block module_name %}CANDIDATURAS - PERFIL{% endblock %}
+{% block icon %}fas fa-id-card-clip{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="row g-0">
+                <!-- Coluna da Foto e Resumo -->
+                <div class="col-md-4 bg-primary text-white p-5 text-center d-flex flex-column align-items-center justify-content-center">
+                    {% if candidato.foto %}
+                        <img src="{{ candidato.foto.url }}" class="rounded-circle border border-4 border-white mb-4 shadow" style="width: 180px; height: 180px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center mb-4 shadow" style="width: 180px; height: 180px; font-size: 80px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    <h3 class="fw-bold mb-1">{{ candidato.nome_completo }}</h3>
+                    <p class="opacity-75 mb-4 text-uppercase fw-bold small tracking-widest">{{ candidato.lista.inscricao.partido.sigla }} | {{ candidato.tipo }}</p>
+                    
+                    <div class="w-100 mt-4 pt-4 border-top border-white border-opacity-25">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="opacity-75 mt-1">Círculo:</span>
+                            <span class="fw-bold">{{ candidato.lista.circulo.nome }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="opacity-75">Posição:</span>
+                            <span class="badge bg-white text-primary fw-bold text-center" style="width: 40px;">{{ candidato.posicao }}º</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna dos Dados Detalhados -->
+                <div class="col-md-8 p-5">
+                    <div class="d-flex justify-content-between align-items-start mb-5">
+                        <h4 class="text-dark fw-bold mb-0">Informação Biográfica</h4>
+                        <span class="badge {% if candidato.status_eleitor == 'confirmado' %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} border py-2 px-3 rounded-pill">
+                            <i class="fas {% if candidato.status_eleitor == 'confirmado' %}fa-circle-check{% else %}fa-clock{% endif %} me-2"></i>
+                            Estatuto: {{ candidato.get_status_eleitor_display }}
+                        </span>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Número de BI</label>
+                            <div class="fs-5 text-dark font-monospace">{{ candidato.bi_numero }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Cartão de Eleitor</label>
+                            <div class="fs-5 text-dark font-monospace">{{ candidato.numero_eleitor|default:"---" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Data de Nascimento</label>
+                            <div class="fs-5 text-dark">{{ candidato.data_nascimento|default:"Não Registada" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Idade Estimada</label>
+                            <div class="fs-5 text-dark">{{ idade }} anos</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Género</label>
+                            <div class="fs-5 text-dark">
+                                <i class="fas {% if candidato.genero == 'M' %}fa-mars text-primary{% else %}fa-venus text-pink{% endif %} me-2"></i>
+                                {{ candidato.get_genero_display }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small fw-bold text-uppercase mb-1 d-block">Categoria de Eleição</label>
+                            <div class="fs-5 text-dark">{{ candidato.get_categoria_display }}</div>
+                        </div>
+                    </div>
+
+                    {% if candidato.duplicado %}
+                    <div class="alert alert-danger d-flex align-items-center mt-5 mb-0 border-0 shadow-sm rounded-3">
+                        <i class="fas fa-triangle-exclamation fs-3 me-3"></i>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-center">ALERTA DE INTEGRIDADE</h6>
+                            <p class="small mb-0">Este BI/Candidato foi detectado em mais do que uma lista de candidatura.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-5 pt-4 border-top d-flex gap-2">
+                        <a href="{% url 'candidaturas:detalhe_lista' candidato.lista.id %}" class="btn btn-outline-secondary px-4 py-2 rounded-3 text-center">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar à Lista
+                        </a>
+                        <button class="btn btn-primary px-4 py-2 rounded-3 text-center">
+                            <i class="fas fa-print me-2"></i> Imprimir Ficha
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

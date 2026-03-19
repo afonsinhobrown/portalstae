@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ manual.titulo }}</title>
+    {{ dynamic_css|safe }}
+    <style>
+        /* Estilos adicionais que não dependem de @page */
+        .note {
+            background-color: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .important {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+        }
+
+        blockquote {
+            border-left: 4px solid #0d6efd;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #555;
+            font-style: italic;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+        }
+
+        .description {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .glossario-termo {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+
+        .historico-versao {
+            font-size: 9pt;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header Frame Content -->
+    <div id="header_content" class="header">
+        <h1>{{ manual.titulo }}</h1>
+        <div style="font-size: 11pt; color: #666; margin-top: 5px;">
+            <strong>Código:</strong> {{ manual.codigo }} | <strong>Versão:</strong> {{ manual.versao }}
+            {% if manual.data_publicacao %}
+            | <strong>Publicação:</strong> {{ manual.data_publicacao|date:"d/m/Y" }}
+            {% endif %}
+        </div>
+        {% if manual.subtitulo %}
+        <div style="font-size: 12pt; color: #555; margin-top: 5px; font-style: italic;">
+            {{ manual.subtitulo }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer Frame Content -->
+    <div id="footer_content" class="footer-text">
+        <strong>{{ manual.codigo }}</strong> - Versão {{ manual.versao }} - Página <pdf:pagenumber> de <pdf:pagecount>
+    </div>
+
+    <!-- Main Content -->
+    {% if manual.descricao %}
+    <div class="description">
+        <h2 style="color: #6c757d; margin-top: 0;">Sobre este Manual</h2>
+        <p>{{ manual.descricao|linebreaksbr }}</p>
+
+        {% if manual.publico_alvo %}
+        <p><strong>Público-alvo:</strong> {{ manual.publico_alvo }}</p>
+        {% endif %}
+
+        {% if manual.responsavel %}
+        <p><strong>Responsável:</strong> {{ manual.responsavel }}</p>
+        {% endif %}
+
+        {% if manual.departamento %}
+        <p><strong>Departamento:</strong> {{ manual.departamento }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Sumário (Opcional) -->
+    {% if capitulos|length > 3 %}
+    <div class="no-break" style="margin-bottom: 30px;">
+        <h2>Sumário</h2>
+        <ul>
+            {% for cap in capitulos %}
+            <li style="margin-bottom: 5px;">
+                <strong>{{ cap.numero }}.</strong> {{ cap.titulo }}
+                {% if cap.pagina %}
+                <span style="float: right;">pág. {{ forloop.counter|add:3 }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="page-break"></div>
+    {% endif %}
+
+    <!-- Capítulos -->
+    {% for cap in capitulos %}
+    <div class="chapter {% if forloop.first %}first-chapter{% endif %}">
+        <div class="chapter-title">
+            <h2>Capítulo {{ cap.numero }}: {{ cap.titulo }}</h2>
+            {% if cap.subtitulo %}
+            <h3 style="color: #555; margin-top: 5px;">{{ cap.subtitulo }}</h3>
+            {% endif %}
+        </div>
+
+        <div class="content">
+            {% if cap.conteudo %}
+            {{ cap.conteudo|safe }}
+            {% else %}
+            <p class="note">Conteúdo a ser desenvolvido.</p>
+            {% endif %}
+
+            {% if cap.observacoes %}
+            <div class="note">
+                <strong>Observações:</strong>
+                <p>{{ cap.observacoes|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+
+            {% if cap.aviso %}
+            <div class="warning">
+                <strong>Aviso:</strong>
+                <p>{{ cap.aviso|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Informações Adicionais -->
+    {% if manual.glossario or manual.historico_versoes %}
+    <div class="chapter page-break">
+        <div class="chapter-title">
+            <h2>Informações Adicionais</h2>
+        </div>
+
+        {% if manual.glossario %}
+        <div class="content">
+            <h3>Glossário de Termos</h3>
+            {% for termo, definicao in manual.glossario.items %}
+            <p>
+                <span class="glossario-termo">{{ termo }}:</span>
+                {{ definicao }}
+            </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if manual.historico_versoes %}
+        <div class="content">
+            <h3>Histórico de Revisões</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Versão</th>
+                        <th>Data</th>
+                        <th>Alterações</th>
+                        <th>Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for versao in manual.historico_versoes %}
+                    <tr>
+                        <td>{{ versao.numero }}</td>
+                        <td>{{ versao.data|date:"d/m/Y" }}</td>
+                        <td>{{ versao.alteracoes }}</td>
+                        <td>{{ versao.responsavel }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Rodapé Final -->
+    <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center;" class="no-break">
+        <p><strong>DOCUMENTO CONTROLADO</strong></p>
+        <p style="font-size: 9pt; color: #666;">
+            Este é um documento controlado. Qualquer cópia impressa é considerada não controlada após 24 horas.<br>
+            Para versões atualizadas, consulte o sistema DFEC.
+        </p>
+        <p style="font-size: 9pt; color: #888;">
+            Gerado em: {{ data_geracao|date:"d/m/Y H:i" }}
+            {% if usuario %}
+            por {{ usuario.get_full_name|default:usuario.username }}<br>
+            {% endif %}
+            {{ manual.codigo }}_v{{ manual.versao }}_pdf
+        </p>
+    </div>
+</body>
+
+</html>

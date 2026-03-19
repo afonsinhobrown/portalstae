@@ -1,0 +1,93 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Proposta de Turmas - {{ formacao.nome }}{% endblock %}
+{% block page_title %}Geração Inteligente de Turmas{% endblock %}
+{% block page_subtitle %}Balanceamento automático por gênero e idade{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4 border-left-primary">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Participantes Pendentes</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Configurar Proposta</h6>
+            </div>
+            <div class="card-body">
+                <p>O sistema identificou <strong>{{ total }}</strong> pessoas aguardando alocação.</p>
+                <p class="text-muted small">
+                    A proposta será feita distribuindo homens e mulheres de forma equilibrada em cada turma,
+                    ordenando-os por idade para garantir diversidade geracional.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Número de Turmas a Criar</label>
+                        <input type="number" name="num_turmas" class="form-control" value="{{ sugerido }}" min="1">
+                        <div class="form-text">Sugestão baseada em 60 participantes por turma.</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Ao confirmar, o sistema criará as turmas automaticamente e moverá os participantes.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-magic me-2"></i>Gerar Proposta e Criar Turmas
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-light">
+                <h6 class="m-0 fw-bold text-dark">Distribuição Estimada</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Turmas</th>
+                                <th>Participantes / Turma</th>
+                                <th>Balanceamento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{{ sugerido }}</td>
+                                <td>~60</td>
+                                <td><span class="badge bg-success">Otimizado</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <hr>
+                <h6>Critérios de Inteligência:</h6>
+                <ul class="small">
+                    <li><strong>Gênero:</strong> Evita turmas exclusivamente masculinas ou femininas.</li>
+                    <li><strong>Idade:</strong> Mescla jovens e experientes para troca de conhecimentos.</li>
+                    <li><strong>Capacidade:</strong> Média recomendada: 60 pessoas.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

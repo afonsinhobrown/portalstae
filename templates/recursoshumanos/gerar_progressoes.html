@@ -1,0 +1,360 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Gerar Progressões Automáticas • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Gerar Progressões Automáticas</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_progressoes_escalao' %}">Progressões</a></li>
+                <li class="breadcrumb-item active">Gerar Automáticas</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-robot me-2 text-primary"></i>Funcionários Elegíveis para Progressão Automática
+                </h5>
+                <p class="text-muted mb-0 mt-2">
+                    Estes funcionários completaram <strong>2 anos</strong> de serviço e podem progredir para o próximo escalão automaticamente.
+                </p>
+            </div>
+            <div class="card-body">
+                {% if funcionarios_elegiveis %}
+                <form method="post" id="progressoesForm">
+                    {% csrf_token %}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="50">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selecionarTodos">
+                                        </div>
+                                    </th>
+                                    <th>Funcionário</th>
+                                    <th>Escalão Atual</th>
+                                    <th>Novo Escalão</th>
+                                    <th>Anos de Serviço</th>
+                                    <th>Data de Ingresso</th>
+                                    <th>Última Avaliação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for funcionario in funcionarios_elegiveis %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input funcionario-checkbox" type="checkbox" 
+                                                   name="funcionarios" value="{{ funcionario.id }}" 
+                                                   data-nome="{{ funcionario.nome_completo }}"
+                                                   data-escalao="{{ funcionario.categoria.escala }}"
+                                                   data-novo-escalao="{% if funcionario.categoria.escala == 'A' %}B{% elif funcionario.categoria.escala == 'B' %}C{% elif funcionario.categoria.escala == 'C' %}D{% else %}-{% endif %}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                {{ funcionario.nome_completo|slice:":1" }}
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">{{ funcionario.nome_completo }}</h6>
+                                                <small class="text-muted">{{ funcionario.funcao }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary fs-6">{{ funcionario.categoria.escala }}</span>
+                                    </td>
+                                    <td>
+                                        {% if funcionario.categoria.escala == 'A' %}
+                                        <span class="badge bg-success fs-6">B</span>
+                                        {% elif funcionario.categoria.escala == 'B' %}
+                                        <span class="badge bg-success fs-6">C</span>
+                                        {% elif funcionario.categoria.escala == 'C' %}
+                                        <span class="badge bg-success fs-6">D</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary fs-6">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-center">
+                                            <span class="fw-bold text-primary">{{ funcionario.tempo_servico }}</span>
+                                            <br>
+                                            <small class="text-muted">anos</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ funcionario.data_ingresso|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% with avaliacao=funcionario.avaliacoes.all|first %}
+                                        {% if avaliacao %}
+                                        <span class="badge {% if avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif avaliacao.classificacao_final == 'Bom' %}bg-info{% elif avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ avaliacao.classificacao_final }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-1">Resumo da Seleção</h6>
+                                <p class="mb-0 text-muted" id="resumoSelecao">
+                                    Nenhum funcionário selecionado
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-outline-primary" id="selecionarElegiveis">
+                                    <i class="fas fa-check-circle me-2"></i>Selecionar Todos Elegíveis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Processo de Geração</h5>
+                                <p class="mb-0">
+                                    Esta ação criará <strong>pedidos de progressão</strong> para os funcionários selecionados.
+                                    Os pedidos aparecerão na lista de progressões pendentes para aprovação final.
+                                    Nenhuma mudança será aplicada diretamente até a aprovação.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <a href="{% url 'recursoshumanos:lista_progressoes_escalao' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="btnGerar" disabled>
+                            <i class="fas fa-robot me-2"></i>Gerar Progressões Selecionadas
+                            <span class="badge bg-white text-primary ms-2" id="contadorSelecionados">0</span>
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h4 class="fw-bold mb-3">Nenhum funcionário elegível</h4>
+                    <p class="text-muted mb-4">
+                        Não existem funcionários que tenham completado o tempo necessário para progressão automática (2 anos por escalão).
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'recursoshumanos:lista_progressoes_escalao' %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar às Progressões
+                        </a>
+                        <a href="{% url 'recursoshumanos:dashboard_rh' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-home me-2"></i>Ir para Dashboard
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Estatísticas -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-chart-bar me-2 text-info"></i>Estatísticas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center p-3 bg-primary text-white rounded">
+                            <h3 class="fw-bold mb-0">{{ funcionarios_elegiveis.count }}</h3>
+                            <small>Elegíveis</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center p-3 bg-success text-white rounded">
+                            <h3 class="fw-bold mb-0">{{ escalao_a|default:0 }}</h3>
+                            <small>Escalão A</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-warning text-white rounded">
+                            <h3 class="fw-bold mb-0">{{ escalao_b|default:0 }}</h3>
+                            <small>Escalão B</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-info text-white rounded">
+                            <h3 class="fw-bold mb-0">{{ escalao_c|default:0 }}</h3>
+                            <small>Escalão C</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regras -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-book me-2 text-success"></i>Regras de Progressão
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-clock text-primary me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold">Tempo Mínimo</h6>
+                                <p class="text-muted mb-0">2 anos completos no escalão atual</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-chart-line text-success me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold">Sequência de Escalões</h6>
+                                <p class="text-muted mb-0">A → B → C → D (máximo)</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-star text-warning me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold">Avaliação Mínima</h6>
+                                <p class="text-muted mb-0">Classificação "Satisfatório" ou superior</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="d-flex">
+                            <i class="fas fa-check-circle text-info me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold">Status Requerido</h6>
+                                <p class="text-muted mb-0">Funcionário ativo e sem pendências</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'recursoshumanos:lista_progressoes_escalao' %}?status=pendente" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>Ver Progressões Pendentes
+                    </a>
+                    <a href="{% url 'admin:recursoshumanos_progressaoescalao_changelist' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog me-2"></i>Admin de Progressões
+                    </a>
+                    <a href="{% url 'recursoshumanos:progressao_automatica' %}" class="btn btn-outline-success">
+                        <i class="fas fa-bolt me-2"></i>Progressão Direta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script para controlar seleção
+    document.addEventListener('DOMContentLoaded', function() {
+        const selecionarTodos = document.getElementById('selecionarTodos');
+        const checkboxes = document.querySelectorAll('.funcionario-checkbox');
+        const btnGerar = document.getElementById('btnGerar');
+        const contadorSelecionados = document.getElementById('contadorSelecionados');
+        const resumoSelecao = document.getElementById('resumoSelecao');
+        const btnSelecionarElegiveis = document.getElementById('selecionarElegiveis');
+        
+        // Atualizar contador
+        function atualizarContador() {
+            const selecionados = document.querySelectorAll('.funcionario-checkbox:checked');
+            const total = selecionados.length;
+            
+            contadorSelecionados.textContent = total;
+            btnGerar.disabled = total === 0;
+            
+            if (total === 0) {
+                resumoSelecao.textContent = 'Nenhum funcionário selecionado';
+            } else {
+                const escaloes = Array.from(selecionados).map(cb => cb.dataset.escalao);
+                const contagem = {};
+                escaloes.forEach(escalao => {
+                    contagem[escalao] = (contagem[escalao] || 0) + 1;
+                });
+                
+                let resumo = 'Selecionados: ';
+                resumo += Object.entries(contagem).map(([escalao, count]) => {
+                    return `${count} do escalão ${escalao}`;
+                }).join(', ');
+                
+                resumoSelecao.textContent = resumo;
+            }
+        }
+        
+        // Selecionar todos
+        selecionarTodos.addEventListener('change', function() {
+            checkboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
+            atualizarContador();
+        });
+        
+        // Selecionar apenas elegíveis (excluir D)
+        btnSelecionarElegiveis.addEventListener('click', function() {
+            checkboxes.forEach(cb => {
+                const novoEscalao = cb.dataset.novoEscalao;
+                cb.checked = novoEscalao !== '-'; // Excluir quem já está no D
+            });
+            atualizarContador();
+        });
+        
+        // Atualizar contador quando checkbox muda
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', atualizarContador);
+        });
+        
+        // Confirmar envio
+        document.getElementById('progressoesForm').addEventListener('submit', function(e) {
+            const selecionados = document.querySelectorAll('.funcionario-checkbox:checked').length;
+            if (selecionados === 0) {
+                e.preventDefault();
+                alert('Por favor, selecione pelo menos um funcionário.');
+                return false;
+            }
+            
+            return confirm(`Tem certeza que deseja gerar ${selecionados} progressão(ões)?`);
+        });
+        
+        // Inicializar contador
+        atualizarContador();
+    });
+</script>
+{% endblock %}

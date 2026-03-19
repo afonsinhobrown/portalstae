@@ -1,0 +1,548 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Dashboard • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Dashboard Combustível</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active">Visão Geral</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <!-- 🔴 ADICIONADO: Botões de administração para staff -->
+        {% if user.is_staff %}
+        <a href="{% url 'gestaocombustivel:nova_viatura' %}" class="btn btn-primary">
+            <i class="fas fa-car-plus me-2"></i>Nova Viatura
+        </a>
+        <a href="{% url 'gestaocombustivel:nova_rota' %}" class="btn btn-success">
+            <i class="fas fa-route me-2"></i>Nova Rota
+        </a>
+        {% endif %}
+
+        <a href="{% url 'gestaocombustivel:pedir_combustivel' %}" class="btn btn-danger">
+            <i class="fas fa-gas-pump me-2"></i>Pedir Combustível
+        </a>
+        <a href="{% url 'gestaocombustivel:solicitar_manutencao' %}" class="btn btn-warning">
+            <i class="fas fa-tools me-2"></i>Solicitar Manutenção
+        </a>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="row g-4 mb-4">
+    <!-- Viaturas -->
+    <div class="col-xl-3 col-md-6">
+        <div class="combustivel-stat-card text-white animate__animated animate__fadeInUp">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="fw-bold display-6">{{ total_viaturas }}</h2>
+                        <p class="mb-0 opacity-75">Viaturas Activas</p>
+                    </div>
+                    <div class="bg-white-20 p-3 rounded-circle">
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{% url 'gestaocombustivel:lista_viaturas' %}"
+                    class="text-white text-decoration-none small mt-3 d-block">
+                    Ver todas <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contratos -->
+    <div class="col-xl-3 col-md-6">
+        <div class="combustivel-stat-card success text-white animate__animated animate__fadeInUp"
+            style="animation-delay: 0.1s">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="fw-bold display-6">{{ contratos_ativos_count }}</h2>
+                        <p class="mb-0 opacity-75">Contratos Activos</p>
+                    </div>
+                    <div class="bg-white-20 p-3 rounded-circle">
+                        <i class="fas fa-file-contract fa-2x"></i>
+                    </div>
+                </div>
+                <a href="{% url 'gestaocombustivel:lista_contratos' %}"
+                    class="text-white text-decoration-none small mt-3 d-block">
+                    Gerir contratos <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dívida Atual -->
+    <div class="col-xl-3 col-md-6">
+        <div class="combustivel-stat-card danger text-white animate__animated animate__fadeInUp"
+            style="animation-delay: 0.2s">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="fw-bold mb-0 text-white">{{ total_divida|floatformat:2 }} <small
+                                class="fs-6">MT</small></h2>
+                        <p class="mb-0 opacity-75">Dívida Acumulada</p>
+                        <small class="d-block mt-1 text-white-50" style="font-size: 0.75rem;">{{ contrato_info_display }}</small>
+                    </div>
+                    <div class="bg-white-20 p-3 rounded-circle">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3 small">
+                    {% if total_divida > 0 %}
+                    <span class="badge bg-white text-danger fw-bold"><i class="fas fa-arrow-up me-1"></i>Atenção
+                        Requerida</span>
+                    {% else %}
+                    <span class="badge bg-white text-success fw-bold"><i class="fas fa-check me-1"></i>Sem
+                        Dívidas</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saldo Disponível -->
+    <div class="col-xl-3 col-md-6">
+        <div class="combustivel-stat-card info text-white animate__animated animate__fadeInUp"
+            style="animation-delay: 0.3s">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="fw-bold mb-0">{{ total_remanescente_valor|floatformat:0 }} <small
+                                class="fs-6">MT</small></h2>
+                        <p class="mb-0 opacity-75">Saldo Disponível</p>
+                        <small class="d-block mt-1 text-white-50" style="font-size: 0.75rem;">{{ contrato_info_display }}</small>
+                    </div>
+                    <div class="bg-white-20 p-3 rounded-circle">
+                        <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                </div>
+                <div class="mt-3 small opacity-75">
+                    <i class="fas fa-gas-pump me-1"></i> Aprox. {{ total_remanescente_litros|floatformat:0 }} Litros
+                    disp.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Status Financeiro Detalhado por Contrato -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="combustivel-card h-100 animate__animated animate__fadeInUp" style="animation-delay: 0.35s">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="text-uppercase text-muted small fw-bold mb-0 ls-1">
+                    <i class="fas fa-coins me-2"></i>Status Financeiro por Contrato
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Contrato</th>
+                                <th>Fornecedor</th>
+                                <th>Valor Total</th>
+                                <th>Consumido</th>
+                                <th>Saldo</th>
+                                <th class="text-end pe-4">Dívida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in contratos_stats %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary">{{ c.numero }}</td>
+                                <td>{{ c.fornecedor }}</td>
+                                <td>{{ c.valor_total|floatformat:2 }} MT</td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span>{{ c.consumido|floatformat:2 }} MT</span>
+                                        <div class="progress" style="height: 3px; width: 80px;">
+                                            <div class="progress-bar bg-info" style="width:{{ c.percentual|stringformat:'d' }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-success">{{ c.saldo|floatformat:2 }} MT</td>
+                                <td class="text-end pe-4">
+                                    {% if c.divida > 0 %}
+                                    <span class="badge bg-danger">
+                                        {{ c.divida|floatformat:2 }} MT
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-3 text-muted">
+                                    Nenhum contrato ativo com dados financeiros.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas de Execução -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="combustivel-card h-100 animate__animated animate__fadeInUp" style="animation-delay: 0.4s">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3 ls-1">Execução Financeira</h6>
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <div>
+                        <h3 class="fw-bold text-primary mb-0">{{ total_gasto_contratos|floatformat:2 }} MT</h3>
+                        <small class="text-muted">Gasto Total</small>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="fw-bold text-dark mb-0">{{ total_valor_contratos|floatformat:2 }} MT</h5>
+                        <small class="text-muted">Contratado</small>
+                    </div>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-primary" role="progressbar"
+                        style="width: {{ percentual_consumido|stringformat:'d' }}%"></div>
+                </div>
+                <div class="mt-2 text-end small text-muted">{{ percentual_consumido|floatformat:1 }}% Utilizado</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="combustivel-card h-100 animate__animated animate__fadeInUp" style="animation-delay: 0.5s">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted small fw-bold mb-3 ls-1">Volume de Combustível</h6>
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <div>
+                        <h3 class="fw-bold text-warning mb-0">{{ total_litros_consumidos|floatformat:2 }} L</h3>
+                        <small class="text-muted">Consumidos</small>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="fw-bold text-dark mb-0">{{ total_litros_contratados|floatformat:2 }} L</h5>
+                        <small class="text-muted">Total Contratado</small>
+                    </div>
+                </div>
+                {% widthratio total_litros_consumidos total_litros_contratados 100 as perc_litros %}
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ perc_litros }}%"></div>
+                </div>
+                <div class="mt-2 text-end small text-muted">
+                    {% if total_litros_contratados > 0 %}
+                    {{ perc_litros }}% Consumido
+                    {% else %}
+                    0%
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Viaturas Recentes -->
+    <div class="col-lg-6">
+        <div class="combustivel-card h-100">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-car me-2 text-primary"></i>Viaturas Recentes
+                </h5>
+                <div>
+                    <a href="{% url 'gestaocombustivel:nova_viatura' %}" class="btn btn-sm btn-primary me-2">
+                        <i class="fas fa-plus"></i> Nova
+                    </a>
+                    <a href="{% url 'gestaocombustivel:lista_viaturas' %}" class="btn btn-sm btn-outline-primary">
+                        Ver Todas
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if viaturas_recentes %}
+                <div class="list-group list-group-flush">
+                    {% for viatura in viaturas_recentes %}
+                    <a href="{% url 'gestaocombustivel:detalhe_viatura' viatura.id %}"
+                        class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-1">{{ viatura.matricula }}</h6>
+                                <small class="text-muted">{{ viatura.marca }} {{ viatura.modelo }}</small>
+                                <br>
+                                <small class="text-success">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ viatura.funcionario_afecto.nome_completo|default:"Sem afectação" }}
+                                </small>
+                            </div>
+                            <span
+                                class="badge {% if viatura.estado == 'excelente' %}bg-success{% elif viatura.estado == 'bom' %}bg-primary{% else %}bg-warning{% endif %}">
+                                {{ viatura.get_estado_display }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-car fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhuma viatura registada</p>
+                    <a href="{% url 'gestaocombustivel:nova_viatura' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-2"></i>Registar Viatura
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos Recentes -->
+    <div class="col-lg-6">
+        <div class="combustivel-card h-100">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-gas-pump me-2 text-warning"></i>Pedidos Recentes
+                </h5>
+                <div>
+                    <a href="{% url 'gestaocombustivel:pedir_combustivel' %}" class="btn btn-sm btn-warning me-2">
+                        <i class="fas fa-plus"></i> Novo
+                    </a>
+                    <a href="{% url 'gestaocombustivel:lista_pedidos' %}" class="btn btn-sm btn-outline-warning">
+                        Ver Todos
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if pedidos_recentes %}
+                <div class="list-group list-group-flush">
+                    {% for pedido in pedidos_recentes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold mb-1">{{ pedido.viatura.matricula }}</h6>
+                                <small class="text-muted">
+                                    {{ pedido.quantidade_litros }}L - {{ pedido.custo_total }} MT
+                                </small>
+                                <br>
+                                <small class="text-primary">
+                                    {{ pedido.solicitante.nome_completo }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-warning mb-2">Pendente</span>
+                                <br>
+                                {% if user.is_staff %}
+                                <a href="{% url 'gestaocombustivel:aprovar_pedido' pedido.id %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    Aprovar
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-gas-pump fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhum pedido pendente</p>
+                    <a href="{% url 'gestaocombustivel:pedir_combustivel' %}" class="btn btn-warning mt-3">
+                        <i class="fas fa-plus me-2"></i>Fazer Pedido
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rotas Activas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-route me-2 text-success"></i>Rotas Activas
+                </h5>
+                <div>
+                    <a href="{% url 'gestaocombustivel:nova_rota' %}" class="btn btn-sm btn-success me-2">
+                        <i class="fas fa-plus"></i> Nova Rota
+                    </a>
+                    <a href="{% url 'gestaocombustivel:lista_rotas' %}" class="btn btn-sm btn-outline-success">
+                        Ver Todas
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- 🔴 ADICIONADO: Seção para rotas (precisa ser populada na view) -->
+                {% if rotas_recentes %}
+                <div class="row g-3">
+                    {% for rota in rotas_recentes %}
+                    <div class="col-md-6">
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ rota.nome_rota }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-car me-1"></i>{{ rota.viatura.matricula }}
+                                    </small>
+                                    <br>
+                                    <small class="text-primary">
+                                        <i class="fas fa-user me-1"></i>{{ rota.motorista.nome_completo }}
+                                    </small>
+                                    <br>
+                                    <small>
+                                        <i class="fas fa-clock me-1"></i>{{ rota.hora_partida|time:"H:i" }} - {{
+                                        rota.hora_chegada|time:"H:i" }}
+                                    </small>
+                                </div>
+                                <a href="{% url 'gestaocombustivel:detalhe_rota' rota.id %}"
+                                    class="btn btn-sm btn-outline-success">
+                                    Detalhes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-route fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhuma rota activa</p>
+                    <a href="{% url 'gestaocombustivel:nova_rota' %}" class="btn btn-success mt-3">
+                        <i class="fas fa-plus me-2"></i>Criar Primeira Rota
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-bolt me-2 text-primary"></i>Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{% url 'gestaocombustivel:pedir_combustivel' %}"
+                            class="btn btn-outline-danger w-100 d-flex align-items-center p-3">
+                            <i class="fas fa-gas-pump fa-2x me-3"></i>
+                            <div>
+                                <strong>Pedir Combustível</strong>
+                                <br>
+                                <small class="text-muted">Abastecimento</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'gestaocombustivel:solicitar_manutencao' %}"
+                            class="btn btn-outline-warning w-100 d-flex align-items-center p-3">
+                            <i class="fas fa-tools fa-2x me-3"></i>
+                            <div>
+                                <strong>Solicitar Manutenção</strong>
+                                <br>
+                                <small class="text-muted">Viaturas</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'gestaocombustivel:registro_diario' %}"
+                            class="btn btn-outline-success w-100 d-flex align-items-center p-3">
+                            <i class="fas fa-route fa-2x me-3"></i>
+                            <div>
+                                <strong>Registro Diário</strong>
+                                <br>
+                                <small class="text-muted">Rotas</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'gestaocombustivel:relatorios' %}"
+                            class="btn btn-outline-info w-100 d-flex align-items-center p-3">
+                            <i class="fas fa-chart-bar fa-2x me-3"></i>
+                            <div>
+                                <strong>Relatórios</strong>
+                                <br>
+                                <small class="text-muted">Consumo</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 🔴 ADICIONADO: Ações administrativas (só para staff) -->
+                {% if user.is_staff %}
+                <hr class="my-4">
+                <h6 class="fw-bold mb-3 text-primary">
+                    <i class="fas fa-user-shield me-2"></i>Ações Administrativas
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <a href="{% url 'gestaocombustivel:novo_contrato' %}"
+                            class="btn btn-primary w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-file-contract fa-2x mb-2"></i>
+                            <span>Novo Contrato</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'gestaocombustivel:nova_viatura' %}"
+                            class="btn btn-secondary w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-car fa-2x mb-2"></i>
+                            <span>Nova Viatura</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'gestaocombustivel:nova_rota' %}"
+                            class="btn btn-success w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-route fa-2x mb-2"></i>
+                            <span>Nova Rota</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'gestaocombustivel:novo_seguro' %}"
+                            class="btn btn-info w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                            <span>Novo Seguro</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'gestaocombustivel:novo_fornecedor' %}"
+                            class="btn btn-warning w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-truck fa-2x mb-2"></i>
+                            <span>Novo Fornecedor</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'admin:index' %}"
+                            class="btn btn-dark w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-cog fa-2x mb-2"></i>
+                            <span>Admin Django</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'gestaocombustivel:exportar_relatorio' %}"
+                            class="btn btn-outline-dark w-100 d-flex flex-column align-items-center p-3">
+                            <i class="fas fa-download fa-2x mb-2"></i>
+                            <span>Exportar CSV</span>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

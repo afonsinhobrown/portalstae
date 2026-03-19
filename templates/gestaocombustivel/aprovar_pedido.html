@@ -1,0 +1,439 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • Aprovar Pedido #{{ pedido.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                Avaliar Pedido de Combustível
+            </h1>
+            <small class="text-muted">Pedido #{{ pedido.id }} - {{ pedido.viatura.matricula }}</small>
+        </div>
+        <a href="{% url 'gestaocombustivel:lista_pedidos' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Informações do Pedido -->
+        <div class="col-lg-8">
+            <div class="combustivel-card p-4 mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Detalhes do Pedido
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Viatura</label>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-car text-primary me-2"></i>
+                                <div>
+                                    <strong>{{ pedido.viatura.matricula }}</strong><br>
+                                    <small>{{ pedido.viatura.marca }} {{ pedido.viatura.modelo }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Solicitante</label>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user text-primary me-2"></i>
+                                <div>
+                                    <strong>{{ pedido.solicitante.nome_completo }}</strong><br>
+                                    <small>{{ pedido.solicitante.numero_agente }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Pedido</label>
+                            <div>
+                                <span class="badge bg-primary">
+                                    {{ pedido.get_tipo_pedido_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data Abastecimento</label>
+                            <div>
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                {{ pedido.data_abastecimento|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Quantidade (L)</label>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-gas-pump me-2"></i>
+                                {{ pedido.quantidade_litros }} L
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Preço/Litro</label>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {{ pedido.preco_por_litro|floatformat:2 }} MT
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Custo Total</label>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calculator me-2"></i>
+                                <strong>{{ pedido.custo_total|floatformat:2 }} MT</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if pedido.destino %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Destino</label>
+                    <div>
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ pedido.destino }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if pedido.descricao_missao %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descrição da Missão</label>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            {{ pedido.descricao_missao|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if pedido.funcionarios_envolvidos.exists %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Funcionários Envolvidos</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for funcionario in pedido.funcionarios_envolvidos.all %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-user me-1"></i>
+                            {{ funcionario.nome_completo }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if pedido.observacoes %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Observações</label>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            {{ pedido.observacoes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Quilometragem</label>
+                            <div>
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                {{ pedido.kilometragem_actual|floatformat:0 }} km
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fornecedor</label>
+                            <div>
+                                <i class="fas fa-building me-2"></i>
+                                {{ pedido.fornecedor.nome }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Status Atual</label>
+                    <div>
+                        {% if pedido.status == 'pendente' %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-clock me-1"></i> Pendente
+                        </span>
+                        {% elif pedido.status == 'aprovado' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i> Aprovado
+                        </span>
+                        {% elif pedido.status == 'rejeitado' %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-times me-1"></i> Rejeitado
+                        </span>
+                        {% elif pedido.status == 'abastecido' %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-gas-pump me-1"></i> Abastecido
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if pedido.numero_senha %}
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-key fa-2x me-3"></i>
+                        <div>
+                            <strong>Senha Gerada:</strong>
+                            <h4 class="mb-0 mt-1">{{ pedido.numero_senha }}</h4>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ações do Pedido (Centralizado na UGEA) -->
+        <div class="col-lg-4">
+            {% if pedido.status == 'pendente' %}
+            <div class="combustivel-card p-4 mb-4" style="border-top: 5px solid #ffc107;">
+                <h5 class="fw-bold mb-3 border-bottom pb-2 text-warning">
+                    <i class="fas fa-hourglass-half me-2"></i>
+                    Aguardando UGEA
+                </h5>
+                <p class="text-muted small">
+                    A análise técnica e aprovação financeira deste pedido devem ser realizadas no módulo <strong>UGEA</strong>.
+                </p>
+                <div class="d-grid mt-3">
+                    <a href="{% url 'ugea:aprovacoes' %}" class="btn btn-warning fw-bold shadow-sm">
+                        <i class="fas fa-external-link-alt me-2"></i>Ir para UGEA
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if pedido.status == 'aprovado' or pedido.status == 'abastecido' %}
+            <div class="combustivel-card p-4 mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">
+                    <i class="fas fa-print me-2"></i>
+                    Documentação
+                </h5>
+
+                <div class="mb-3">
+                    <a href="{% url 'gestaocombustivel:imprimir_requisicao' pedido.id %}" target="_blank"
+                        class="btn btn-outline-dark w-100 py-3">
+                        <i class="fas fa-print fa-lg me-2"></i>
+                        {% if pedido.status == 'abastecido' %}Re-imprimir Requisição{% else %}Imprimir Requisição{% endif %}
+                    </a>
+                </div>
+
+                {% if pedido.status == 'aprovado' %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="alert alert-info mb-3 small">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Insira a senha para confirmar o abastecimento.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Senha de Confirmação</label>
+                        <input type="text" name="senha_confirmacao" class="form-control form-control-lg text-center"
+                            style="letter-spacing: 5px; font-weight: bold;" placeholder="SENHAXXXX" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" name="acao" value="abastecer" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check-double me-2"></i> Confirmar Abastecimento
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Status do Pedido -->
+            <div class="combustivel-card p-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">
+                    <i class="fas fa-history me-2"></i>
+                    Histórico do Pedido
+                </h5>
+
+                <div class="timeline">
+                    <div class="timeline-item {% if pedido.status == 'pendente' %}active{% endif %}">
+                        <div class="timeline-point {% if pedido.data_pedido %}success{% endif %}"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Submetido</h6>
+                            <small class="text-muted">{{ pedido.data_pedido|date:"d/m/Y H:i" }}</small>
+                            <p class="mb-0 small">Por: {{ pedido.solicitante.nome_completo }}</p>
+                        </div>
+                    </div>
+
+                    {% if pedido.status == 'aprovado' or pedido.status == 'rejeitado' %}
+                    <div class="timeline-item active">
+                        <div class="timeline-point {% if pedido.data_aprovacao %}success{% endif %}"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">
+                                {% if pedido.status == 'aprovado' %}Aprovado{% else %}Rejeitado{% endif %}
+                            </h6>
+                            {% if pedido.data_aprovacao %}
+                            <small class="text-muted">{{ pedido.data_aprovacao|date:"d/m/Y H:i" }}</small>
+                            <p class="mb-0 small">
+                                Por: {% if pedido.aprovado_por %}{{ pedido.aprovado_por.username }}{% else %}N/A{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if pedido.status == 'abastecido' %}
+                    <div class="timeline-item active">
+                        <div class="timeline-point success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Abastecido</h6>
+                            <small class="text-muted">{{ pedido.data_abastecimento|date:"d/m/Y" }}</small>
+                            <p class="mb-0 small">Senha: {{ pedido.numero_senha }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informações da Viatura -->
+            <div class="combustivel-card p-4 mt-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-car me-2"></i>
+                    Estado da Viatura
+                </h5>
+
+                {% with disponivel=pedido.viatura.verificar_disponibilidade %}
+                <div class="alert {% if disponivel.0 %}alert-success{% else %}alert-warning{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <i class="fas {% if disponivel.0 %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} fa-2x me-3"></i>
+                        <div>
+                            <strong>Disponibilidade:</strong><br>
+                            {{ disponivel.1 }}
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        <strong>Quilometragem:</strong> {{ pedido.viatura.kilometragem_actual|floatformat:0 }} km
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-gas-pump me-2"></i>
+                        <strong>Combustível:</strong> {{ pedido.viatura.tipo_combustivel }}
+                    </li>
+                    <li>
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        <strong>Próximo Seguro:</strong> {{ pedido.viatura.data_proximo_seguro|date:"d/m/Y" }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para solicitar informações -->
+<div class="modal fade" id="solicitarInfoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>
+                    Solicitar Mais Informações
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Informações Solicitadas</label>
+                        <textarea name="info_solicitada" class="form-control" rows="4"
+                            placeholder="Especifique que informações adicionais são necessárias..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Prazo para resposta</label>
+                        <input type="date" name="prazo_resposta" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-2"></i>Envir Solicitação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-point {
+        position: absolute;
+        left: -30px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #6c757d;
+    }
+
+    .timeline-point.success {
+        background: #28a745;
+    }
+
+    .timeline-item.active .timeline-point {
+        background: #007bff;
+    }
+
+    .timeline-content {
+        padding-left: 15px;
+    }
+</style>
+{% endblock %}

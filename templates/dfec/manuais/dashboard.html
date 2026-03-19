@@ -1,0 +1,368 @@
+<!-- templates/dfec/manuais/dashboard.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Manuais - DFEC{% endblock %}
+{% block page_title %}Gestão de Manuais{% endblock %}
+{% block page_subtitle %}Crie, edite e publique manuais de formação{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <!-- CORREÇÃO: mudar 'manual_novo' para 'dfec:manual_criar' -->
+    <a href="{% url 'dfec:manual_criar' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Novo Manual
+    </a>
+    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+        <span class="visually-hidden">Menu</span>
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'dfec:biblioteca_imagens' %}">
+                <i class="fas fa-images me-2"></i>Biblioteca de Imagens
+            </a></li>
+        <li><a class="dropdown-item" href="#">
+                <i class="fas fa-file-alt me-2"></i>Templates
+            </a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" href="#">
+                <i class="fas fa-download me-2"></i>Exportar Catálogo
+            </a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Cards de Estatísticas -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-primary border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Total de Manuais</div>
+                        <div class="h3 mb-0">{{ estatisticas.total_manuais }}</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-book fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-success border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Publicados</div>
+                        <div class="h3 mb-0">{{ estatisticas.manuais_publicados }}</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-warning border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Em Rascunho</div>
+                        <div class="h3 mb-0">{{ estatisticas.manuais_rascunho }}</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-edit fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-info border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Tipos de Manual</div>
+                        <div class="h3 mb-0">{{ estatisticas.tipos_manuais }}</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tags fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Manuais Recentes -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Manuais Recentes</h6>
+                <a href="{% url 'dfec:manuais_lista' %}" class="btn btn-sm btn-outline-primary">
+                    Ver todos
+                </a>
+            </div>
+            <div class="card-body">
+                {% if manuais_recentes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Versão</th>
+                                <th>Status</th>
+                                <th>Atualizado</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for manual in manuais_recentes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ manual.titulo }}</strong>
+                                    {% if manual.subtitulo %}
+                                    <br>
+                                    <small class="text-muted">{{ manual.subtitulo }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ manual.tipo.nome }}</span>
+                                </td>
+                                <td>{{ manual.versao }}</td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if manual.status == 'PUBLICADO' %}success{% elif manual.status == 'RASCUNHO' %}warning{% elif manual.status == 'REVISAO' %}info{% else %}secondary{% endif %}">
+                                        {{ manual.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ manual.data_atualizacao|date:"d/m/Y" }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'dfec:manual_detalhe' manual.pk %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'dfec:manual_editar' manual.pk %}"
+                                            class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if manual.arquivo_pdf %}
+                                        <a href="{{ manual.arquivo_pdf.url }}" class="btn btn-sm btn-outline-success"
+                                            target="_blank">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum manual criado</h5>
+                    <p class="text-muted">Comece criando seu primeiro manual</p>
+                    <!-- CORREÇÃO: mudar 'manual_novo' para 'dfec:manual_criar' -->
+                    <a href="{% url 'dfec:manual_criar' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Criar Primeiro Manual
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribuição por Tipo -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Manuais por Tipo</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4">
+                    <canvas id="manuaisTipoChart"></canvas>
+                </div>
+                <div class="mt-3">
+                    <ul class="list-unstyled">
+                        {% for tipo in manuais_por_tipo %}
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span>
+                                <i class="fas fa-circle" style="color: {{ tipo.cor|default:'#0d6efd' }}"></i>
+                                {{ tipo.nome }}
+                            </span>
+                            <span class="badge bg-primary">{{ tipo.total_manuais }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tipos de Manual Disponíveis -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Tipos de Manual Disponíveis</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                                <h5>Manual do Brigadista</h5>
+                                <p class="text-muted">Procedimentos, checklists e guias para brigadistas eleitorais</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Formato: A5</span>
+                                    <span class="badge bg-success">Digital/Físico</span>
+                                </div>
+                            </div>
+                            <div class="card-footer text-center">
+                                <!-- CORREÇÃO: mudar '#' para 'dfec:manual_criar' -->
+                                <a href="{% url 'dfec:manual_criar' %}" class="btn btn-sm btn-primary">Criar Manual</a>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Ver Exemplos</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-vote-yea fa-3x text-success mb-3"></i>
+                                <h5>Manual do Membro da Mesa</h5>
+                                <p class="text-muted">Procedimentos para membros das mesas de voto</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Formato: A4</span>
+                                    <span class="badge bg-success">Digital/Físico</span>
+                                </div>
+                            </div>
+                            <div class="card-footer text-center">
+                                <!-- CORREÇÃO: mudar '#' para 'dfec:manual_criar' -->
+                                <a href="{% url 'dfec:manual_criar' %}" class="btn btn-sm btn-success">Criar Manual</a>
+                                <a href="#" class="btn btn-sm btn-outline-success">Ver Exemplos</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 border-warning">
+                            <div class="card-body text-center">
+                                <i class="fas fa-megaphone fa-3x text-warning mb-3"></i>
+                                <h5>Manual do Agente de EC</h5>
+                                <p class="text-muted">Guias para agentes de educação cívica</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Formato: Livro</span>
+                                    <span class="badge bg-success">Digital/Físico</span>
+                                </div>
+                            </div>
+                            <div class="card-footer text-center">
+                                <!-- CORREÇÃO: mudar '#' para 'dfec:manual_criar' -->
+                                <a href="{% url 'dfec:manual_criar' %}" class="btn btn-sm btn-warning">Criar Manual</a>
+                                <a href="#" class="btn btn-sm btn-outline-warning">Ver Exemplos</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Ações Rápidas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-2 col-6">
+                        <a href="{% url 'dfec:objetivos_lista' %}" class="btn btn-outline-dark w-100 h-100 py-3">
+                            <i class="fas fa-bullseye fa-2x mb-2"></i><br>
+                            <span>Objetivos Institucionais</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6">
+                        <!-- CORREÇÃO: mudar 'manual_novo' para 'dfec:manual_criar' -->
+                        <a href="{% url 'dfec:manual_criar' %}" class="btn btn-outline-primary w-100 h-100 py-3">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i><br>
+                            <span>Criar Manual</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6">
+                        <a href="{% url 'dfec:biblioteca_imagens' %}" class="btn btn-outline-success w-100 h-100 py-3">
+                            <i class="fas fa-images fa-2x mb-2"></i><br>
+                            <span>Biblioteca de Imagens</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="#" class="btn btn-outline-info w-100 h-100 py-3">
+                            <i class="fas fa-download fa-2x mb-2"></i><br>
+                            <span>Importar Template</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="#" class="btn btn-outline-warning w-100 h-100 py-3">
+                            <i class="fas fa-print fa-2x mb-2"></i><br>
+                            <span>Solicitar Impressão</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de Manuais por Tipo
+    const ctx = document.getElementById('manuaisTipoChart').getContext('2d');
+    const manuaisTipoChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for tipo in manuais_por_tipo %}
+            '{{ tipo.nome }}',
+            {% endfor %}
+        ],
+    datasets: [{
+        data: [
+            {% for tipo in manuais_por_tipo %}
+                {{ tipo.total_manuais }},
+    {% endfor %}
+    ],
+        backgroundColor: [
+            '#0d6efd', '#198754', '#ffc107', '#dc3545',
+            '#6f42c1', '#20c997', '#fd7e14', '#e83e8c'
+        ]
+        }]
+    },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

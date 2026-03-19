@@ -1,0 +1,381 @@
+<!-- templates/pagina_stae/noticias/detalhe.html -->
+{% extends '../base.html' %}
+{% load markdownify %}
+{% load static %}
+
+{% block title %}{{ noticia.titulo }} - STAE Moçambique{% endblock %}
+
+{% block extra_css %}
+<style>
+    .prose {
+        color: #374151;
+        max-width: none;
+        line-height: 1.75;
+    }
+
+    .prose h1, .prose h2, .prose h3, .prose h4 {
+        color: #111827;
+        font-weight: 700;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        line-height: 1.3;
+    }
+
+    .prose h1 {
+        font-size: 2.25rem;
+        border-bottom: 3px solid #3B82F6;
+        padding-bottom: 0.5rem;
+    }
+
+    .prose h2 {
+        font-size: 1.875rem;
+        border-left: 4px solid #3B82F6;
+        padding-left: 1rem;
+    }
+
+    .prose h3 {
+        font-size: 1.5rem;
+        color: #3B82F6;
+    }
+
+    .prose h4 {
+        font-size: 1.25rem;
+        color: #6B7280;
+    }
+
+    .prose p {
+        margin-bottom: 1.5rem;
+        text-align: justify;
+    }
+
+    .prose strong {
+        color: #111827;
+        font-weight: 700;
+    }
+
+    .prose em {
+        color: #6B7280;
+        font-style: italic;
+    }
+
+    .prose ul, .prose ol {
+        margin-bottom: 1.5rem;
+        padding-left: 2rem;
+    }
+
+    .prose li {
+        margin-bottom: 0.5rem;
+        position: relative;
+    }
+
+    .prose ul li::before {
+        content: "•";
+        color: #3B82F6;
+        font-weight: bold;
+        display: inline-block;
+        width: 1em;
+        margin-left: -1em;
+    }
+
+    .prose ol {
+        counter-reset: list-counter;
+    }
+
+    .prose ol li {
+        counter-increment: list-counter;
+    }
+
+    .prose ol li::before {
+        content: counter(list-counter) ".";
+        color: #3B82F6;
+        font-weight: bold;
+        display: inline-block;
+        width: 1.5em;
+        margin-left: -1.5em;
+    }
+
+    .prose blockquote {
+        border-left: 4px solid #3B82F6;
+        padding: 1.5rem 2rem;
+        margin: 2rem 0;
+        background: #F3F4F6;
+        border-radius: 0 8px 8px 0;
+        font-style: italic;
+        color: #6B7280;
+    }
+
+    .prose blockquote p {
+        margin-bottom: 0;
+    }
+
+    .prose code {
+        background: #F3F4F6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        color: #EF4444;
+    }
+
+    .prose pre {
+        background: #1F2937;
+        color: #F9FAFB;
+        padding: 1.5rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+    }
+
+    .prose pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
+    }
+
+    .prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .prose th {
+        background: #3B82F6;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .prose td {
+        padding: 1rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .prose tr:nth-child(even) {
+        background: #F9FAFB;
+    }
+
+    .prose a {
+        color: #3B82F6;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .prose a:hover {
+        text-decoration: underline;
+    }
+
+    .prose img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .badge-categoria {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .social-share {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .social-share a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .share-facebook { background: #1877F2; color: white; }
+    .share-twitter { background: #1DA1F2; color: white; }
+    .share-whatsapp { background: #25D366; color: white; }
+    .share-linkedin { background: #0077B5; color: white; }
+
+    .social-share a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <article class="max-w-4xl mx-auto">
+        <!-- Cabeçalho da Notícia -->
+        <header class="mb-8 text-center">
+            {% if noticia.categoria %}
+            <div class="mb-4">
+                <span class="badge-categoria" style="background-color: {{ noticia.categoria.cor }}; color: white;">
+                    {{ noticia.categoria.nome }}
+                </span>
+            </div>
+            {% endif %}
+
+            <h1 class="text-4xl lg:text-5xl font-bold text-gray-800 mb-6 leading-tight">
+                {{ noticia.titulo }}
+            </h1>
+
+            <div class="flex flex-wrap justify-center items-center gap-4 text-gray-600 mb-6">
+                <div class="flex items-center">
+                    <i class="far fa-calendar mr-2"></i>
+                    <span>{{ noticia.data_publicacao|date:"d/m/Y" }}</span>
+                </div>
+
+                <div class="flex items-center">
+                    <i class="far fa-clock mr-2"></i>
+                    <span>{{ noticia.data_publicacao|date:"H:i" }}</span>
+                </div>
+
+                <div class="flex items-center">
+                    <i class="far fa-eye mr-2"></i>
+                    <span>{{ noticia.visualizacoes }} visualizações</span>
+                </div>
+
+                {% if noticia.autor %}
+                <div class="flex items-center">
+                    <i class="far fa-user mr-2"></i>
+                    <span>Por {{ noticia.autor.get_full_name|default:noticia.autor.username }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Imagem de Destaque -->
+        {% if noticia.imagem_destaque %}
+        <div class="mb-8">
+            <img src="{{ noticia.imagem_destaque.url }}"
+                 alt="{{ noticia.titulo }}"
+                 class="w-full h-64 lg:h-96 object-cover rounded-2xl shadow-lg">
+            {% if noticia.imagem_legenda %}
+            <p class="text-center text-gray-500 text-sm mt-2 italic">{{ noticia.imagem_legenda }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Resumo -->
+        {% if noticia.resumo %}
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+            <p class="text-lg text-gray-700 font-semibold">{{ noticia.resumo }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Conteúdo Principal com Markdown -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div class="prose">
+                {{ noticia.conteudo|markdownify }}
+            </div>
+        </div>
+
+        <!-- Partilha Social -->
+        <div class="social-share">
+            <span class="text-gray-700 font-semibold">Partilhar:</span>
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}"
+               target="_blank" class="share-facebook">
+                <i class="fab fa-facebook-f"></i>
+                Facebook
+            </a>
+            <a href="https://twitter.com/intent/tweet?text={{ noticia.titulo }}&url={{ request.build_absolute_uri }}"
+               target="_blank" class="share-twitter">
+                <i class="fab fa-twitter"></i>
+                Twitter
+            </a>
+            <a href="https://api.whatsapp.com/send?text={{ noticia.titulo }} {{ request.build_absolute_uri }}"
+               target="_blank" class="share-whatsapp">
+                <i class="fab fa-whatsapp"></i>
+                WhatsApp
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri }}"
+               target="_blank" class="share-linkedin">
+                <i class="fab fa-linkedin-in"></i>
+                LinkedIn
+            </a>
+        </div>
+    </article>
+
+    <!-- Notícias Relacionadas -->
+    {% with noticias_relacionadas=noticia.categoria.noticia_set.filter|slice:":3" %}
+        {% if noticias_relacionadas %}
+        <section class="mt-16">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">Notícias Relacionadas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for rel in noticias_relacionadas %}
+                    {% if rel.id != noticia.id %}
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                        {% if rel.imagem_destaque %}
+                        <img src="{{ rel.imagem_destaque.url }}" alt="{{ rel.titulo }}"
+                             class="w-full h-48 object-cover">
+                        {% else %}
+                        <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-newspaper text-4xl text-gray-400"></i>
+                        </div>
+                        {% endif %}
+
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-3 line-clamp-2">
+                                <a href="{% url 'pagina_stae:noticia_detalhe' slug=rel.slug %}"
+                                   class="hover:text-blue-600 transition">
+                                    {{ rel.titulo }}
+                                </a>
+                            </h3>
+
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ rel.resumo }}</p>
+
+                            <div class="flex justify-between items-center text-xs text-gray-500">
+                                <span>{{ rel.data_publicacao|date:"d/m/Y" }}</span>
+                                <span>{{ rel.visualizacoes }} visualizações</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Incrementar visualizações quando a página carrega
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fazer uma requisição para incrementar visualizações
+        fetch("{% url 'pagina_stae:noticia_detalhe' slug=noticia.slug %}", {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
+    });
+
+    // Smooth scroll para âncoras
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

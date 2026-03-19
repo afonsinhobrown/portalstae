@@ -1,0 +1,742 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block page_title %}Sistema de Análise Eleitoral Inteligente{% endblock %}
+{% block page_subtitle %}Análise avançada e estratégica do desempenho eleitoral{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filter-card h2 {
+        font-weight: 700;
+        letter-spacing: -1px;
+    }
+
+    .btn-relatorio {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+        transition: all 0.3s ease;
+    }
+
+    .btn-relatorio:hover {
+        background-color: #c0392b;
+        transform: translateY(-2px);
+    }
+
+    .btn-analisar {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+        font-weight: bold;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    .btn-analisar:hover {
+        background-color: #27ae60;
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+    }
+
+    .section-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease;
+    }
+
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #555;
+    }
+
+    .kpi-tile {
+        border-radius: 10px;
+        padding: 1.5rem;
+        border-left: 5px solid;
+    }
+
+    @media print {
+
+        .btn-toolbar,
+        .filter-card,
+        .btn,
+        .sidebar,
+        .header,
+        #loading {
+            display: none !important;
+        }
+
+        .main-content {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card filter-card">
+            <div class="card-body text-center py-4">
+                <h2><i class="fas fa-chart-bar me-2"></i> Dashboard de Análise Eleitoral Inteligente</h2>
+                <p class="mb-0 opacity-75">Selecione os critérios de análise e execute os cruzamentos de dados para
+                    gerar relatórios estratégicos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros Inteligentes -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card section-card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-filter me-2 text-primary"></i> Critérios de Filtragem Estratégica</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" id="formAnalise" class="row g-3">
+                    <!-- Linha 1: Contexto Geral -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Ano da Eleição</label>
+                        <select name="ano" class="form-select" onchange="this.form.submit()">
+                            {% for a in anos_disponiveis %}
+                            {% if ano_selecionado %}
+                            {% if a|stringformat:"s" == ano_selecionado|stringformat:"s" %}
+                            <option value="{{ a }}" selected>Eleições {{ a }}</option>
+                            {% else %}
+                            <option value="{{ a }}">Eleições {{ a }}</option>
+                            {% endif %}
+                            {% else %}
+                            <option value="{{ a }}">Eleições {{ a }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Nível de Análise</label>
+                        <select name="nivel" id="selectNivel" class="form-select" onchange="atualizarFiltros()">
+                            {% if nivel_selecionado == "provincial" %}
+                            <option value="provincial" selected>Provincial</option>
+                            <option value="distrital">Distrital</option>
+                            <option value="posto">Posto Administrativo</option>
+                            <option value="localidade">Localidade</option>
+                            <option value="assembleia">Assembleia de Voto</option>
+                            {% elif nivel_selecionado == "distrital" %}
+                            <option value="provincial">Provincial</option>
+                            <option value="distrital" selected>Distrital</option>
+                            <option value="posto">Posto Administrativo</option>
+                            <option value="localidade">Localidade</option>
+                            <option value="assembleia">Assembleia de Voto</option>
+                            {% elif nivel_selecionado == "posto" %}
+                            <option value="provincial">Provincial</option>
+                            <option value="distrital">Distrital</option>
+                            <option value="posto" selected>Posto Administrativo</option>
+                            <option value="localidade">Localidade</option>
+                            <option value="assembleia">Assembleia de Voto</option>
+                            {% elif nivel_selecionado == "localidade" %}
+                            <option value="provincial">Provincial</option>
+                            <option value="distrital">Distrital</option>
+                            <option value="posto">Posto Administrativo</option>
+                            <option value="localidade" selected>Localidade</option>
+                            <option value="assembleia">Assembleia de Voto</option>
+                            {% elif nivel_selecionado == "assembleia" %}
+                            <option value="provincial">Provincial</option>
+                            <option value="distrital">Distrital</option>
+                            <option value="posto">Posto Administrativo</option>
+                            <option value="localidade">Localidade</option>
+                            <option value="assembleia" selected>Assembleia de Voto</option>
+                            {% else %}
+                            <option value="provincial" selected>Provincial</option>
+                            <option value="distrital">Distrital</option>
+                            <option value="posto">Posto Administrativo</option>
+                            <option value="localidade">Localidade</option>
+                            <option value="assembleia">Assembleia de Voto</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <!-- Linha 2: Hierarquia Geográfica -->
+                    <div class="col-md-3" id="divProvincia">
+                        <label class="form-label fw-bold">Província</label>
+                        <select name="provincia" id="selectProvincia" class="form-select" onchange="this.form.submit()">
+                            <option value="">Todas as províncias</option>
+                            {% for p in provincias %}
+                            {% if request.GET.provincia %}
+                            {% if p.id|stringformat:"s" == request.GET.provincia %}
+                            <option value="{{ p.id }}" selected>{{ p.nome }}</option>
+                            {% else %}
+                            <option value="{{ p.id }}">{{ p.nome }}</option>
+                            {% endif %}
+                            {% else %}
+                            <option value="{{ p.id }}">{{ p.nome }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3" id="divDistrito" style="display:none;">
+                        <label class="form-label fw-bold">Distrito</label>
+                        <select name="distrito" id="selectDistrito" class="form-select" onchange="this.form.submit()">
+                            <option value="">Todos os distritos</option>
+                            {% for d in distritos %}
+                            {% if request.GET.distrito %}
+                            {% if d.id|stringformat:"s" == request.GET.distrito %}
+                            <option value="{{ d.id }}" selected>{{ d.nome }}</option>
+                            {% else %}
+                            <option value="{{ d.id }}">{{ d.nome }}</option>
+                            {% endif %}
+                            {% else %}
+                            <option value="{{ d.id }}">{{ d.nome }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3" id="divPosto" style="display:none;">
+                        <label class="form-label fw-bold">Posto Administrativo</label>
+                        <select name="posto" id="selectPosto" class="form-select" onchange="this.form.submit()">
+                            <option value="">Todos os postos</option>
+                            {% for pt in postos %}
+                            {% if request.GET.posto %}
+                            {% if pt == request.GET.posto %}
+                            <option value="{{ pt }}" selected>{{ pt }}</option>
+                            {% else %}
+                            <option value="{{ pt }}">{{ pt }}</option>
+                            {% endif %}
+                            {% else %}
+                            <option value="{{ pt }}">{{ pt }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3" id="divLocalidade" style="display:none;">
+                        <label class="form-label fw-bold">Localidade</label>
+                        <select name="localidade" id="selectLocalidade" class="form-select">
+                            <option value="">Todas as localidades</option>
+                            {% for loc in localidades %}
+                            {% if request.GET.localidade %}
+                            {% if loc == request.GET.localidade %}
+                            <option value="{{ loc }}" selected>{{ loc }}</option>
+                            {% else %}
+                            <option value="{{ loc }}">{{ loc }}</option>
+                            {% endif %}
+                            {% else %}
+                            <option value="{{ loc }}">{{ loc }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 mt-3 border-top pt-3">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-analisar text-white">
+                                <i class="fas fa-chart-line me-2"></i> ANALISAR
+                            </button>
+                            <button type="button" class="btn btn-relatorio text-white"
+                                onclick="window.location.href='{% url 'dfec:relatorio_pdf' %}?{{ request.GET.urlencode }}'">
+                                <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="imprimirResultados()">
+                                <i class="fas fa-print me-1"></i> Imprimir Análise
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Área de Conteúdo -->
+<div id="conteudoImpressao">
+    <!-- KPIs de Alto Nível -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card kpi-tile border-left-primary bg-white shadow-sm">
+                <small class="text-muted text-uppercase">Total Inscritos</small>
+                <h3 class="fw-bold mb-0">{{ kpi.inscritos|default:"0" }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-tile border-left-success bg-white shadow-sm">
+                <small class="text-muted text-uppercase">Participação</small>
+                <h3 class="fw-bold mb-0">{{ kpi.votantes|default:"0" }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-tile border-left-warning bg-white shadow-sm">
+                <small class="text-muted text-uppercase">Abstenção</small>
+                <h3 class="fw-bold mb-0 text-warning">{{ kpi.abstencao_perc }}%</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-tile border-left-danger bg-white shadow-sm">
+                <small class="text-muted text-uppercase">Votos Nulos</small>
+                <h4 class="fw-bold mb-0 text-danger">{{ kpi.nulos_perc }}%</h4>
+            </div>
+        </div>
+        <div class="col-md-3 mt-3 mt-md-0">
+            <div class="card kpi-tile border-left-dark bg-white shadow-sm">
+                <small class="text-muted text-uppercase">Votos em Branco</small>
+                <h4 class="fw-bold mb-0 text-dark">{{ kpi.brancos_perc }}%</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 1: Tabelas de Desempenho -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card section-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>
+                        1. Resultados Geográficos e Risco
+                        {% if nivel_selecionado == "distrital" %}
+                        (Por Distrito)
+                        {% elif nivel_selecionado == "posto" %}
+                        (Por Posto)
+                        {% elif nivel_selecionado == "localidade" %}
+                        (Por Localidade)
+                        {% elif nivel_selecionado == "assembleia" %}
+                        (Por Assembleia)
+                        {% else %}
+                        (Por Província)
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Unidade de Análise</th>
+                                    <th>Distrito/Província</th>
+                                    <th class="text-center">Abstenção (%)</th>
+                                    <th class="text-center">Votos Nulos (%)</th>
+                                    <th class="text-center">Votos em Branco (%)</th>
+                                    <th class="text-center">Nível de Risco</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in ranking_tabela %}
+                                <tr>
+                                    <td><span class="fw-bold text-primary">{{ item.unidade }}</span></td>
+                                    <td>{{ item.distrito|default:item.provincia }}</td>
+                                    <td class="text-center fw-bold">{{ item.taxa_abstencao }}%</td>
+                                    <td class="text-center">{{ item.taxa_nulos }}%</td>
+                                    <td class="text-center text-muted">{{ item.taxa_brancos }}%</td>
+                                    <td class="text-center">
+                                        <span class="badge 
+                                            {% if item.risco == 'Crítico' %} bg-danger {% elif item.risco == 'Médio' %}
+                                            bg-warning text-dark {% else %} bg-success {% endif %}">
+                                            {{ item.risco }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">Aguardando execução da
+                                        análise...</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Navegação" class="mt-3 pb-3">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                             {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&ano={{ ano_selecionado }}&provincia={{ request.GET.provincia }}&distrito={{ request.GET.distrito }}&posto={{ request.GET.posto }}&nivel={{ nivel_selecionado }}">Anterior</a></li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                            {% endif %}
+                            
+                            <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&ano={{ ano_selecionado }}&provincia={{ request.GET.provincia }}&distrito={{ request.GET.distrito }}&posto={{ request.GET.posto }}&nivel={{ nivel_selecionado }}">Próxima</a></li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 2: Visualização Gráfica -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card section-card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> 2. Distribuição da Abstenção</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="abstencaoChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card section-card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> 3. Comparativo de Nulos por Região</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="nulosChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção movida para página dedicada -->
+
+    <style>
+        .geo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .geo-cell {
+            padding: 10px;
+            text-align: center;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .geo-cell:hover { transform: scale(1.05); cursor: pointer; }
+        .geo-row-single { grid-column: span 2; }
+    </style>
+
+    <!-- Mapa Esquemático de Risco (Provincial) -->
+    <div class="row mb-4" id="mapa">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-map mb-1 me-2"></i>Mapa de Risco (Abstenção por Província)</h5>
+                    <div>
+                        <a href="{% url 'dfec:mapa_interativo' %}" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-expand-arrows-alt me-1"></i>Ver Mapa Completo
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body bg-light">
+                    <div class="d-flex justify-content-center">
+                        <div class="geo-grid">
+                            <!-- Helper Macro ou Repetição manual para adicionar dados -->
+                            <div class="geo-cell {{ map_data.Niassa.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Niassa', '{{ map_data.Niassa.rate }}')">Niassa<br><small>{{ map_data.Niassa.rate }}%</small></div>
+                            <div class="geo-cell {{ map_data.Cabo_Delgado.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Cabo Delgado', '{{ map_data.Cabo_Delgado.rate }}')">Cabo Delg.<br><small>{{ map_data.Cabo_Delgado.rate }}%</small></div>
+                            
+                            <div class="geo-cell {{ map_data.Tete.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Tete', '{{ map_data.Tete.rate }}')">Tete<br><small>{{ map_data.Tete.rate }}%</small></div>
+                            <div class="geo-cell {{ map_data.Nampula.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Nampula', '{{ map_data.Nampula.rate }}')">Nampula<br><small>{{ map_data.Nampula.rate }}%</small></div>
+                            
+                            <div class="geo-cell geo-row-single {{ map_data.Zambezia.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Zambézia', '{{ map_data.Zambezia.rate }}')">Zambézia<br><small>{{ map_data.Zambezia.rate }}%</small></div>
+                            <div class="geo-cell {{ map_data.Manica.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Manica', '{{ map_data.Manica.rate }}')">Manica<br><small>{{ map_data.Manica.rate }}%</small></div>
+                            <div class="geo-cell {{ map_data.Sofala.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Sofala', '{{ map_data.Sofala.rate }}')">Sofala<br><small>{{ map_data.Sofala.rate }}%</small></div>
+
+                            <div class="geo-cell geo-row-single {{ map_data.Inhambane.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Inhambane', '{{ map_data.Inhambane.rate }}')">Inhambane<br><small>{{ map_data.Inhambane.rate }}%</small></div>
+                            <div class="geo-cell geo-row-single {{ map_data.Gaza.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Gaza', '{{ map_data.Gaza.rate }}')">Gaza<br><small>{{ map_data.Gaza.rate }}%</small></div>
+                            
+                            <div class="geo-cell {{ map_data.Maputo_Provincia.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Maputo Província', '{{ map_data.Maputo_Provincia.rate }}')">Maputo Prov.<br><small>{{ map_data.Maputo_Provincia.rate }}%</small></div>
+                            <div class="geo-cell {{ map_data.Maputo_Cidade.color|default:'bg-secondary' }}" onclick="abrirDetalhesProvincia('Maputo Cidade', '{{ map_data.Maputo_Cidade.rate }}')">Maputo Cid.<br><small>{{ map_data.Maputo_Cidade.rate }}%</small></div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3 small text-muted">
+                        <span class="badge bg-danger me-2">Crítico >= 45%</span>
+                        <span class="badge bg-warning text-dark me-2">Alerta 35-44%</span>
+                        <span class="badge bg-success">Estável < 35%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 4: Tendências e Recomendações -->
+    <div class="row mb-4" id="recomendacoes">
+        <div class="col-12">
+            <div class="card section-card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i> 4. Recomendações Operacionais (STAE)</h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <div class="row">
+                        {% for rec in recomendacoes %}
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3 border rounded bg-light border-start border-4 {% if rec.prioridade_geral == 'alta' %} border-danger {% elif rec.prioridade_geral == 'media' %} border-warning {% else %} border-success {% endif %}">
+                                <!-- Linha 1: Local + Prioridade Geral -->
+                                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                    <h5 class="fw-bold mb-0 text-dark">
+                                        <i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ rec.local }}
+                                    </h5>
+                                    <span class="badge {% if rec.prioridade_geral == 'alta' %} bg-danger {% elif rec.prioridade_geral == 'media' %} bg-warning text-dark {% else %} bg-success {% endif %}">
+                                        {{ rec.titulo }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Linha 2: Loop de Ações -->
+                                {% for acao in rec.acoes %}
+                                <div class="mb-2 p-2 rounded" style="background-color: #fcfcfc; border-left: 3px solid {% if acao.status == 'CRÍTICO' %}#dc3545{% elif acao.status == 'ALERTA' %}#fd7e14{% elif acao.status == 'ATENÇÃO' %}#ffc107{% else %}#198754{% endif %};">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="fw-bold text-dark">{{ acao.tema }}</small>
+                                        <small class="badge {% if acao.status == 'CRÍTICO' %}bg-danger{% elif acao.status == 'ALERTA' %}bg-warning text-dark{% elif acao.status == 'ATENÇÃO' %}bg-warning text-dark{% else %}bg-success{% endif %}" style="font-size: 0.65rem;">{{ acao.status }}</small>
+                                    </div>
+                                    <p class="small mb-0 mt-1 text-muted">{{ acao.texto }}</p>
+                                </div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4 text-muted">
+                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                            <p>Nenhuma unidade para exibir.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Navegação com Filtros Preservados -->
+                    {% if page_obj_rec.has_other_pages %}
+                    <nav aria-label="Navegação Recomendações" class="mt-3">
+                        <ul class="pagination pagination-sm justify-content-center">
+                            {% if page_obj_rec.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key,value in request.GET.items %}{% if key != 'page_rec' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page_rec={{ page_obj_rec.previous_page_number }}#recomendacoes">Anterior</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item disabled"><span class="page-link">Página {{ page_obj_rec.number }} de {{ page_obj_rec.paginator.num_pages }}</span></li>
+                            
+                            {% if page_obj_rec.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key,value in request.GET.items %}{% if key != 'page_rec' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page_rec={{ page_obj_rec.next_page_number }}#recomendacoes">Próximo</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- (Mantido Seção Partidos se necessário, abaixo) -->
+
+
+    <!-- Seção 5: Indicadores Partidários -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card section-card border-dark">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-bullhorn me-2"></i> 5. Indicadores de Espaço Político (Partidos)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for rec in rec_partidos %}
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3 border rounded bg-white border-start border-4 border-dark">
+                                <!-- Linha 1: Local -->
+                                <h5 class="fw-bold mb-2 text-dark border-bottom pb-2">
+                                    <i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ rec.local }}
+                                </h5>
+                                
+                                <!-- Linha 2: Badge e Ação -->
+                                <div class="mb-2">
+                                    <span class="badge bg-dark">PARCERIA ESTRATÉGICA</span>
+                                    <span class="fw-bold ms-2 text-dark">{{ rec.titulo }}</span>
+                                </div>
+
+                                <!-- Linha 3: Descrição -->
+                                <p class="small mb-0">{{ rec.descricao }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center text-muted col-padding">
+                            <p>Os níveis de votos em branco estão dentro do padrão esperado para competição partidária.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal de Detalhes da Província -->
+<div class="modal fade" id="modalDetalhesProvincia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalProvinciaTitulo">Detalhes da Província</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <h1 class="display-4 fw-bold mb-0" id="modalProvinciaTaxa">0%</h1>
+                    <p class="text-muted">Taxa de Abstenção</p>
+                </div>
+                
+                <div class="card bg-light border-0 mb-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Análise Visual & Recomendações</h6>
+                        <p class="small mb-0" id="modalProvinciaTexto">Carregando análise...</p>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function imprimirResultados() {
+        window.print();
+    }
+
+    function abrirDetalhesProvincia(nome, taxa) {
+        // Atualizar Título e Valor
+        document.getElementById('modalProvinciaTitulo').innerText = nome;
+        document.getElementById('modalProvinciaTaxa').innerText = taxa + '%';
+        
+        // Gerar Análise Contextual Detalhada
+        let texto = "";
+        let t = parseFloat(taxa.replace(',', '.'));
+        
+        if (t >= 45) {
+            texto = "Situação Crítica. Esta província apresenta níveis de desmobilização alarmantes, muito acima da média nacional. \n\n" +
+                    "Recomendação Estratégica:\n" +
+                    "1. Realizar auditoria urgente nos cadernos eleitorais para remover falecidos e duplicados.\n" +
+                    "2. Deslocar brigadas móveis de educação cívica para os distritos rurais com menor participação histórica.\n" +
+                    "3. Envolver lideranças comunitárias e religiosas para reverter a desconfiança no processo.";
+        } else if (t >= 35) {
+            texto = "Nível de Alerta. A abstenção é elevada e sugere ineficácia das campanhas convencionais.\n\n" +
+                    "Ações Sugeridas:\n" +
+                    "1. Intensificar spots radiofônicos nas línguas locais (em vez de Português apenas).\n" +
+                    "2. Focar a mobilização em mulheres e jovens, que demonstraram maior tendência ao absenteísmo nesta região.";
+        } else if (t >= 20) {
+            texto = "Situação Moderada. Os índices estão dentro do esperado, mas exigem vigilância.\n\n" +
+                    "Plano:\nManter a estratégia atual, mas reforçar a pedagogia do voto (como votar) para reduzir os votos nulos, que tendem a subir quando a participação aumenta.";
+        } else {
+            texto = "Excelente Desempenho. Esta província é um modelo de mobilização.\n\n" +
+                    "Ação:\nDocumentar as práticas locais para replicar no resto do país. Verificar apenas se não houve coação (votação em bloco).";
+        }
+        
+        document.getElementById('modalProvinciaTexto').innerText = texto;
+        
+        // Abrir Modal
+        var myModal = new bootstrap.Modal(document.getElementById('modalDetalhesProvincia'));
+        myModal.show();
+    }
+
+    function atualizarFiltros() {
+        const nivel = document.getElementById('selectNivel').value;
+        const divDistrito = document.getElementById('divDistrito');
+        const divPosto = document.getElementById('divPosto');
+        const divLocalidade = document.getElementById('divLocalidade');
+
+        // Reset visibility
+        divDistrito.style.display = 'none';
+        divPosto.style.display = 'none';
+        divLocalidade.style.display = 'none';
+
+        if (nivel === 'distrital' || nivel === 'posto' || nivel === 'localidade' || nivel === 'assembleia') {
+            divDistrito.style.display = 'block';
+        }
+        if (nivel === 'posto' || nivel === 'localidade' || nivel === 'assembleia') {
+            divPosto.style.display = 'block';
+        }
+        if (nivel === 'localidade' || nivel === 'assembleia') {
+            divLocalidade.style.display = 'block';
+        }
+    }
+
+    // Inicialização dos Gráficos com dados do Django
+    $(document).ready(function () {
+        // Run filter check on load
+        atualizarFiltros();
+
+        const labels = [
+            {% for item in ranking_abstencao %}
+                "{{ item.unidade }}",
+            {% endfor %}
+        ];
+
+    const dataAbstencao = [
+        {% for item in ranking_abstencao %}
+        {{ item.taxa_abstencao }},
+        {% endfor %}
+        ];
+
+    const dataNulos = [
+        {% for item in ranking_nulos %}
+        {{ item.taxa_nulos }},
+        {% endfor %}
+        ];
+
+    // Verificar se temos dados suficientes para os gráficos
+    if (labels.length > 0 && dataAbstencao.length > 0) {
+        // Gráfico de Abstenção
+        new Chart(document.getElementById('abstencaoChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels.slice(0, 5),
+                datasets: [{
+                    data: dataAbstencao.slice(0, 5),
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Gráfico de Nulos
+        new Chart(document.getElementById('nulosChart'), {
+            type: 'bar',
+            data: {
+                labels: labels.slice(0, 7),
+                datasets: [{
+                    label: 'Votos Nulos %',
+                    data: dataNulos.slice(0, 7),
+                    backgroundColor: '#f6c23e'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    }
+    });
+</script>
+{% endblock %}

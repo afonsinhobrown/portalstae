@@ -1,0 +1,284 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Solicitantes - Credenciais STAE{% endblock %}
+
+{% block page_title %}Gestão de Solicitantes{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active">Solicitantes</li>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'credenciais:adicionar_solicitante' %}" class="btn btn-success">
+        <i class="fas fa-user-plus"></i> Adicionar Solicitante
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card card-stae">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="mb-0">Lista de Solicitantes</h5>
+            </div>
+            <div class="col-md-6">
+                <form method="get" class="d-flex">
+                    <input type="text" name="q" class="form-control me-2" placeholder="Pesquisar..."
+                        value="{{ query }}">
+                    <select name="tipo" class="form-select me-2" style="max-width: 150px;">
+                        <option value="">Todos os tipos</option>
+                        {% for tipo_val, tipo_label in solicitante_tipos %}
+                        <option value="{{ tipo_val }}" {% if tipo_filter == tipo_val %}selected{% endif %}>
+                            {{ tipo_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>BI/NUIT</th>
+                        <th>Contacto</th>
+                        <th>BI Validado</th>
+                        <th>Estado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitante in solicitantes %}
+                    <tr>
+                        <td>
+                            <strong>{{ solicitante.nome_completo }}</strong>
+                            {% if solicitante.tipo == 'colectivo' and solicitante.nome_colectivo %}
+                            <br>
+                            <small class="text-muted">{{ solicitante.nome_colectivo }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ solicitante.get_tipo_display }}</td>
+                        <td>
+                            {% if solicitante.numero_bi %}
+                            <span class="badge bg-info">{{ solicitante.numero_bi }}</span>
+                            {% else %}
+                            <span class="text-muted">Não informado</span>
+                            {% endif %}
+                            {% if solicitante.nif %}
+                            <br>
+                            <small class="text-muted">NIF: {{ solicitante.nif }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ solicitante.email }}<br>
+                            <small>{{ solicitante.telefone }}</small>
+                        </td>
+                        <td>
+                            {% if solicitante.bi_validado %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check"></i> Validado
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-minus"></i> Pendente
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if solicitante.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary dropdown-toggle"
+                                    data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal"
+                                            data-bs-target="#modalSolicitante{{ solicitante.id }}">
+                                            <i class="fas fa-eye"></i> Ver Detalhes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fas fa-id-card"></i> Ver Pedidos
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal de Detalhes -->
+                    <div class="modal fade" id="modalSolicitante{{ solicitante.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Detalhes do Solicitante</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-4 text-center">
+                                            {% if solicitante.foto %}
+                                            <img src="{{ solicitante.foto.url }}" alt="Foto"
+                                                class="img-fluid rounded mb-3" style="max-height: 200px;">
+                                            {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
+                                                style="height: 200px;">
+                                                <i class="fas fa-user fa-5x text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-8">
+                                            <h4>{{ solicitante.nome_completo }}</h4>
+                                            <p class="text-muted">{{ solicitante.get_tipo_display }}</p>
+
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <th>BI/NUIT:</th>
+                                                    <td>
+                                                        {{ solicitante.numero_bi|default:"Não informado" }}
+                                                        {% if solicitante.bi_validado %}
+                                                        <span class="badge bg-success ms-2">Validado</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>NIF:</th>
+                                                    <td>{{ solicitante.nif|default:"Não informado" }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Email:</th>
+                                                    <td>{{ solicitante.email }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Telefone:</th>
+                                                    <td>{{ solicitante.telefone }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Nacionalidade:</th>
+                                                    <td>{{ solicitante.nacionalidade }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Data Nascimento:</th>
+                                                    <td>{{ solicitante.data_nascimento|date:"d/m/Y"|default:"Não informada" }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Endereço:</th>
+                                                    <td>{{ solicitante.endereco|default:"Não informado" }}</td>
+                                                </tr>
+                                                {% if solicitante.tipo == 'colectivo' %}
+                                                <tr>
+                                                    <th>Nome Colectivo:</th>
+                                                    <td>{{ solicitante.nome_colectivo }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Nº Registo:</th>
+                                                    <td>{{ solicitante.numero_registo|default:"Não informado" }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Representante:</th>
+                                                    <td>{{ solicitante.representante_legal }}</td>
+                                                </tr>
+                                                {% endif %}
+                                                <tr>
+                                                    <th>Data Registo:</th>
+                                                    <td>{{ solicitante.data_registo|date:"d/m/Y H:i" }}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Fechar</button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5>Nenhum solicitante encontrado</h5>
+                            <p class="text-muted">Adicione o primeiro solicitante ao sistema</p>
+                            <a href="{% url 'credenciais:adicionar_solicitante' %}" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Adicionar Solicitante
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if solicitantes.has_other_pages %}
+        <nav aria-label="Paginação">
+            <ul class="pagination justify-content-center">
+                {% if solicitantes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ solicitantes.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if tipo_filter %}&tipo={{ tipo_filter }}{% endif %}">
+                        &laquo; Anterior
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; Anterior</span>
+                </li>
+                {% endif %}
+
+                {% for i in solicitantes.paginator.page_range %}
+                {% if solicitantes.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ i }}{% if query %}&q={{ query }}{% endif %}{% if tipo_filter %}&tipo={{ tipo_filter }}{% endif %}">{{ i }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if solicitantes.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ solicitantes.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if tipo_filter %}&tipo={{ tipo_filter }}{% endif %}">
+                        Próxima &raquo;
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Próxima &raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

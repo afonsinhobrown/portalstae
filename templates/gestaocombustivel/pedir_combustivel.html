@@ -1,0 +1,379 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Pedir Combustível • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-gas-pump me-2 text-warning"></i>
+                    Novo Pedido de Combustível
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <!-- Mensagens -->
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message|safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.preco_por_litro }}
+
+                    <div class="row g-3">
+                        <!-- SOLICITANTE -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.solicitante.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i> Solicitante *
+                                </label>
+                                {{ form.solicitante }}
+                                {% if form.solicitante.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.solicitante.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Selecione o funcionário que está solicitando</div>
+                            </div>
+                        </div>
+
+                        <!-- VIATURA -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.viatura.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-car me-1"></i> Viatura *
+                                </label>
+                                {{ form.viatura }}
+                                {% if form.viatura.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.viatura.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">Viatura que será abastecida</div>
+                            </div>
+                        </div>
+
+                        <!-- CONTRATO E ITEM (UGEA) -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Contrato (UGEA) *</label>
+                                <select name="contrato_id" id="selectContrato" class="form-select" required>
+                                    <option value="">Selecione um Contrato...</option>
+                                    {% for contrato in contratos_ugea %}
+                                    <option value="{{ contrato.id }}">{{ contrato.numero_contrato }} - {{ contrato.proposta_vencedora.fornecedor.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Produto / Serviço *</label>
+                                <select name="item_id" id="selectItem" class="form-select" required disabled>
+                                    <option value="">Selecione o Contrato primeiro...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- FORNECEDOR (Auto-preenchido) -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fornecedor</label>
+                                <input type="text" id="inputFornecedor" class="form-control bg-light" readonly placeholder="Automático via Contrato">
+                                <!-- Campo hidden para o form Django se necessário, ou manipulamos no backend -->
+                            </div>
+                        </div>
+
+                        <!-- TIPO DE PEDIDO (Lógica de Negócio) -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.tipo_pedido.id_for_label }}" class="form-label fw-bold">
+                                    Finalidade *
+                                </label>
+                                {{ form.tipo_pedido }}
+                            </div>
+                        </div>
+
+                        <!-- DATA E QUANTIDADE -->
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="{{ form.data_abastecimento.id_for_label }}" class="form-label fw-bold">
+                                    Data de Abastecimento *
+                                </label>
+                                {{ form.data_abastecimento }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.quantidade_litros.id_for_label }}" class="form-label fw-bold">
+                                    Quantidade (L) *
+                                </label>
+                                {{ form.quantidade_litros }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Preço Unitário (MT)</label>
+                                <div class="input-group">
+                                    <input type="number" id="inputPreco" class="form-control bg-light" 
+                                           readonly step="0.01" placeholder="0.00">
+                                    <span class="input-group-text">MT</span>
+                                </div>
+                                <div class="form-text">Definido pelo item do contrato</div>
+                            </div>
+                        </div>
+
+
+                        <!-- KILOMETRAGEM -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.kilometragem_actual.id_for_label }}" class="form-label fw-bold">
+                                    Kilometragem Actual
+                                </label>
+                                {{ form.kilometragem_actual }}
+                                {% if form.kilometragem_actual.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.kilometragem_actual.errors }}
+                                </div>
+                                {% endif %}
+                                <div class="form-text">km no momento do abastecimento</div>
+                            </div>
+                        </div>
+
+                        <!-- DESTINO (condicional) -->
+                        <div class="col-12" id="destinoField">
+                            <div class="mb-3">
+                                <label for="{{ form.destino.id_for_label }}" class="form-label fw-bold">
+                                    Destino
+                                </label>
+                                {{ form.destino }}
+                                <div class="form-text">Destino da viagem</div>
+                            </div>
+                        </div>
+
+                        <!-- DESCRIÇÃO DA MISSÃO (condicional) -->
+                        <div class="col-12" id="missaoField">
+                            <div class="mb-3">
+                                <label for="{{ form.descricao_missao.id_for_label }}" class="form-label fw-bold">
+                                    Descrição da Missão
+                                </label>
+                                {{ form.descricao_missao }}
+                                <div class="form-text">Propósito da viagem</div>
+                            </div>
+                        </div>
+
+                        <!-- FUNCIONÁRIOS ENVOLVIDOS -->
+                        <div class="col-12" id="funcionariosField">
+                            <div class="mb-3">
+                                <label for="{{ form.funcionarios_envolvidos.id_for_label }}" class="form-label fw-bold">
+                                    Funcionários Envolvidos
+                                </label>
+                                {{ form.funcionarios_envolvidos }}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Pressione Ctrl para selecionar múltiplos (exceto o solicitante)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OBSERVAÇÕES -->
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="{{ form.observacoes.id_for_label }}" class="form-label fw-bold">
+                                    Observações
+                                </label>
+                                {{ form.observacoes }}
+                                <div class="form-text">Informações adicionais</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CUSTO ESTIMADO -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-calculator me-2"></i>
+                                        <strong>Custo Estimado:</strong>
+                                        <span id="custoEstimado">0.00</span> MT
+                                    </div>
+                                    <small class="text-muted">
+                                        Cálculo: Quantidade × Preço por Litro
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-between">
+                                <div>
+                                    <a href="{% url 'gestaocombustivel:lista_viaturas' %}"
+                                        class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="reset" class="btn btn-outline-danger me-2">
+                                        <i class="fas fa-redo me-2"></i>Limpar
+                                    </button>
+                                    <button type="submit" class="btn btn-warning px-4">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        Submeter Pedido
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Dados dos Contratos e Itens (Serializado do Backend)
+        const contratosData = JSON.parse('{{ contratos_json|safe }}');
+        const viaturasInfo = JSON.parse('{{ viaturas_info_json|safe }}');
+
+        // Elementos DOM
+        const selectContrato = document.getElementById('selectContrato');
+        const selectItem = document.getElementById('selectItem');
+        const selectViatura = document.getElementById('{{ form.viatura.id_for_label }}');
+        const inputFornecedor = document.getElementById('inputFornecedor');
+        const inputPreco = document.getElementById('inputPreco');
+        const inputQtd = document.getElementById('{{ form.quantidade_litros.id_for_label }}');
+        const spanCusto = document.getElementById('custoEstimado');
+        
+        let selectedCombustivel = null; // Armazena tipo da viatura selecionada
+
+        // Função auxiliar para tentar selecionar item
+        function tentarSelecionarItemAuto() {
+            if (!selectedCombustivel || selectItem.disabled) return;
+            
+            // Tentar achar um item que contenha o nome do combustível
+            // Normalizar: 'gasolina' -> match em 'Fornecimento Gasolina'
+            const termo = selectedCombustivel.toLowerCase();
+            
+            for (let i = 0; i < selectItem.options.length; i++) {
+                const opt = selectItem.options[i];
+                const texto = opt.text.toLowerCase();
+                
+                if (texto.includes(termo)) {
+                    selectItem.selectedIndex = i;
+                    // Disparar evento change manualmente para atualizar preço
+                    selectItem.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+        }
+
+        // Listener Viatura
+        if(selectViatura) {
+            selectViatura.addEventListener('change', function() {
+                const vId = this.value;
+                if (vId && viaturasInfo[vId]) {
+                    selectedCombustivel = viaturasInfo[vId];
+                    console.log("Viatura usa:", selectedCombustivel);
+                    tentarSelecionarItemAuto();
+                } else {
+                    selectedCombustivel = null;
+                }
+            });
+            // Checar inicial (se form vier preenchido)
+            if(selectViatura.value && viaturasInfo[selectViatura.value]) {
+                selectedCombustivel = viaturasInfo[selectViatura.value];
+            }
+        }
+
+        // 1. Lógica de Contratos e Itens
+        selectContrato.addEventListener('change', function() {
+            const contratoId = parseInt(this.value);
+            
+            // Limpar Item e Preço
+            selectItem.innerHTML = '<option value="">Selecione...</option>';
+            selectItem.disabled = true;
+            inputPreco.value = '';
+            inputFornecedor.value = '';
+            atualizarCusto();
+
+            if (!contratoId) return;
+
+            // Encontrar contrato nos dados
+            const contrato = contratosData.find(c => c.id === contratoId);
+            if (contrato) {
+                // Preencher Fornecedor
+                inputFornecedor.value = contrato.fornecedor;
+
+                // Popular Itens
+                contrato.itens.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.descricao;
+                    option.dataset.preco = item.preco;
+                    selectItem.appendChild(option);
+                });
+                selectItem.disabled = false;
+                
+                // Tenta selecionar automaticamente se já tiver viatura escolhida
+                tentarSelecionarItemAuto();
+            }
+        });
+
+        // 2. Lógica de Preço por Item
+        selectItem.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.dataset.preco) {
+                inputPreco.value = parseFloat(selectedOption.dataset.preco).toFixed(2);
+            } else {
+                inputPreco.value = '';
+            }
+            atualizarCusto();
+        });
+
+        // 3. Cálculo de Custo
+        function atualizarCusto() {
+            const qtd = parseFloat(inputQtd.value) || 0;
+            const preco = parseFloat(inputPreco.value) || 0;
+            const total = qtd * preco;
+            spanCusto.textContent = total.toFixed(2); // Formatação com ponto
+        }
+
+        inputQtd.addEventListener('input', atualizarCusto);
+
+        // 4. Campos Condicionais (Legado mantido)
+        function toggleFields() {
+            const tipo = tipoPedido.value;
+            if (tipo === 'expediente' || tipo === 'missao') {
+                destinoField.style.display = 'block';
+                missaoField.style.display = 'block';
+                funcionariosField.style.display = 'block';
+            } else {
+                destinoField.style.display = 'none';
+                missaoField.style.display = 'none';
+                funcionariosField.style.display = 'none';
+            }
+        }
+        tipoPedido.addEventListener('change', toggleFields);
+        toggleFields(); // Inicializar
+    });
+</script>
+{% endblock %}

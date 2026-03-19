@@ -1,0 +1,105 @@
+{% extends 'gestaocombustivel/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{% if contrato %}Editar Contrato {{ contrato.numero_contrato }}{% else %}Novo Contrato{% endif %} •
+Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0 pt-4">
+                <h5 class="fw-bold mb-0">{% if contrato %}Editar{% else %}Registar{% endif %} Contrato de Manutenção
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Oficina (Fornecedor) *</label>
+                            <select name="fornecedor" class="form-select" required {% if contrato %}disabled{% endif %}>
+                                <option value="">Selecione a oficina...</option>
+                                {% for oficina in oficinas %}
+                                <option value="{{ oficina.id }}" {% if contrato.fornecedor_id==oficina.id %}selected{%
+                                    endif %}>
+                                    {{ oficina.nome }} - NUIT: {{ oficina.nuit }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if contrato %}
+                            <input type="hidden" name="fornecedor" value="{{ contrato.fornecedor_id }}">
+                            <small class="text-muted">A oficina não pode ser alterada após o contrato ser
+                                criado.</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nº do Contrato *</label>
+                            <input type="text" name="numero_contrato" class="form-control" required
+                                value="{{ contrato.numero_contrato|default:'' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Valor Global (MT) *</label>
+                            <input type="number" step="0.01" name="valor_total" class="form-control" required
+                                value="{{ contrato.valor_total|stringformat:'.2f'|default:'' }}">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Objeto / Descrição do Contrato</label>
+                            <textarea name="descricao" class="form-control"
+                                rows="2">{{ contrato.descricao|default:'' }}</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Data Início *</label>
+                            <input type="date" name="data_inicio" class="form-control" required
+                                value="{{ contrato.data_inicio|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Data Fim *</label>
+                            <input type="date" name="data_fim" class="form-control" required
+                                value="{{ contrato.data_fim|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 mb-3">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3">Tabela de Preços por Tipo de Serviço</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tipo de Serviço</th>
+                                        <th style="width: 200px;">Preço Negociado (MT)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for code, name in servicos %}
+                                    <tr>
+                                        <td class="align-middle">{{ name }}</td>
+                                        <td>
+                                            {% with price_val=precos_existentes|get_item:code %}
+                                            <input type="number" step="0.01" name="price_{{ code }}"
+                                                class="form-control form-control-sm" placeholder="Opcional"
+                                                value="{{ price_val|stringformat:'.2f'|default:'' }}">
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <small class="text-muted">Deixe em branco para serviços não cobertos ou não prestados por
+                                esta oficina.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <a href="{% url 'gestaocombustivel:lista_contratos_manutencao' %}"
+                            class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-warning px-4">
+                            {% if contrato %}Guardar Alterações{% else %}Registar Contrato{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

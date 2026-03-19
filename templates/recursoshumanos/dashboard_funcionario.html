@@ -1,0 +1,237 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Meu Dashboard • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Meu Dashboard</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active">Área Pessoal</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'recursoshumanos:pedir_ferias' %}" class="btn btn-warning">
+            <i class="fas fa-umbrella-beach me-2"></i>Pedir Férias
+        </a>
+    </div>
+</div>
+
+<!-- Stats do Funcionário -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="rh-stat-card text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-umbrella-beach fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ dias_ferias_restantes }}</h2>
+                <p class="mb-0">Dias de Férias Restantes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-user-tie fa-2x text-primary mb-3"></i>
+                <h4 class="fw-bold">{{ funcionario.get_funcao_display }}</h4>
+                <p class="text-muted mb-0">Minha Função</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x text-info mb-3"></i>
+                <h4 class="fw-bold">{{ funcionario.categoria.escala }}</h4>
+                <p class="text-muted mb-0">Meu Escalão</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="rh-card">
+            <div class="card-body text-center">
+                <i class="fas fa-building fa-2x text-success mb-3"></i>
+                <h4 class="fw-bold">{{ funcionario.sector.nome }}</h4>
+                <p class="text-muted mb-0">Meu Sector</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informações de Carreira -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-briefcase me-2 text-success"></i>Minha Carreira
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-calendar-alt fa-2x text-primary mb-2"></i>
+                            <h5 class="fw-bold">{{ funcionario.tempo_servico }} anos</h5>
+                            <p class="text-muted mb-0">Tempo de Serviço</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-graduation-cap fa-2x text-warning mb-2"></i>
+                            <h5 class="fw-bold">{{ funcionario.categoria.get_categoria_display }}</h5>
+                            <p class="text-muted mb-0">Minha Categoria</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <i class="fas fa-chart-bar fa-2x text-info mb-2"></i>
+                            <h5 class="fw-bold">{{ avaliacao_recente.classificacao_final|default:"N/A" }}</h5>
+                            <p class="text-muted mb-0">Última Avaliação</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Meus Pedidos de Férias -->
+    <div class="col-lg-6">
+        <div class="rh-card h-100">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history me-2 text-primary"></i>Meus Pedidos de Férias
+                </h5>
+                <a href="{% url 'recursoshumanos:pedir_ferias' %}" class="btn btn-sm btn-outline-warning">
+                    Novo Pedido
+                </a>
+            </div>
+            <div class="card-body">
+                {% if meus_pedidos %}
+                <div class="list-group list-group-flush">
+                    {% for pedido in meus_pedidos %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ pedido.data_inicio|date:"d/m/Y" }} - {{ pedido.data_fim|date:"d/m/Y" }}</strong>
+                                <br>
+                                <small class="text-muted">{{ pedido.dias_solicitados }} dias</small>
+                                {% if pedido.observacao %}
+                                <br>
+                                <small class="text-muted">{{ pedido.observacao|truncatechars:50 }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if pedido.status == 'aprovado' %}bg-success{% elif pedido.status == 'rejeitado' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ pedido.get_status_display }}
+                                </span>
+                                {% if pedido.aprovado_por %}
+                                <br>
+                                <small class="text-muted">Por: {{ pedido.aprovado_por.username }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-umbrella-beach fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhum pedido de férias</p>
+                    <a href="{% url 'recursoshumanos:pedir_ferias' %}" class="btn btn-warning mt-3">
+                        <i class="fas fa-plus me-2"></i>Pedir Férias
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Minhas Presenças Recentes -->
+    <div class="col-lg-6">
+        <div class="rh-card h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-check me-2 text-success"></i>Minhas Presenças Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if minhas_presencas %}
+                <div class="list-group list-group-flush">
+                    {% for presenca in minhas_presencas %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ presenca.data|date:"d/m/Y" }}</strong>
+                                <br>
+                                <small class="text-muted">{{ presenca.horas_trabalhadas }} horas</small>
+                                {% if presenca.observacao %}
+                                <br>
+                                <small class="text-muted">{{ presenca.observacao|truncatechars:50 }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                {% if presenca.presente %}
+                                <span class="badge bg-success">Presente</span>
+                                {% else %}
+                                <span class="badge bg-danger">Ausente</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-times fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhum registo de presença</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Últimas Avaliações -->
+{% if avaliacoes_recentes %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-star me-2 text-warning"></i>Minhas Avaliações de Desempenho
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for avaliacao in avaliacoes_recentes %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <span class="badge bg-primary fs-6">{{ avaliacao.ano }}</span>
+                                </div>
+                                <h3 class="fw-bold display-6">{{ avaliacao.nota_final_geral }}</h3>
+                                <div class="mb-2">
+                                    <span class="badge {% if avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif avaliacao.classificacao_final == 'Bom' %}bg-info{% elif avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ avaliacao.classificacao_final }}
+                                    </span>
+                                </div>
+                                <p class="text-muted mb-0">Avaliado por: {{ avaliacao.avaliado_por.username|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

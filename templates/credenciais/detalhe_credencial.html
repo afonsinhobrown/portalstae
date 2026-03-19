@@ -1,0 +1,193 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Credencial {{ credencial.numero_credencial }} • Credenciais{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="credenciais-card">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-id-card me-2 text-primary"></i>
+                    Credencial {{ credencial.numero_credencial }}
+                </h5>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Imprimir
+                    </button>
+                    <a href="{% url 'credenciais:lista_pedidos' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Cabeçalho da Credencial -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Informações da Credencial</h6>
+                        <p class="mb-1"><strong>Número:</strong> {{ credencial.numero_credencial }}</p>
+                        <p class="mb-1"><strong>Modelo:</strong> {{ credencial.modelo.nome }}</p>
+                        <p class="mb-1"><strong>Emissão:</strong> {{ credencial.data_emissao|date:"d/m/Y" }}</p>
+                        <p class="mb-1"><strong>Validade:</strong> {{ credencial.data_validade|date:"d/m/Y" }}</p>
+                        <p class="mb-0">
+                            <strong>Status:</strong> 
+                            <span class="badge {% if credencial.esta_valida %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ credencial.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        {% if credencial.qr_code %}
+                        <img src="{{ credencial.qr_code.url }}" alt="QR Code" class="img-fluid" style="max-width: 150px;">
+                        <p class="text-muted small mt-2">Código: {{ credencial.codigo_verificacao }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Informações do Pedido -->
+                <div class="alert alert-info mb-4">
+                    <h6 class="fw-bold">Detalhes do Pedido</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Solicitante:</strong> {{ credencial.pedido.solicitante.nome_completo }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ credencial.pedido.solicitante.email }}</p>
+                            <p class="mb-1"><strong>Telefone:</strong> {{ credencial.pedido.solicitante.telefone }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Tipo:</strong> {{ credencial.pedido.tipo_credencial.nome }}</p>
+                            <p class="mb-1"><strong>Evento:</strong> {{ credencial.pedido.evento.nome|default:"Não especificado" }}</p>
+                            <p class="mb-1"><strong>Área:</strong> {{ credencial.pedido.area_atuacao|default:"Não especificada" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Foto e Documentos -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Foto</h6>
+                        <div class="text-center">
+                            {% if credencial.pedido.foto_pedido %}
+                                <img src="{{ credencial.pedido.foto_pedido.url }}" alt="Foto" class="img-thumbnail" style="max-width: 200px;">
+                            {% elif credencial.pedido.usar_foto_perfil and credencial.pedido.solicitante.foto %}
+                                <img src="{{ credencial.pedido.solicitante.foto.url }}" alt="Foto" class="img-thumbnail" style="max-width: 200px;">
+                            {% else %}
+                                <div class="text-muted">
+                                    <i class="fas fa-user fa-3x mb-2"></i>
+                                    <p>Sem foto disponível</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Documentação</h6>
+                        <div class="d-flex flex-column gap-2">
+                            {% if credencial.pedido.carta_solicitacao %}
+                            <a href="{{ credencial.pedido.carta_solicitacao.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-file-pdf me-1"></i>Carta de Solicitação
+                            </a>
+                            {% endif %}
+                            {% if credencial.pedido.outros_documentos %}
+                            <a href="{{ credencial.pedido.outros_documentos.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-file-alt me-1"></i>Outros Documentos
+                            </a>
+                            {% endif %}
+                            {% if credencial.ficheiro_pdf %}
+                            <a href="{{ credencial.ficheiro_pdf.url }}" target="_blank" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-download me-1"></i>Download Credencial
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary">Histórico</h6>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <strong>Pedido Submetido</strong>
+                                <small class="text-muted d-block">{{ credencial.pedido.data_pedido|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% if credencial.pedido.data_analise %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <strong>Pedido Aprovado</strong>
+                                <small class="text-muted d-block">{{ credencial.pedido.data_analise|date:"d/m/Y H:i" }}</small>
+                                <small>Por: {{ credencial.pedido.analisado_por.username }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <strong>Credencial Emitida</strong>
+                                <small class="text-muted d-block">{{ credencial.data_emissao|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% if credencial.data_entrega %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <strong>Credencial Entregue</strong>
+                                <small class="text-muted d-block">{{ credencial.data_entrega|date:"d/m/Y H:i" }}</small>
+                                {% if credencial.pedido.levantado_por %}
+                                <small>Por: {{ credencial.pedido.levantado_por }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="border-top pt-3">
+                    <h6 class="fw-bold text-primary mb-3">Ações</h6>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'credenciais:verificar_credencial' %}?codigo={{ credencial.codigo_verificacao }}" 
+                           class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-qrcode me-2"></i>Verificar Online
+                        </a>
+                        {% if not credencial.data_entrega and credencial.pedido.pedido_remoto %}
+                        <button class="btn btn-outline-success">
+                            <i class="fas fa-check me-2"></i>Registrar Entrega
+                        </button>
+                        {% endif %}
+                        {% if credencial.esta_valida %}
+                        <button class="btn btn-outline-warning">
+                            <i class="fas fa-pause me-2"></i>Suspender
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 1rem;
+}
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+}
+.timeline-content {
+    padding-left: 1rem;
+}
+</style>
+{% endblock %}

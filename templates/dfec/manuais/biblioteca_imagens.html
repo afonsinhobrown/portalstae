@@ -1,0 +1,159 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Biblioteca de Imagens - DFEC{% endblock %}
+{% block page_title %}Biblioteca de Imagens{% endblock %}
+{% block page_subtitle %}Gerencie as imagens utilizadas nos manuais técnicos{% endblock %}
+
+{% block page_actions %}
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+    <i class="fas fa-upload me-2"></i>Nova Imagem
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Pesquisar imagem..."
+                    value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-3">
+                <select name="manual" class="form-select">
+                    <option value="">Todos os Manuais</option>
+                    {% for m in manuais %}
+                    <option value="{{ m.id }}" {% if request.GET.manual==m.id|stringformat:"i" %}selected{% endif %}>{{
+                        m.titulo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-secondary w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="row row-cols-1 row-cols-md-4 g-4" id="imageGrid">
+            {% for img in imagens %}
+            <div class="col">
+                <div class="card h-100 image-card shadow-sm border-0">
+                    <div class="position-relative">
+                        <img src="{{ img.get_url }}" class="card-img-top" alt="{{ img.titulo }}"
+                            style="height: 180px; object-fit: cover;">
+                        <span class="badge bg-dark position-absolute top-0 end-0 m-2">{{ img.formato|upper }}</span>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title text-truncate" title="{{ img.titulo }}">{{ img.titulo }}</h6>
+                        <p class="card-text small text-muted text-truncate">{{ img.descricao|default:"Sem descrição" }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">{{ img.tamanho|filesizeformat }}</small>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                    onclick="copyUrl('{{ img.get_url }}')">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-images fa-4x text-gray-300 mb-3"></i>
+                <p class="text-muted">Nenhuma imagem encontrada na biblioteca.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if imagens.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if imagens.has_previous %}
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ imagens.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active"><span class="page-link">{{ imagens.number }}</span></li>
+
+                {% if imagens.has_next %}
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ imagens.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Próxima</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{% url 'dfec:upload_imagem' %}" method="post" enctype="multipart/form-data" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title">Carregar Nova Imagem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Título</label>
+                    <input type="text" name="titulo" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Imagem</label>
+                    <input type="file" name="imagem" class="form-control" accept="image/*" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Manual (Opcional)</label>
+                    <select name="manual" class="form-select">
+                        <option value="">Nenhum / Geral</option>
+                        {% for m in manuais %}
+                        <option value="{{ m.id }}">{{ m.titulo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <textarea name="descricao" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tags (separadas por vírgula)</label>
+                    <input type="text" name="tags" class="form-control" placeholder="ex: fluxograma, votacao, stae">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Carregar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function copyUrl(url) {
+        const fullUrl = window.location.origin + url;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            showToast('Link da imagem copiado!', 'success');
+        });
+    }
+</script>
+
+<style>
+    .image-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .image-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+</style>
+{% endblock %}

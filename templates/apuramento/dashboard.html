@@ -1,0 +1,47 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Apuramento de Resultados{% endblock %}
+{% block module_name %}APURAMENTO{% endblock %}
+{% block icon %}fas fa-chart-line{% endblock %}
+{% block dashboard_url %}{% url 'apuramento:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="#" class="menu-item"><i class="fas fa-edit"></i> <span>Lançamento de Editais</span></a>
+<a href="#" class="menu-item"><i class="fas fa-calculator"></i> <span>Processamento</span></a>
+<a href="#" class="menu-item"><i class="fas fa-globe-africa"></i> <span>Resultados Nacionais</span></a>
+<a href="#" class="menu-item"><i class="fas fa-tv"></i> <span>Publicação TV/Web</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="card-grid">
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-calculator"></i></div>
+        <div class="card-title">Editais Processados</div>
+        <div class="card-value">{{ total_processados }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-plus-circle"></i></div>
+        <div class="card-title">Lançamento Manual</div>
+        <a href="{% url 'apuramento:lancar_resultado' %}" class="action-btn">Lançar Edital</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top:30px;">
+    <h3>Últimos Resultados Lançados</h3>
+    <table style="width:100%; margin-top:15px; border-collapse: collapse;">
+        <thead><tr style="border-bottom:2px solid #ddd; text-align:left;"><th>Mesa</th><th>Partido</th><th>Votos</th><th>Ações</th></tr></thead>
+        <tbody>
+            {% for r in resultados %}
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px;">{{ r.mesa }}</td>
+                <td style="padding:10px;">{{ r.partido }}</td>
+                <td style="padding:10px;">{{ r.votos_validos }}</td>
+                <td style="padding:10px;"><a href="{% url 'apuramento:editar_resultado' r.id %}"><i class="fas fa-edit"></i></a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="padding:20px;text-align:center;">Nenhum resultado lançado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

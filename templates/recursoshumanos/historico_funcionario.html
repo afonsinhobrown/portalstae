@@ -1,0 +1,405 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Histórico do Funcionário • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Histórico do Funcionário</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_funcionarios' %}">Funcionários</a></li>
+                <li class="breadcrumb-item active">Histórico</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="imprimirHistorico()">
+            <i class="fas fa-print me-2"></i>Imprimir
+        </button>
+        <a href="{% url 'recursoshumanos:lista_funcionarios' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Informações do Funcionário -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="avatar-xl bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                            {{ funcionario.nome_completo|slice:":1" }}
+                        </div>
+                        <h5 class="fw-bold">{{ funcionario.nome_completo }}</h5>
+                        <p class="text-muted mb-0">{{ funcionario.numero_identificacao }}</p>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Função Atual</small>
+                                    <p class="fw-bold">{{ funcionario.get_funcao_display }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Setor Atual</small>
+                                    <p class="fw-bold">{{ funcionario.sector.nome }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Categoria/Escalão</small>
+                                    <p class="fw-bold">{{ funcionario.categoria.get_categoria_display }} - {{ funcionario.categoria.escala }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Data de Ingresso</small>
+                                    <p class="fw-bold">{{ funcionario.data_ingresso|date:"d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Tempo de Serviço</small>
+                                    <p class="fw-bold">{{ funcionario.tempo_servico }} anos</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <small class="text-muted">Status</small>
+                                    <p>
+                                        {% if funcionario.activo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inativo</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex gap-3 align-items-center">
+                            <span class="fw-bold">Filtrar por Tipo:</span>
+                            <div class="btn-group flex-wrap" role="group">
+                                {% for tipo, eventos in eventos_por_tipo.items %}
+                                <a href="#{{ tipo }}" class="btn btn-outline-primary">
+                                    {{ eventos.0.get_tipo_evento_display }}
+                                    <span class="badge bg-primary ms-2">{{ eventos|length }}</span>
+                                </a>
+                                {% endfor %}
+                                <a href="#" class="btn btn-primary">Todos ({{ historico.count }})</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Buscar no histórico..." id="searchHistorico">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Linha do Tempo -->
+<div class="row">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history me-2 text-primary"></i>Linha do Tempo - Histórico Completo
+                </h5>
+                <div>
+                    <span class="text-muted">{{ historico.count }} eventos registados</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if historico %}
+                <div class="timeline">
+                    {% for evento in historico %}
+                    <div class="timeline-item" id="evento-{{ evento.id }}">
+                        <div class="timeline-marker 
+                            {% if evento.tipo_evento == 'admissao' %}bg-success
+                            {% elif evento.tipo_evento == 'promocao' %}bg-primary
+                            {% elif evento.tipo_evento == 'mudanca_escalao' %}bg-info
+                            {% elif evento.tipo_evento == 'transferencia' %}bg-warning
+                            {% elif evento.tipo_evento == 'avaliacao' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            <i class="fas 
+                                {% if evento.tipo_evento == 'admissao' %}fa-user-plus
+                                {% elif evento.tipo_evento == 'promocao' %}fa-arrow-up
+                                {% elif evento.tipo_evento == 'mudanca_escalao' %}fa-chart-line
+                                {% elif evento.tipo_evento == 'transferencia' %}fa-exchange-alt
+                                {% elif evento.tipo_evento == 'avaliacao' %}fa-star
+                                {% elif evento.tipo_evento == 'ferias' %}fa-umbrella-beach
+                                {% elif evento.tipo_evento == 'licenca' %}fa-file-medical
+                                {% else %}fa-history{% endif %}">
+                            </i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ evento.get_tipo_evento_display }}</h6>
+                                    <p class="mb-2">{{ evento.descricao }}</p>
+                                    
+                                    {% if evento.detalhes %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            {% for key, value in evento.detalhes.items %}
+                                            <span class="badge bg-light text-dark me-1">{{ key }}: {{ value }}</span>
+                                            {% endfor %}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex gap-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ evento.data_evento|date:"d/m/Y" }}
+                                        </small>
+                                        {% if evento.registado_por %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>
+                                            {{ evento.registado_por.username }}
+                                        </small>
+                                        {% endif %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ evento.data_registo|date:"H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="verDetalhesEvento({{ evento.id }})">
+                                                <i class="fas fa-eye me-2"></i>Ver Detalhes
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'admin:recursoshumanos_historicofuncionario_change' evento.id %}" target="_blank">
+                                                <i class="fas fa-edit me-2"></i>Editar
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h4 class="fw-bold mb-3">Nenhum histórico encontrado</h4>
+                    <p class="text-muted mb-4">
+                        Este funcionário ainda não tem eventos registados no histórico.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo por Tipo -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-chart-bar me-2 text-success"></i>Resumo por Tipo de Evento
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for tipo, eventos in eventos_por_tipo.items %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card border">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <div class="avatar-sm 
+                                        {% if tipo == 'admissao' %}bg-success
+                                        {% elif tipo == 'promocao' %}bg-primary
+                                        {% elif tipo == 'mudanca_escalao' %}bg-info
+                                        {% elif tipo == 'transferencia' %}bg-warning
+                                        {% elif tipo == 'avaliacao' %}bg-danger
+                                        {% else %}bg-secondary{% endif %} 
+                                        text-white rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                                        <i class="fas 
+                                            {% if tipo == 'admissao' %}fa-user-plus
+                                            {% elif tipo == 'promocao' %}fa-arrow-up
+                                            {% elif tipo == 'mudanca_escalao' %}fa-chart-line
+                                            {% elif tipo == 'transferencia' %}fa-exchange-alt
+                                            {% elif tipo == 'avaliacao' %}fa-star
+                                            {% else %}fa-history{% endif %}">
+                                        </i>
+                                    </div>
+                                </div>
+                                <h3 class="fw-bold">{{ eventos|length }}</h3>
+                                <p class="text-muted mb-0">{{ eventos.0.get_tipo_evento_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Ações
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'recursoshumanos:avaliar_desempenho' funcionario.id %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-star me-2"></i>Avaliar Desempenho
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'recursoshumanos:criar_mudanca_categoria' funcionario.id %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-exchange-alt me-2"></i>Alterar Categoria
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'recursoshumanos:criar_transferencia_sector' funcionario.id %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-building me-2"></i>Transferir Setor
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'admin:recursoshumanos_funcionario_change' funcionario.id %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-cog me-2"></i>Editar Funcionário
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 1;
+    }
+    
+    .timeline-content {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #3498db;
+    }
+    
+    .timeline-item:nth-child(odd) .timeline-content {
+        border-left-color: #2ecc71;
+    }
+    
+    .timeline-item:nth-child(even) .timeline-content {
+        border-left-color: #f39c12;
+    }
+</style>
+
+<script>
+    function imprimirHistorico() {
+        window.print();
+    }
+    
+    function verDetalhesEvento(eventoId) {
+        // Implementar modal com detalhes do evento
+        alert('Detalhes do evento ' + eventoId);
+    }
+    
+    // Filtro de busca
+    document.getElementById('searchHistorico').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const eventos = document.querySelectorAll('.timeline-item');
+        
+        eventos.forEach(evento => {
+            const texto = evento.textContent.toLowerCase();
+            if (texto.includes(searchTerm)) {
+                evento.style.display = 'block';
+            } else {
+                evento.style.display = 'none';
+            }
+        });
+    });
+    
+    // Scroll para tipo específico
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (this.getAttribute('href') !== '#') {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

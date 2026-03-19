@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Credencial</title>
+    <style>
+        @page {
+            size: 54mm 86mm;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        * {
+            -pdf-frame-break: avoid;
+        }
+    </style>
+</head>
+<body>
+
+<table style="width: 54mm; border-collapse: collapse; margin: 0; border-spacing: 0;" cellspacing="0" cellpadding="0">
+    
+    <!-- HEADER -->
+    <tr>
+        <td style="background-color: {% if config.entidade == 'cne' %}#d9534f{% else %}#003366{% endif %}; color: white; text-align: center; padding: 1.5mm;">
+            <div style="font-size: 5pt;">República de Moçambique</div>
+            <div style="font-size: 6pt; font-weight: bold; text-transform: uppercase; line-height: 1.2;">
+                {% if config.entidade == 'cne' %}Comissão Nacional de Eleições{% else %}Secretariado Técnico de Administração Eleitoral{% endif %}
+            </div>
+        </td>
+    </tr>
+    
+    <!-- CONTEÚDO COMPLETO -->
+    <tr>
+        <td style="padding: 1mm;">
+            
+            <!-- FOTO -->
+            <div style="width: 23mm; height: 30mm; border: 1px solid #000; background: #f0f0f0; margin: 0 auto; text-align: center; overflow: hidden;">
+                {% if funcionario_real and funcionario_real.foto %}
+                    <img src="{{ funcionario_real.foto.path }}" style="width: 23mm; height: 30mm;" />
+                {% elif credencial.pedido.solicitante.foto %}
+                    <img src="{{ credencial.pedido.solicitante.foto.path }}" style="width: 23mm; height: 30mm;" />
+                {% else %}
+                    <img src="c:\Users\Acer\Documents\tecnologias\portalstae\static\img\silhouette_placeholder.png" style="width: 23mm; height: 30mm;" />
+                {% endif %}
+            </div>
+            
+            <!-- LINHA -->
+            <div style="height: 1px; background: #000; width: 30mm; margin: 0.5mm 0;"></div>
+            
+            <!-- NOME -->
+            <div style="font-size: 6pt; font-weight: bold; text-transform: uppercase; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50mm;">
+                {{ funcionario_real.nome_completo|default:credencial.pedido.solicitante.nome_completo|truncatechars:40|upper }}
+            </div>
+            
+            <!-- LINHA FINA -->
+            <div style="height: 1px; background: #ccc; width: 30mm; margin: 0.5mm 0;"></div>
+            
+            <!-- DETALHES + QR (Tabela Interna) -->
+            <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                <tr>
+                    <td style="vertical-align: top; width: 38mm; padding: 0;">
+                        <div style="font-size: 7pt; font-weight: bold; margin: 0;">
+                            ID: {{ credencial.numero_credencial|default:"N/A" }}
+                        </div>
+                        <div style="font-size: 8pt; font-weight: bold; text-transform: uppercase; margin: 0;">
+                            {% if funcionario_real.sector %}
+                                {{ funcionario_real.sector.nome|upper|truncatechars:18 }}
+                            {% elif credencial.pedido.solicitante.nome_empresa %}
+                                {{ credencial.pedido.solicitante.nome_empresa|upper|truncatechars:18 }}
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 4pt; color: #666; margin: 0;">
+                            {% if credencial.pedido.evento %}
+                                {{ credencial.pedido.evento.nome|truncatechars:30 }}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="vertical-align: top; text-align: right; padding: 0;">
+                        {% if credencial.qr_code %}
+                            <img src="{{ credencial.qr_code.path }}" style="width: 10mm; height: 10mm; border: 1px solid #ccc;" />
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+            
+        </td>
+    </tr>
+    
+    <!-- FOOTER -->
+    <tr>
+        <td style="background-color: {% if config.entidade == 'cne' %}#d9534f{% else %}#003366{% endif %}; color: white; padding: 2mm; text-align: center;">
+            <div style="font-size: 8pt; font-weight: bold; text-transform: uppercase;">
+                {{ funcionario_real.funcao|default:credencial.pedido.tipo_credencial.nome|upper|truncatechars:25 }}
+            </div>
+        </td>
+    </tr>
+    
+</table>
+
+</body>
+</html>

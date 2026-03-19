@@ -1,0 +1,121 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Contratos • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row mb-4 animate__animated animate__fadeIn">
+    <div class="col-md-8">
+        <h2 class="fw-bold text-dark">
+            <i class="fas fa-file-contract me-2 text-primary"></i>Contratos de Combustível
+        </h2>
+        <p class="text-muted">Gerenciamento de contratos com fornecedores</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'ugea:lista_contratos' %}" class="btn btn-outline-primary shadow-sm" target="_blank">
+            <i class="fas fa-external-link-alt me-2"></i>Gerir na UGEA
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label class="col-form-label fw-bold">Filtrar por Status:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="ativo" class="form-select" onchange="this.form.submit()">
+                            <option value="todos" {% if is_todos %}selected{% endif %}>Todos</option>
+                            <option value="sim" {% if is_ativos %}selected{% endif %}>Ativos</option>
+                            <option value="nao" {% if is_inativos %}selected{% endif %}>Inativos/Vencidos</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Contratos -->
+<div class="card border-0 shadow-sm animate__animated animate__fadeInUp">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Contrato</th>
+                        <th>Fornecedor</th>
+                        <th>Combustível</th>
+                        <th>Validade</th>
+                        <th>Preço/L</th>
+                        <th>Status Consumo</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contrato in contratos %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-primary">{{ contrato.numero_contrato }}</div>
+                            <small class="text-muted">ID: {{ contrato.id }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-bold">{{ contrato.fornecedor.nome }}</div>
+                            <small class="text-muted">NUIT: {{ contrato.fornecedor.nuit }}</small>
+                        </td>
+                        <td>
+                            {% if contrato.tipo_combustivel == 'diesel' %}
+                            <span class="badge bg-dark">Diesel</span>
+                            {% elif contrato.tipo_combustivel == 'gasolina' %}
+                            <span class="badge bg-warning text-dark">Gasolina</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ contrato.get_tipo_combustivel_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ contrato.data_inicio|date:"d/m/Y" }}</div>
+                            <small class="text-muted">a {{ contrato.data_fim|date:"d/m/Y" }}</small>
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ contrato.preco_unitario }} MT</span>
+                        </td>
+                        <td style="min-width: 150px;">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>{{ contrato.litros_consumidos|floatformat:0 }}L</small>
+                                <small class="text-muted">de {{ contrato.litros_contratados|floatformat:0 }}L</small>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                {% widthratio contrato.litros_consumidos contrato.litros_contratados 100 as percent %}
+                                <div class="progress-bar {% if percent|add:0 > 90 %}bg-danger{% elif percent|add:0 > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                                    role="progressbar" style="width: {{ percent }}%">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="btn-group">
+                                <a href="{% url 'gestaocombustivel:detalhe_contrato' contrato.id %}"
+                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-file-contract fa-3x mb-3 text-secondary opacity-50"></i>
+                                <p>Nenhum contrato encontrado.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

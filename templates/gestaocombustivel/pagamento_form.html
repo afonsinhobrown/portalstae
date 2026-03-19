@@ -1,0 +1,104 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Registrar Pagamento • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Registrar Pagamento</h1>
+            <small class="text-muted">Contrato: {{ contrato.numero_contrato }} - {{ contrato.fornecedor.nome }}</small>
+        </div>
+        <a href="{% url 'gestaocombustivel:lista_contratos' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>Valor Total do Contrato:</strong> {{
+                                contrato.valor_total_contrato|floatformat:2 }} MT</span>
+                            <span><strong>Total Já Pago:</strong> {{ contrato.valor_pago|floatformat:2 }} MT</span>
+                            <span><strong>Saldo Restante:</strong> {{ contrato.saldo_financeiro_restante|floatformat:2
+                                }} MT</span>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Valor do Pagamento (MT)</label>
+                                <input type="number" step="0.01" name="valor" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Data do Pagamento</label>
+                                <input type="date" name="data_pagamento" class="form-control" value="{% now 'Y-m-d' %}"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Referência / Nota Fiscal</label>
+                            <input type="text" name="referencia" class="form-control"
+                                placeholder="Ex: Pagamento da 1ª Parcela">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Comprovativo (Upload)</label>
+                            <input type="file" name="comprovativo" class="form-control">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Registrar Pagamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if contrato.pagamentos.exists %}
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Histórico de Pagamentos</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Referência</th>
+                                <th>Valor</th>
+                                <th>Registado Por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pg in contrato.pagamentos.all %}
+                            <tr>
+                                <td>{{ pg.data_pagamento|date:"d/m/Y" }}</td>
+                                <td>{{ pg.referencia_documento }}</td>
+                                <td class="fw-bold text-success">{{ pg.valor|floatformat:2 }} MT</td>
+                                <td><small>{{ pg.registado_por.username }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

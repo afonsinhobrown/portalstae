@@ -1,0 +1,345 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Minhas Avaliações • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Minhas Avaliações de Desempenho</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Avaliações</li>
+            </ol>
+        </nav>
+    </div>
+    {% if not is_rh %}
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="showCompetencias()">
+            <i class="fas fa-list me-2"></i>Ver Competências
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if ultima_avaliacao %}
+                <h2 class="text-{{ ultima_avaliacao.classificacao_final|lower }}">
+                    {{ ultima_avaliacao.nota_final_geral }}
+                </h2>
+                <p class="text-muted mb-0">Última Avaliação</p>
+                <small class="text-muted">{{ ultima_avaliacao.periodo }}</small>
+                {% else %}
+                <h2 class="text-muted">-</h2>
+                <p class="text-muted mb-0">Nenhuma Avaliação</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="text-info">{{ media_historica }}</h2>
+                <p class="text-muted mb-0">Média Histórica</p>
+                <small class="text-muted">{{ total_avaliacoes }} avaliações</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h2 class="text-primary">{{ total_avaliacoes }}</h2>
+                <p class="text-muted mb-0">Total de Avaliações</p>
+                <small class="text-muted">Desde {{ funcionario.data_admissao|date:"Y" }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evolução Gráfica -->
+{% if avaliacoes.count >= 2 %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-chart-line me-2"></i>Evolução do Desempenho
+        </h5>
+    </div>
+    <div class="card-body">
+        <div id="graficoEvolucao" style="height: 300px;"></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Lista de Avaliações -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Histórico de Avaliações</h5>
+        <small class="text-muted">{{ avaliacoes.count }} avaliações</small>
+    </div>
+    <div class="card-body">
+        {% if avaliacoes %}
+        <div class="accordion" id="avaliacoesAccordion">
+            {% for avaliacao in avaliacoes %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading{{ avaliacao.id }}">
+                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" 
+                            type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapse{{ avaliacao.id }}">
+                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                            <div>
+                                <strong>{{ avaliacao.periodo }}</strong>
+                                <small class="text-muted ms-2">
+                                    Avaliado por: {{ avaliacao.avaliado_por.get_full_name|default:avaliacao.avaliado_por.username }}
+                                </small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-{{ avaliacao.classificacao_final|lower }} me-3">
+                                    {{ avaliacao.nota_final_geral }} - {{ avaliacao.classificacao_final }}
+                                </span>
+                                <small class="text-muted">{{ avaliacao.data_avaliacao|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapse{{ avaliacao.id }}" 
+                     class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                     data-bs-parent="#avaliacoesAccordion">
+                    <div class="accordion-body">
+                        <!-- Competências Avaliadas -->
+                        <h6 class="mb-3">Competências Avaliadas</h6>
+                        <div class="row mb-4">
+                            {% for competencia in avaliacao.competenciaavaliada_set.all %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ competencia.competencia.nome }}</h6>
+                                        <p class="card-text small text-muted mb-2">
+                                            {{ competencia.competencia.descricao|truncatechars:100 }}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="star-rating">
+                                                {% for i in "12345" %}
+                                                <i class="fas fa-star {% if forloop.counter <= competencia.pontuacao %}text-warning{% else %}text-muted{% endif %}"></i>
+                                                {% endfor %}
+                                            </div>
+                                            <span class="badge bg-primary">{{ competencia.pontuacao }}/5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Observações -->
+                        {% if avaliacao.observacoes %}
+                        <h6 class="mb-2">Observações do Avaliador</h6>
+                        <div class="alert alert-light">
+                            {{ avaliacao.observacoes|linebreaks }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Pontos Fortes e Fracos -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-2">
+                                    <i class="fas fa-thumbs-up text-success me-2"></i>Pontos Fortes
+                                </h6>
+                                <ul class="list-group list-group-flush">
+                                    {% for ponto_forte in avaliacao.pontos_fortes_list %}
+                                    <li class="list-group-item">{{ ponto_forte }}</li>
+                                    {% empty %}
+                                    <li class="list-group-item text-muted">Não especificado</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-2">
+                                    <i class="fas fa-thumbs-down text-danger me-2"></i>Áreas de Melhoria
+                                </h6>
+                                <ul class="list-group list-group-flush">
+                                    {% for area_melhoria in avaliacao.areas_melhoria_list %}
+                                    <li class="list-group-item">{{ area_melhoria }}</li>
+                                    {% empty %}
+                                    <li class="list-group-item text-muted">Não especificado</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Metas e Objetivos -->
+                        {% if avaliacao.metas_proximo_periodo %}
+                        <h6 class="mt-4 mb-2">
+                            <i class="fas fa-bullseye text-primary me-2"></i>Metas para o Próximo Período
+                        </h6>
+                        <div class="alert alert-info">
+                            {{ avaliacao.metas_proximo_periodo|linebreaks }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Ações -->
+                        <div class="d-flex justify-content-end mt-3">
+                            <button class="btn btn-sm btn-outline-primary me-2" 
+                                    onclick="printAvaliacao({{ avaliacao.id }})">
+                                <i class="fas fa-print me-1"></i>Imprimir
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" 
+                                    onclick="downloadAvaliacao({{ avaliacao.id }})">
+                                <i class="fas fa-download me-1"></i>PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-star fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted mb-3">Nenhuma avaliação registrada</h5>
+            <p class="text-muted mb-0">Suas avaliações de desempenho aparecerão aqui quando forem realizadas.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Competências -->
+<div class="modal fade" id="competenciasModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Competências Avaliadas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    {% for competencia in competencias %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ competencia.nome }}</h6>
+                                <p class="card-text small">{{ competencia.descricao }}</p>
+                                <div class="mt-2">
+                                    <small class="text-muted">Níveis:</small>
+                                    <div class="mt-1">
+                                        {% for i in "12345" %}
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span>Nível {{ forloop.counter }}:</span>
+                                            <span>{{ competencia.get_nivel_descricao|default:"-" }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(26, 74, 114, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .star-rating {
+        font-size: 0.9rem;
+    }
+    
+    .accordion-body {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de evolução
+        if (document.getElementById('graficoEvolucao')) {
+            const avaliacoesData = [
+                {% for avaliacao in avaliacoes %}
+                {
+                    periodo: '{{ avaliacao.periodo }}',
+                    nota: {{ avaliacao.nota_final_geral }},
+                    data: '{{ avaliacao.data_avaliacao|date:"m/Y" }}'
+                },
+                {% endfor %}
+            ].reverse();
+            
+            const chartHtml = `
+                <div class="d-flex align-items-end" style="height: 250px;">
+                    ${avaliacoesData.map((av, index) => `
+                        <div class="flex-fill text-center mx-2">
+                            <div class="d-flex flex-column align-items-center">
+                                <div class="bg-primary rounded-top mb-1" 
+                                     style="height: ${(av.nota / 5) * 100}%; width: 30px;"></div>
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mb-1" 
+                                     style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                    ${av.nota}
+                                </div>
+                                <small class="text-muted">${av.periodo}</small>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-3 text-center">
+                    <small class="text-muted">Evolução da nota final ao longo do tempo</small>
+                </div>
+            `;
+            
+            document.getElementById('graficoEvolucao').innerHTML = chartHtml;
+        }
+        
+        // Print function
+        window.printAvaliacao = function(avaliacaoId) {
+            const printContent = document.getElementById('collapse' + avaliacaoId).innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Avaliação de Desempenho</title>
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                        <style>
+                            body { padding: 20px; }
+                            @media print {
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h3 class="mb-4">Avaliação de Desempenho</h3>
+                            ${printContent}
+                            <div class="mt-4 no-print">
+                                <button class="btn btn-primary" onclick="window.print()">Imprimir</button>
+                                <button class="btn btn-secondary" onclick="window.close()">Fechar</button>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        };
+        
+        // Download PDF
+        window.downloadAvaliacao = function(avaliacaoId) {
+            alert('Gerando PDF da avaliação ' + avaliacaoId + '...');
+            // Implementação real geraria PDF via backend
+        };
+        
+        // Show competências modal
+        window.showCompetencias = function() {
+            const modal = new bootstrap.Modal(document.getElementById('competenciasModal'));
+            modal.show();
+        };
+    });
+</script>
+{% endblock %}

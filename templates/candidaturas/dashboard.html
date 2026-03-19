@@ -1,0 +1,202 @@
+{% extends 'base_apps.html' %}
+{% load candidaturas_extras %}
+{% block title %}Listas de Candidatos - {{ inscricao.partido.sigla }}{% endblock %}
+{% block module_name %}CANDIDATURAS - AUDITORIA{% endblock %}
+{% block icon %}fas fa-shield-halved{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+
+{% block content %}
+<!-- KPIs SUPERIORES COM ALERTAS DE INTEGRIDADE -->
+<!-- Navegação por Abas para Clareza Operacional -->
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white p-0 border-0">
+        <ul class="nav nav-tabs nav-pills nav-justified p-2 bg-light" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold py-3 border-0" id="resumo-tab" data-bs-toggle="tab" data-bs-target="#resumo" type="button" role="tab">
+                    <i class="fas fa-chart-line me-2"></i>Dashboard Executivo
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold py-3 border-0" id="gestao-tab" data-bs-toggle="tab" data-bs-target="#gestao" type="button" role="tab">
+                    <i class="fas fa-users-gear me-2"></i>Gestão de Candidaturas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold py-3 border-0" id="integridade-tab" data-bs-toggle="tab" data-bs-target="#integridade" type="button" role="tab">
+                    <i class="fas fa-shield-halved me-2"></i>Monitor de Integridade
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- TAB 1: RESUMO EXECUTIVO -->
+        <div class="tab-pane fade show active" id="resumo" role="tabpanel">
+            <div class="p-4">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm border-0 bg-light">
+                            <div class="card-header bg-white fw-bold"><i class="fas fa-users me-2"></i>Perfil de Representatividade</div>
+                            <div class="card-body">
+                                <label class="small fw-bold text-muted">Paridade de Género (Efetivos)</label>
+                                <div class="progress-stack" style="height: 35px; display: flex; border-radius: 10px; overflow: hidden; margin: 10px 0 25px;">
+                                    <div class="progress-bar" style="width: {% widthratio stats.homens total_candidatos 100 %}%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white;">H: {{ stats.homens }}</div>
+                                    <div class="progress-bar" style="width: {% widthratio stats.mulheres total_candidatos 100 %}%; background: #ec4899; display: flex; align-items: center; justify-content: center; color: white;">M: {{ stats.mulheres }}</div>
+                                </div>
+
+                                <label class="small fw-bold text-muted">Quotas Geracionais</label>
+                                <div class="mt-2">
+                                    <div class="d-flex justify-content-between mb-1 small text-dark"><span>Jovens (<= 35)</span><strong>{{ stats.jovens }}</strong></div>
+                                    <div class="progress mb-3" style="height: 6px;"><div class="progress-bar bg-success" style="width: {% widthratio stats.jovens total_candidatos 100 %}%"></div></div>
+                                    
+                                    <div class="d-flex justify-content-between mb-1 small text-dark"><span>Adultos (36-60)</span><strong>{{ stats.adultos }}</strong></div>
+                                    <div class="progress mb-3" style="height: 6px;"><div class="progress-bar bg-primary" style="width: {% widthratio stats.adultos total_candidatos 100 %}%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card h-100 shadow-sm border-0 bg-light">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <span class="fw-bold"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Alcance Territorial por Força Política</span>
+                                <a href="{% url 'candidaturas:relatorios_eleicao' eleicoes.0.id %}" class="btn btn-xs btn-dark rounded-pill">Ver Painel Completo</a>
+                            </div>
+                            <div class="card-body p-0 overflow-auto" style="max-height: 300px;">
+                                <table class="table table-hover mb-0 align-middle small">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>Sigla / Nome</th>
+                                            <th>Círculos</th>
+                                            <th style="width: 40%;">Cobertura Nacional</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for a in stats.alcance %}
+                                        <tr>
+                                            <td class="fw-bold">{{ a.partido__sigla }}</td>
+                                            <td><span class="badge bg-primary rounded-pill">{{ a.num_circulos }}</span></td>
+                                            <td>
+                                                <div class="progress" style="height: 10px; border-radius: 5px;">
+                                                    <div class="progress-bar bg-success" style="width: {% widthratio a.num_circulos total_circulos_sistema 100 %}%"></div>
+                                                </div>
+                                                <small class="text-muted" style="font-size: 0.65rem;">Base: {{ total_circulos_sistema }} Círculos</small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: GESTÃO DE CANDIDATURAS -->
+        <div class="tab-pane fade" id="gestao" role="tabpanel">
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-dark">Processos Ativos e Submissão de Listas</h5>
+                    <a href="{% url 'candidaturas:inscrever_partido' %}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus-circle me-1"></i> Nova Submissão de Candidatura
+                    </a>
+                </div>
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-striped table-hover mb-0 align-middle">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th class="ps-4">Força Política</th>
+                                <th>Âmbito Geográfico</th>
+                                <th>Eleição</th>
+                                <th>Estado das Listas</th>
+                                <th class="text-end pe-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ins in inscricoes %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary-subtle p-2 rounded-3 me-3"><i class="fas fa-university text-primary"></i></div>
+                                        <div>
+                                            <div class="fw-bold">{{ ins.partido.sigla }}</div>
+                                            <small class="text-muted">{{ ins.partido.nome_completo|truncatechars:30 }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if ins.scope_provincia %}<span class="badge bg-info-subtle text-info border">Provincial: {{ ins.scope_provincia.nome }}</span>
+                                    {% elif ins.scope_circulo %}<span class="badge bg-warning-subtle text-warning border">Local: {{ ins.scope_circulo.nome }}</span>
+                                    {% else %}<span class="badge bg-dark-subtle text-dark border">Nacional / Geral</span>{% endif %}
+                                </td>
+                                <td>{{ ins.eleicao.get_tipo_display }}</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                    {% for lista in ins.listas.all %}
+                                        {% with conf=conformidade_map|get_item:lista.id %}
+                                            {% if conf.conforme %}
+                                                <span class="badge bg-success-subtle text-success border border-success" title="{{ lista.circulo.nome }}: OK">
+                                                    {{ lista.circulo.nome|slice:":3" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger" title="{{ lista.circulo.nome }}: Erro">
+                                                    {{ lista.circulo.nome|slice:":3" }}
+                                                </span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{% url 'candidaturas:gerenciar_listas' ins.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-list-check me-1"></i> Gerir Listas
+                                        </a>
+                                        <a href="{% url 'candidaturas:remover_inscricao' ins.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja remover integralmente esta inscrição?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-5">Nenhuma força política registada.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: MONITOR DE INTEGRIDADE -->
+        <div class="tab-pane fade" id="integridade" role="tabpanel">
+            <div class="p-5 text-center">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card p-4 {% if duplicados_detectados > 0 %}border-danger bg-danger-subtle{% else %}border-success bg-success-subtle{% endif %} shadow-sm">
+                            <i class="fas {% if duplicados_detectados > 0 %}fa-triangle-exclamation fa-4x text-danger{% else %}fa-circle-check fa-4x text-success{% endif %} mb-3"></i>
+                            <h3 class="fw-bold">{% if duplicados_detectados > 0 %}Alertas de BIs Duplicados Detectados!{% else %}Soberania de Identidade Confirmada{% endif %}</h3>
+                            <p class="fs-5">Foram encontrados <strong>{{ duplicados_detectados }}</strong> documentos de identidade em múltiplas candidaturas.</p>
+                            
+                            {% if duplicados_detectados > 0 %}
+                                <hr>
+                                <p class="small text-muted mb-4">A lei eleitoral proíbe a inclusão do mesmo cidadão em listas de forças políticas diferentes para o mesmo cargo.</p>
+                                <a href="{% url 'candidaturas:dashboard' %}" class="btn btn-danger btn-lg px-5">Ver Fichas em Conflito</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link { color: #64748b; border-radius: 8px !important; margin: 0 4px; }
+    .nav-tabs .nav-link.active { background: white !important; color: var(--primary) !important; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    .nav-pills .nav-link.active { background: var(--primary) !important; color: white !important; }
+    .tab-content { min-height: 450px; }
+    .bg-indigo { background-color: #6366f1 !important; }
+    .badge { font-weight: 500; font-size: 0.75rem; }
+    .card-value { font-size: 2rem; font-weight: 800; color: #1e293b; }
+</style>
+{% endblock %}

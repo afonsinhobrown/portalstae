@@ -1,0 +1,214 @@
+{% extends 'admin_portal/base.html' %}
+
+{% block title %}{{ titulo }} • Portal STAE{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}Templates / {{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="stat-card animate__animated animate__fadeInUp">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-{{ 'edit' if template else 'plus-circle' }} me-2 text-primary"></i>
+                    {{ titulo }}
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <!-- Informações Básicas -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Nome do Template *</label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.nome.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Aplicação Destino *</label>
+                            {{ form.app_destino }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Modelo Django *</label>
+                            {{ form.modelo_destino }}
+                            <small class="form-text text-muted">
+                                Nome exato do modelo (ex: recursoshumanos.Funcionario)
+                            </small>
+                        </div>
+                        
+                        <!-- Upload de Template -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Ficheiro Template</label>
+                            <div class="file-upload-area border-dashed rounded-3 p-4 text-center">
+                                {{ form.ficheiro_template }}
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">Arraste o ficheiro ou clique para fazer upload</h6>
+                                    <p class="text-muted small mb-0">Suporta: .xlsx, .xls, .csv</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mapeamento de Campos -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Mapeamento de Campos *</label>
+                            <div class="bg-light rounded-3 p-3 mb-3">
+                                <small class="text-muted">
+                                    Defina o mapeamento entre colunas do Excel e campos do modelo em formato JSON.
+                                    Exemplo: {"Nome": "nome_completo", "Email": "email"}
+                                </small>
+                            </div>
+                            {{ form.mapeamento_campos }}
+                            {% if form.mapeamento_campos.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.mapeamento_campos.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.activo }}
+                                <label class="form-check-label fw-bold" for="{{ form.activo.id_for_label }}">
+                                    Template Ativo
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Templates inativos não aparecem para importação
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'admin_portal:lista_templates' %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    {{ 'Atualizar' if template else 'Criar' }} Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Helper Card -->
+        <div class="stat-card mt-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+            <div class="card-header bg-transparent border-0">
+                <h6 class="fw-bold mb-0 text-primary">
+                    <i class="fas fa-lightbulb me-2"></i>Dicas para Mapeamento
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">📊 Formato JSON</h6>
+                        <pre class="bg-dark text-light p-3 rounded small">{<br>  "Coluna Excel": "campo_model",<br>  "Nome": "nome_completo",<br>  "Email": "email"<br>}</pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">🎯 Campos Comuns</h6>
+                        <ul class="list-unstyled small">
+                            <li><code>nome</code> - Nome completo</li>
+                            <li><code>email</code> - Endereço email</li>
+                            <li><code>telefone</code> - Contacto telefónico</li>
+                            <li><code>data_nascimento</code> - Data nascimento</li>
+                            <li><code>activo</code> - Status ativo/inativo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Estilização dos campos do formulário
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar classes Bootstrap aos campos
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        if (!input.classList.contains('btn')) {
+            input.classList.add('form-control');
+        }
+    });
+    
+    // Estilização especial para o file input
+    const fileInput = document.querySelector('input[type="file"]');
+    const uploadArea = document.querySelector('.file-upload-area');
+    
+    if (fileInput && uploadArea) {
+        fileInput.classList.add('d-none');
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-primary', 'bg-primary-10');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-primary', 'bg-primary-10');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-primary', 'bg-primary-10');
+            fileInput.files = e.dataTransfer.files;
+            updateFileLabel();
+        });
+        
+        fileInput.addEventListener('change', updateFileLabel);
+        
+        function updateFileLabel() {
+            if (fileInput.files.length > 0) {
+                uploadArea.innerHTML = `
+                    <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                    <h6 class="text-success">${fileInput.files[0].name}</h6>
+                    <p class="text-muted small">Clique para alterar o ficheiro</p>
+                `;
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.file-upload-area {
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+.bg-primary-10 {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+</style>
+{% endblock %}

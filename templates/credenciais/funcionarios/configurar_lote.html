@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-id-card-alt me-2 text-primary"></i>Emissão de Credenciais STAE</h2>
+        <a href="{% url 'credenciais:dashboard_credenciais' %}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Configuração de Lote (Funcionários)</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'credenciais:func_processar_lote' %}">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Coluna da Esquerda: Filtros -->
+                    <div class="col-md-6 border-end">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3">1. Seleção de Público</h6>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Evento / Operação</label>
+                            <select name="evento" class="form-select form-select-lg" required>
+                                <option value="">Selecione o Evento...</option>
+                                {% for evento in eventos %}
+                                <option value="{{ evento.id }}">{{ evento.nome }} ({{ evento.data_inicio|date:"Y" }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">A validade da credencial seguirá a data do evento.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Filtrar por Sector</label>
+                            <select name="sector" class="form-select">
+                                <option value="">-- Todos os Funcionários (Geral) --</option>
+                                {% for sector in sectores %}
+                                <option value="{{ sector.id }}">{{ sector.nome }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Deixe em "Todos" para emitir para todo o órgão.</div>
+                        </div>
+                    </div>
+
+                    <!-- Coluna da Direita: Personalização -->
+                    <div class="col-md-6 ps-md-4">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3">2. Configuração do Crachá</h6>
+                        
+                        <div class="card bg-light border-0 mb-3">
+                            <div class="card-body">
+                                <label class="form-label fw-bold mb-2">Campos Visíveis</label>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_nome" id="checkNome" checked>
+                                    <label class="form-check-label" for="checkNome">Nome Completo</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_cargo" id="checkCargo" checked>
+                                    <label class="form-check-label" for="checkCargo">Cargo / Função</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_sector" id="checkSector" checked>
+                                    <label class="form-check-label" for="checkSector">Sector / Departamento</label>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_qr" id="checkQR" checked>
+                                    <label class="form-check-label" for="checkQR">QR Code de Validação</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Entidade Emissora (Cabeçalho)</label>
+                            <select name="entidade" class="form-select">
+                                <option value="cne">Comissão Nacional de Eleições (CNE)</option>
+                                <option value="stae">Secretariado Técnico de Admin. Eleitoral (STAE)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Rótulo Inferior (Rodapé)</label>
+                            <input type="text" name="texto_rodape" class="form-control" placeholder="Ex: STAFF / APOIO">
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success btn-lg px-5">
+                        <i class="fas fa-print me-2"></i>Gerar Credenciais
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

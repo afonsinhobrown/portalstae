@@ -1,0 +1,351 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Autorizar Licença • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Autorização de Licença</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Autorização</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Resumo da Licença -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-contract me-2"></i>Solicitação de Licença
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <h6>Funcionário</h6>
+                        <p class="mb-0">
+                            <strong>{{ licenca.funcionario.nome_completo }}</strong><br>
+                            <small class="text-muted">{{ licenca.funcionario.numero_identificacao }}</small>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Setor</h6>
+                        <p class="mb-0">
+                            {{ licenca.funcionario.sector.codigo }}<br>
+                            <small class="text-muted">{{ licenca.funcionario.sector.nome }}</small>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Período</h6>
+                        <p class="mb-0">
+                            <strong>{{ licenca.periodo_formatado }}</strong><br>
+                            <span class="badge bg-info">{{ licenca.dias_utilizados }} dias</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Tipo de Licença</h6>
+                        <p class="mb-3">
+                            <span class="badge bg-primary">{{ licenca.get_tipo_display }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                {% if licenca.motivo %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Motivo Apresentado</h6>
+                        <div class="alert alert-light">
+                            {{ licenca.motivo }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Parecer do Chefe -->
+        {% if licenca.parecer_chefe %}
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-user-tie me-2"></i>Parecer do Chefe
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Chefe</h6>
+                        <p class="mb-0">
+                            <strong>{{ licenca.chefe_aprovador_nome }}</strong><br>
+                            <small class="text-muted">{{ licenca.data_parecer_chefe|date:"d/m/Y H:i" }}</small>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Status</h6>
+                        <p class="mb-0">
+                            <span
+                                class="badge bg-{% if licenca.status_chefia == 'favoravel' %}success{% else %}danger{% endif %}">
+                                {{ licenca.get_status_chefia_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Parecer</h6>
+                        <div class="alert alert-warning">
+                            {{ licenca.parecer_chefe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Formulário de Autorização -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-tie me-2"></i>Autorização do Diretor
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Ação -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Decisão Final *</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="acao" id="autorizar"
+                                        value="autorizar" checked>
+                                    <label class="form-check-label" for="autorizar">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-success me-2">AUTORIZAR</span>
+                                            <div>
+                                                <strong>Autorizar Licença</strong>
+                                                <small class="d-block text-muted">Gerará documento oficial</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="acao" id="reprovar"
+                                        value="reprovar">
+                                    <label class="form-check-label" for="reprovar">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-danger me-2">REPROVAR</span>
+                                            <div>
+                                                <strong>Reprovar Solicitação</strong>
+                                                <small class="d-block text-muted">Arquivará a solicitação</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parecer do Diretor -->
+                    <div class="mb-4">
+                        <label for="parecer" class="form-label">
+                            Parecer do Diretor *
+                        </label>
+                        <textarea class="form-control" id="parecer" name="parecer" rows="6"
+                            placeholder="Descreva seu parecer detalhadamente..." required></textarea>
+                        <small class="form-text text-muted">
+                            Este parecer será incluído no documento oficial e arquivado permanentemente.
+                        </small>
+                    </div>
+
+                    <!-- Condições Especiais -->
+                    <div class="mb-4" id="condicoesContainer">
+                        <label for="condicoes_especiais" class="form-label">
+                            Condições Especiais (opcional)
+                        </label>
+                        <textarea class="form-control" id="condicoes_especiais" name="condicoes_especiais" rows="3"
+                            placeholder="Ex: Retorno parcial, condições específicas, etc..."></textarea>
+                    </div>
+
+                    <!-- Impacto Organizacional -->
+                    <div class="mb-4">
+                        <h6>Impacto Organizacional</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="impacto_baixo" name="impacto[]"
+                                value="baixo">
+                            <label class="form-check-label" for="impacto_baixo">
+                                <span class="badge bg-success">Baixo</span> - Não afeta operações
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="impacto_medio" name="impacto[]"
+                                value="medio">
+                            <label class="form-check-label" for="impacto_medio">
+                                <span class="badge bg-warning">Médio</span> - Requer substituição temporária
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="impacto_alto" name="impacto[]"
+                                value="alto">
+                            <label class="form-check-label" for="impacto_alto">
+                                <span class="badge bg-danger">Alto</span> - Afeta atividades críticas
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Informações do Documento -->
+                    <div class="alert alert-info">
+                        <h6>
+                            <i class="fas fa-file-pdf me-2"></i>Documento Oficial
+                        </h6>
+                        <p class="mb-0">
+                            Ao autorizar, será gerado automaticamente um <strong>documento PDF oficial</strong>
+                            contendo:
+                        </p>
+                        <ul class="mb-0 mt-2">
+                            <li>Dados completos do funcionário</li>
+                            <li>Período autorizado</li>
+                            <li>Pareceres do chefe e diretor</li>
+                            <li>Assinaturas e carimbos oficiais</li>
+                        </ul>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'recursoshumanos:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-2"></i>Confirmar Decisão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Histórico de Licenças do Setor -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Estatísticas do Setor
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Licenças do Mês ({{ licenca.funcionario.sector.codigo }})</h6>
+                        <ul class="list-unstyled">
+                            {% for outra_licenca in licenca.funcionario.sector.licenca_set.all|slice:":3" %}
+                            {% if outra_licenca.id != licenca.id %}
+                            <li class="mb-2">
+                                <small>
+                                    {{ outra_licenca.funcionario.nome_completo|truncatechars:20 }}:
+                                    {{ outra_licenca.data_inicio|date:"d/m/Y" }}
+                                    <span
+                                        class="badge bg-{% if outra_licenca.status == 'aprovado' %}success{% else %}warning{% endif %}">
+                                        {{ outra_licenca.get_status_display }}
+                                    </span>
+                                </small>
+                            </li>
+                            {% endif %}
+                            {% empty %}
+                            <li class="text-muted">Nenhuma outra licença este mês</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Taxa de Aprovação</h6>
+                        <div class="text-center">
+                            <h2 class="text-success">85%</h2>
+                            <small class="text-muted">Últimos 3 meses</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        width: 100%;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Toggle condições especiais based on action
+        const autorizarRadio = document.getElementById('autorizar');
+        const reprovarRadio = document.getElementById('reprovar');
+        const condicoesContainer = document.getElementById('condicoesContainer');
+
+        function toggleCondicoes() {
+            if (autorizarRadio.checked) {
+                condicoesContainer.style.display = 'block';
+            } else {
+                condicoesContainer.style.display = 'none';
+            }
+        }
+
+        autorizarRadio.addEventListener('change', toggleCondicoes);
+        reprovarRadio.addEventListener('change', toggleCondicoes);
+
+        // Initial state
+        toggleCondicoes();
+
+        // Impact checkboxes (single selection)
+        const impactCheckboxes = document.querySelectorAll('input[name="impacto[]"]');
+        impactCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    impactCheckboxes.forEach(other => {
+                        if (other !== this) other.checked = false;
+                    });
+                }
+            });
+        });
+
+        // Auto-expand textarea
+        const parecerField = document.getElementById('parecer');
+        parecerField.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Highlight decision
+        function highlightDecision() {
+            const selectedAction = document.querySelector('input[name="acao"]:checked').value;
+            parecerField.style.borderColor = selectedAction === 'autorizar' ? '#198754' : '#dc3545';
+            parecerField.style.boxShadow = selectedAction === 'autorizar'
+                ? '0 0 0 0.2rem rgba(25, 135, 84, 0.25)'
+                : '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        }
+
+        document.querySelectorAll('input[name="acao"]').forEach(radio => {
+            radio.addEventListener('change', highlightDecision);
+        });
+
+        // Initial highlight
+        highlightDecision();
+    });
+</script>
+{% endblock %}

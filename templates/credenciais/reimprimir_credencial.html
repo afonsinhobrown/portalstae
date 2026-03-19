@@ -1,0 +1,188 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Reimprimir Credencial • STAE{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Coluna Principal -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-warning text-dark py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-print me-2"></i>
+                            Reimprimir Credencial
+                        </h4>
+                        <div>
+                            <span class="badge bg-light text-dark fs-6 me-2">
+                                {{ credencial.numero_credencial|default:"N/A" }}
+                            </span>
+                            {% if credencial.esta_valida %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>VÁLIDA
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times me-1"></i>{{
+                                credencial.get_status_display|upper|default:"INVÁLIDA" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Preview do Cartão -->
+                    <div class="text-center mb-4">
+                        <iframe src="{% url 'credenciais:imprimir_cartao' credencial.id %}"
+                            style="width: 100%; height: 400px; border: 2px solid #dee2e6; border-radius: 8px;"
+                            title="Preview da Credencial" sandbox="allow-same-origin allow-scripts"></iframe>
+                    </div>
+
+                    <!-- Informações da Credencial -->
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Número:</small>
+                                <strong>{{ credencial.numero_credencial|default:"N/A" }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Emitida em:</small>
+                                <strong>{{ credencial.data_emissao|date:"d/m/Y H:i"|default:"N/A" }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Válida até:</small>
+                                <strong>{{ credencial.data_validade|date:"d/m/Y"|default:"N/A" }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Modelo:</small>
+                                <strong>{{ credencial.modelo.nome|default:"Padrão" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Lateral - Ações -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 20px;">
+
+                <!-- Seleção de Modelo -->
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-palette me-2"></i>
+                            Modelo de Impressão
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'credenciais:alterar_modelo_credencial' credencial.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Escolha o Modelo:</label>
+                                <select name="modelo_id" class="form-select" onchange="this.form.submit()">
+                                    {% for modelo in modelos_disponiveis %}
+                                    <option value="{{ modelo.id }}" {% if credencial.modelo.id==modelo.id %}selected{%
+                                        endif %}>
+                                        {{ modelo.nome }} ({{ modelo.tamanho|default:"85x54" }}mm)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Alterar o modelo mudará o layout da credencial impressa.
+                            </small>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Botão de Impressão -->
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-print me-2"></i>
+                            Imprimir
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Imprime o cartão no tamanho {{ credencial.modelo.tamanho|default:"85x54" }}mm (padrão ID-1).
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'credenciais:imprimir_cartao' credencial.id %}" target="_blank"
+                                class="btn btn-success btn-lg py-3">
+                                <i class="fas fa-print me-2"></i>
+                                ABRIR PARA IMPRESSÃO
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gerar QR Code -->
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-header bg-secondary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-qrcode me-2"></i>
+                            QR Code
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            {% if credencial.qr_code or credencial.codigo_verificacao %}
+                            ✅ QR Code disponível
+                            {% else %}
+                            ❌ QR Code não gerado
+                            {% endif %}
+                        </p>
+                        <div class="d-grid">
+                            <form method="post" action="{% url 'credenciais:gerar_qrcode' credencial.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary btn-lg py-3 w-100">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    GERAR/ATUALIZAR QR
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações -->
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header bg-dark text-white py-3">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Detalhes
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Solicitante:</small>
+                            <strong>{{ credencial.pedido.solicitante.nome_completo }}</strong>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Tipo:</small>
+                            <span class="badge"
+                                style="background-color: {{ credencial.pedido.tipo_credencial.cor|default:'#6c757d' }};">
+                                {{ credencial.pedido.tipo_credencial.nome }}
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Evento:</small>
+                            <strong>{{ credencial.pedido.evento.nome|default:"Geral" }}</strong>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <a href="{% url 'credenciais:lista_pedidos' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Voltar à Lista
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

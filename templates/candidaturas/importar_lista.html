@@ -1,0 +1,63 @@
+{% extends 'base_apps.html' %}
+{% block title %}Importação em Massa - Lista de Candidatos{% endblock %}
+{% block module_name %}IMPORTAÇÃO DE LISTAS{% endblock %}
+{% block icon %}fas fa-file-import{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-file-csv me-2"></i>Carregar Ficheiro CSV</h4>
+                <p class="text-muted">Importe rapidamente dezenas de candidatos para a lista do círculo: <strong>{{ lista.circulo.nome }}</strong></p>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group mb-4">
+                        <label class="form-label fw-bold">Selecione o Ficheiro CSV</label>
+                        <input type="file" name="arquivo_csv" class="form-control" accept=".csv" required>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-1"></i>Instruções de Formato:</h5>
+                        <p>O ficheiro deve ser um Excel (.xlsx) ou CSV com as colunas oficiais.</p>
+                        <div class="mt-2 btn-group">
+                            <a href="{% url 'candidaturas:baixar_modelo_excel' lista.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-file-download me-1"></i> Descarregar Modelo Oficial
+                            </a>
+                            <a href="{% url 'candidaturas:baixar_dados_teste_excel' %}" class="btn btn-sm btn-outline-info bg-white">
+                                <i class="fas fa-vial me-1"></i> Dados de Teste
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'candidaturas:detalhe_lista' lista.id %}" class="btn btn-light">Voltar</a>
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fas fa-upload me-1"></i> Iniciar Processamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h5><i class="fas fa-lightbulb me-2 text-warning"></i>Dica do Sistema</h5>
+                <p>O carregamento automático realiza a conferência de duplicados e validação básica. Após a importação, o júri deverá realizar a "Verificação de Eleitor" manual clicando no status de cada candidato na página da lista.</p>
+                <div class="mt-4 p-3 bg-white rounded border">
+                    <h6 class="text-primary font-weight-bold">Exemplo de Ficheiro (modelo.csv)</h6>
+                    <pre class="mb-0 bg-dark text-white p-2" style="font-size: 0.8rem;">
+Nome,BI,Eleitor,Posicao,Genero,Categoria
+Joao Exemplo,1234567,998877,1,M,legislativo
+Maria Silva,7654321,112233,2,F,legislativo
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

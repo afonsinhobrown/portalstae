@@ -1,0 +1,29 @@
+<!-- templates/pagina_stae/servicos.html -->
+{% extends 'pagina_stae/base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8">Nossos Serviços</h1>
+
+    {% for departamento in departamentos %}
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold mb-4 flex items-center">
+            <i class="{{ departamento.icone }} text-blue-600 mr-3"></i>
+            {{ departamento.nome }}
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for servico in departamento.servico_set.all %}
+            {% if servico.ativo %}
+            <div class="border border-gray-200 rounded-lg p-4">
+                <i class="{{ servico.icone }} text-blue-600 text-xl mb-2"></i>
+                <h3 class="font-semibold mb-2">{{ servico.nome }}</h3>
+                <p class="text-gray-600 text-sm">{{ servico.descricao }}</p>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

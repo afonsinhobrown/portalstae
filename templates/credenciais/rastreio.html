@@ -1,0 +1,87 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Rastrear Pedido • Credenciais{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-5">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-lg text-center p-4">
+            <div class="card-body">
+                <i class="fas fa-search-location fa-4x text-primary mb-4"></i>
+                <h3 class="fw-bold mb-3">Rastreio de Pedido</h3>
+                <p class="text-muted mb-4">Insira o código do pedido ou o seu BI para consultar o estado atual.</p>
+
+                <form method="get" class="mb-4">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <input type="text" name="codigo" class="form-control border-end-0"
+                            placeholder="Ex: PED-2025-ABCDEF" value="{{ codigo }}" required>
+                        <button class="btn btn-primary px-4 border-start-0" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                {% if pedido %}
+                <div class="mt-5 text-start animate__animated animate__fadeIn">
+                    <div class="p-4 rounded-4 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold mb-0">Status:
+                                {% if pedido.status == 'pendente' %}
+                                <span class="badge bg-warning text-dark"><i
+                                        class="fas fa-clock me-1"></i>Pendente</span>
+                                {% elif pedido.status == 'em_analise' %}
+                                <span class="badge bg-info"><i class="fas fa-search me-1"></i>Em Análise</span>
+                                {% elif pedido.status == 'aprovado' %}
+                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Aprovado</span>
+                                {% elif pedido.status == 'reprovado' %}
+                                <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Reprovado</span>
+                                {% elif pedido.status == 'emitido' %}
+                                <span class="badge bg-primary"><i class="fas fa-id-card me-1"></i>Emitido</span>
+                                {% endif %}
+                            </h5>
+                            <span class="text-muted small">ID: {{ pedido.numero_pedido }}</span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="small text-muted d-block">Solicitante</label>
+                                <span class="fw-bold">{{ pedido.solicitante.nome_completo }}</span>
+                            </div>
+                            <div class="col-12">
+                                <label class="small text-muted d-block">Evento</label>
+                                <span class="fw-bold">{{ pedido.evento.nome }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted d-block">Data do Pedido</label>
+                                <span>{{ pedido.data_pedido|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted d-block">Última Atualização</label>
+                                <span>{{ pedido.data_atualizacao|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        </div>
+
+                        {% if pedido.status == 'reprovado' and pedido.observacoes_analise %}
+                        <div class="mt-4 p-3 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25">
+                            <h6 class="fw-bold text-danger mb-1 small"><i
+                                    class="fas fa-exclamation-triangle me-2"></i>Motivo da Reprovação:</h6>
+                            <p class="mb-0 small">{{ pedido.observacoes_analise }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if pedido.status == 'emitido' %}
+                        <div
+                            class="mt-4 p-3 bg-primary bg-opacity-10 rounded border border-primary border-opacity-25 text-center">
+                            <h6 class="fw-bold text-primary mb-2">Sua credencial já está pronta!</h6>
+                            <p class="small mb-0">Você pode retirá-la no local do evento ou no escritório central do
+                                STAE.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

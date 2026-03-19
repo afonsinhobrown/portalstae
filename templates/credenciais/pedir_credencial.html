@@ -1,0 +1,283 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Solicitar Credencial • Credenciais{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-11">
+        <div class="credenciais-card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-id-card-alt me-2 text-primary"></i>
+                    {{ titulo|default:"Novo Pedido de Credencial" }}
+                </h5>
+                <a href="{% url 'credenciais:lista_pedidos' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="pedidoForm">
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+                        <!-- 1. SOLICITANTE E EVENTO -->
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-user-circle me-2 text-primary"></i>Solicitante
+                                    e Tipo</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Solicitante *</label>
+                                    {{ form.solicitante }}
+                                    <div class="form-text small">
+                                        Se não encontrar, <a href="{% url 'credenciais:adicionar_solicitante' %}"
+                                            target="_blank">cadastre aqui</a>.
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Tipo de Credencial *</label>
+                                    {{ form.tipo_credencial }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-calendar-check me-2 text-primary"></i>Evento e
+                                    Abrangência</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Evento *</label>
+                                    {{ form.evento }}
+                                    <div class="form-text small">Toda credencial deve estar associada a um evento.</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Abrangência</label>
+                                        {{ form.abrangencia }}
+                                    </div>
+                                    <div class="col-md-6" id="div_provincia_abrangencia" style="display: none;">
+                                        <label class="form-label small fw-bold">Província</label>
+                                        {{ form.provicia_abrangencia }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. DOCUMENTOS OBRIGATÓRIOS -->
+                        <div class="col-12">
+                            <div class="p-3 border border-warning rounded-3 bg-light bg-opacity-10">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-file-upload me-2 text-warning"></i>Documentos
+                                    Obrigatórios</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Carta ao Presidente da CNE *</label>
+                                        {{ form.carta_solicitacao }}
+                                        <div class="form-text small">Documento em PDF ou Imagem.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Cópia do Documento de Identificação
+                                            *</label>
+                                        {{ form.copia_identificacao }}
+                                        <div class="form-text small">Cópia válida e legível do BI ou Passaporte.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. MOTIVO E DATAS -->
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 h-100">
+                                <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-secondary"></i>Detalhes
+                                    do Pedido</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Motivo da Solicitação *</label>
+                                    {{ form.motivo }}
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Data Início</label>
+                                        {{ form.data_inicio }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Data Fim</label>
+                                        {{ form.data_fim }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Quantidade de Crachás</label>
+                                        {{ form.quantidade }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. BENEFICIÁRIOS (Apenas para organizações) -->
+                        <div class="col-12" id="beneficiarios-section" style="display: none;">
+                            <div class="card border-primary">
+                                <div
+                                    class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0"><i class="fas fa-users me-2"></i>Beneficiários (Pessoas a
+                                        Credenciar)</h6>
+                                    <button type="button" class="btn btn-sm btn-light" id="add-beneficiario">
+                                        <i class="fas fa-plus me-1"></i>Adicionar Pessoa
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    {{ formset.management_form }}
+                                    <div id="formset-container">
+                                        {% for form_b in formset %}
+                                        <div class="beneficiario-form p-3 border-bottom position-relative">
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Nome Completo</label>
+                                                    {{ form_b.nome_completo }}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small">Nº BI</label>
+                                                    {{ form_b.numero_bi }}
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small">Cargo/Função</label>
+                                                    {{ form_b.cargo_funcao }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small">Foto</label>
+                                                    {{ form_b.foto }}
+                                                </div>
+                                            </div>
+                                            {% if formset.can_delete %}
+                                            <div class="mt-2 text-end">
+                                                <div class="form-check form-check-inline">
+                                                    {{ form_b.DELETE }}
+                                                    <label class="form-check-label small text-danger">Remover</label>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-link text-muted px-0 text-decoration-none"
+                            onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                            <i class="fas fa-save me-2"></i>Submeter Pedido
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const abrangenciaSelect = document.getElementById('id_abrangencia');
+        const divProvincia = document.getElementById('div_provincia_abrangencia');
+        const provinciaSelect = document.getElementById('id_provicia_abrangencia');
+        const solicitanteSelect = document.getElementById('id_solicitante');
+        const eventoSelect = document.getElementById('id_evento');
+        const dataInicioInput = document.getElementById('id_data_inicio');
+        const dataFimInput = document.getElementById('id_data_fim');
+        const beneficiariosSection = document.getElementById('beneficiarios-section');
+
+        // Mapeamento de tipos que precisam de beneficiários
+        const orgTypes = ['ong', 'radio', 'tv', 'jornal', 'partido', 'observador', 'instituicao', 'empresa', 'outro'];
+
+        function toggleProvincia() {
+            if (abrangenciaSelect.value === 'provincial') {
+                divProvincia.style.display = 'block';
+            } else {
+                divProvincia.style.display = 'none';
+            }
+        }
+
+        // Lógica Inteligente: Sincronizar com o Evento selecionado
+        async function syncWithEvento() {
+            const eventoId = eventoSelect.value;
+            if (!eventoId) return;
+
+            try {
+                const response = await fetch(`/credenciais/api/evento-detalhes/${eventoId}/`);
+                const data = await response.json();
+
+                if (data.abrangencia) {
+                    abrangenciaSelect.value = data.abrangencia;
+                    toggleProvincia();
+
+                    if (data.abrangencia === 'provincial' && data.provincia) {
+                        provinciaSelect.value = data.provincia;
+                    }
+                }
+
+                // Sincronizar datas sugeridas
+                if (data.data_inicio) dataInicioInput.value = data.data_inicio;
+                if (data.data_fim) dataFimInput.value = data.data_fim;
+
+            } catch (error) {
+                console.error('Erro ao buscar detalhes do evento:', error);
+            }
+        }
+
+        function updateBeneficiarios() {
+            // Nota: Se o solicitante for organização, mostrar beneficiários
+            // Por simplicidade, exibimos quase sempre para organizações
+            beneficiariosSection.style.display = 'block';
+        }
+
+        abrangenciaSelect.addEventListener('change', toggleProvincia);
+        eventoSelect.addEventListener('change', syncWithEvento);
+
+        toggleProvincia();
+        // Se já houver um evento selecionado (ex: erro de validação), sincroniza
+        if (eventoSelect.value) syncWithEvento();
+
+        // Lógica para adicionar mais beneficiários
+        const addButton = document.getElementById('add-beneficiario');
+        const totalForms = document.getElementById('id_beneficiarios-TOTAL_FORMS');
+        const container = document.getElementById('formset-container');
+
+        addButton.addEventListener('click', function () {
+            const formCount = parseInt(totalForms.value);
+            const firstForm = container.querySelector('.beneficiario-form');
+            const newForm = firstForm.cloneNode(true);
+
+            // Limpar campos
+            newForm.querySelectorAll('input').forEach(input => {
+                input.value = '';
+                if (input.type === 'checkbox') input.checked = false;
+                // Atualizar IDs e Nomes
+                input.name = input.name.replace('-0-', `-${formCount}-`);
+                input.id = input.id.replace('-0-', `-${formCount}-`);
+            });
+
+            container.appendChild(newForm);
+            totalForms.value = formCount + 1;
+        });
+    });
+</script>
+
+<style>
+    .credenciais-card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    .form-label {
+        color: #495057;
+    }
+
+    .beneficiario-form:last-child {
+        border-bottom: none !important;
+    }
+</style>
+{% endblock %}

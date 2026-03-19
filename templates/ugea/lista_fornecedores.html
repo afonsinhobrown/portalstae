@@ -1,0 +1,68 @@
+{% extends 'base_apps.html' %}
+{% block title %}Fornecedores - UGEA{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-truck-loading{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Base de Fornecedores{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <div>
+            <h3 style="margin:0;"><i class="fas fa-users"></i> Gestão de Fornecedores</h3>
+            <p style="margin:5px 0 0 0; color:#666;">Base de dados centralizada de fornecedores do estado.</p>
+        </div>
+        <div>
+            <a href="{% url 'ugea:novo_fornecedor' %}" class="action-btn"><i class="fas fa-plus"></i> Novo Fornecedor</a>
+        </div>
+    </div>
+
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom:2px solid #ddd; text-align:left; color:#555; background:#f9f9f9;">
+                <th style="padding:15px 10px;">Fornecedor</th>
+                <th style="padding:15px 10px;">Contacto</th>
+                <th style="padding:15px 10px;">Endereço</th>
+                <th style="padding:15px 10px;">Categoria</th>
+                <th style="padding:15px 10px;">Status</th>
+                <th style="padding:15px 10px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in fornecedores %}
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px;">
+                    <b>{{ f.nome }}</b><br>
+                    <small>NUIT: {{ f.nuit }}</small>
+                </td>
+                <td style="padding:10px;">
+                    {% if f.email %}<i class="fas fa-envelope" style="color:#666; width:20px;"></i> {{ f.email }}<br>{% endif %}
+                    {% if f.telefone %}<i class="fas fa-phone" style="color:#666; width:20px;"></i> {{ f.telefone }}{% endif %}
+                </td>
+                <td style="padding:10px; max-width: 250px;">
+                    {{ f.endereco|default:"-" }}
+                </td>
+                <td style="padding:10px;">
+                    <span style="background:#e3f2fd; color:#0d47a1; padding:4px 8px; border-radius:4px; font-size:12px;">{{ f.get_categoria_display }}</span>
+                </td>
+                <td style="padding:10px;">
+                     {% if f.bloqueado %}
+                        <span style="background:#721c24; color:white; padding:4px 8px; border-radius:4px; font-size:12px;">Bloqueado</span>
+                     {% elif f.ativo %}
+                        <span style="background:#d4edda; color:#155724; padding:4px 8px; border-radius:4px; font-size:12px;">Ativo</span>
+                     {% else %}
+                        <span style="background:#f8d7da; color:#721c24; padding:4px 8px; border-radius:4px; font-size:12px;">Inativo</span>
+                     {% endif %}
+                </td>
+                <td style="padding:10px;">
+                    <a href="#" class="action-btn small secondary" title="Editar"><i class="fas fa-edit"></i></a>
+                    <a href="#" class="action-btn small" title="Histórico"><i class="fas fa-history"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="padding:30px; text-align:center; color:#999;">Nenhum fornecedor registado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

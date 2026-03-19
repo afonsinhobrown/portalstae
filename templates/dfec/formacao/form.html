@@ -1,0 +1,113 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{% if formacao %}Editar{% else %}Nova{% endif %} Formação - DFEC{% endblock %}
+
+{% block page_title %}{% if formacao %}Editar Formação{% else %}Registrar Nova Formação{% endif %}{% endblock %}
+{% block page_subtitle %}Preencha os dados técnicos da formação{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow mb-4 border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-edit me-2"></i>Formulário de Dados
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Nome da Formação</label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}
+                            <div class="text-danger small">{{ form.nome.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Tipo</label>
+                            {{ form.tipo_formacao }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nível</label>
+                            {{ form.nivel }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Província</label>
+                            {{ form.provincia }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Local</label>
+                            {{ form.local_realizacao }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Atividade do Plano</label>
+                            {{ form.atividade }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Vagas Planeadas</label>
+                            {{ form.vagas_planeadas }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Status</label>
+                            {{ form.status }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Responsável Principal</label>
+                            {{ form.responsavel_principal }}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if formacao %}{% url 'dfec:formacao_detalhe' formacao.pk %}{% else %}{% url 'dfec:formacoes_lista' %}{% endif %}"
+                            class="btn btn-light px-4">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if formacao %}Salvar Alterações{% else %}Criar Formação{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Bootstrap classes to form fields
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (!input.classList.contains('form-check-input')) {
+                input.classList.add('form-control');
+                if (input.tagName === 'SELECT') {
+                    input.classList.add('form-select');
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+    }
+</style>
+{% endblock %}

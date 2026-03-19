@@ -1,0 +1,221 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Detalhes da Avaliação • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 fw-bold text-primary">
+                        <i class="fas fa-file-alt me-2"></i>Detalhes da Avaliação
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'minhas_avaliacoes' %}">Minhas Avaliações</a></li>
+                            <li class="breadcrumb-item active">Detalhes</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <span class="badge {% if avaliacao.classificacao_final == 'Excelente' %}bg-success{% elif avaliacao.classificacao_final == 'Bom' %}bg-info{% elif avaliacao.classificacao_final == 'Satisfatório' %}bg-warning{% elif avaliacao.classificacao_final == 'Regular' %}bg-danger{% else %}bg-secondary{% endif %} fs-6">
+                        {{ avaliacao.classificacao_final }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Cabeçalho -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Informações Gerais</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Funcionário Avaliado:</strong><br>
+                            {{ avaliacao.funcionario.nome_completo }}</p>
+                            
+                            <p><strong>Setor:</strong><br>
+                            {{ avaliacao.funcionario.sector.codigo }} - {{ avaliacao.funcionario.sector.nome }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <p><strong>Avaliado Por:</strong><br>
+                            {{ avaliacao.avaliado_por.get_full_name|default:avaliacao.avaliado_por.username }}</p>
+                            
+                            <p><strong>Data da Avaliação:</strong><br>
+                            {{ avaliacao.data_avaliacao|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="info-box text-center p-3 border rounded">
+                                <h6 class="text-muted">Nota Final</h6>
+                                <h1 class="display-4 fw-bold text-primary">
+                                    {{ avaliacao.nota_final_geral|floatformat:1 }}
+                                </h1>
+                                <small>/ 5.0</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="info-box text-center p-3 border rounded">
+                                <h6 class="text-muted">Classificação</h6>
+                                <h2 class="fw-bold {% if avaliacao.classificacao_final == 'Excelente' %}text-success{% elif avaliacao.classificacao_final == 'Bom' %}text-info{% elif avaliacao.classificacao_final == 'Satisfatório' %}text-warning{% elif avaliacao.classificacao_final == 'Regular' %}text-danger{% else %}text-secondary{% endif %}">
+                                    {{ avaliacao.classificacao_final }}
+                                </h2>
+                                <small>Baseado na pontuação</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competências Avaliadas -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Competências Avaliadas</h5>
+                </div>
+                <div class="card-body">
+                    {% for competencia_avaliada in competencias_avaliadas %}
+                    <div class="competencia-detalhe mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0">{{ competencia_avaliada.competencia.nome }}</h6>
+                            <span class="badge bg-primary fs-6">
+                                {{ competencia_avaliada.pontuacao }}/5
+                            </span>
+                        </div>
+                        
+                        <p class="small text-muted mb-2">
+                            {{ competencia_avaliada.competencia.descricao }}
+                        </p>
+                        
+                        <!-- Barra de progresso -->
+                        <div class="progress" style="height: 20px;">
+                            {% with width=competencia_avaliada.pontuacao|multiply:20 %}
+                            <div class="progress-bar 
+                                {% if competencia_avaliada.pontuacao >= 4 %}bg-success
+                                {% elif competencia_avaliada.pontuacao >= 3 %}bg-info
+                                {% elif competencia_avaliada.pontuacao >= 2 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ width }}%;"
+                                aria-valuenow="{{ competencia_avaliada.pontuacao }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="5">
+                                {% if competencia_avaliada.pontuacao == 1 %}Insuficiente
+                                {% elif competencia_avaliada.pontuacao == 2 %}Regular
+                                {% elif competencia_avaliada.pontuacao == 3 %}Adequado
+                                {% elif competencia_avaliada.pontuacao == 4 %}Bom
+                                {% else %}Excelente{% endif %}
+                            </div>
+                            {% endwith %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between small mt-1">
+                            <span>1 - Insuficiente</span>
+                            <span>2 - Regular</span>
+                            <span>3 - Adequado</span>
+                            <span>4 - Bom</span>
+                            <span>5 - Excelente</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Nenhuma competência avaliada neste período.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Observações -->
+            {% if avaliacao.observacoes %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Observações e Recomendações</h5>
+                </div>
+                <div class="card-body">
+                    <div class="observacoes-content">
+                        {{ avaliacao.observacoes|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ações -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'minhas_avaliacoes' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+                        </a>
+                        
+                        {% if e_proprietario %}
+                        <button onclick="window.print()" class="btn btn-outline-primary">
+                            <i class="fas fa-print me-2"></i>Imprimir
+                        </button>
+                        {% endif %}
+                        
+                        {% if user.is_staff or user.groups.filter(name='rh_staff').exists %}
+                        <a href="{% url 'admin:recursoshumanos_avaliacaodesempenho_change' avaliacao.id %}" 
+                           class="btn btn-outline-info">
+                            <i class="fas fa-edit me-2"></i>Editar (Admin)
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.competencia-detalhe {
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+.observacoes-content {
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+.info-box {
+    transition: transform 0.3s;
+}
+.info-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.progress-bar {
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<!-- Estilo para impressão -->
+<style media="print">
+.navbar, .breadcrumb, .btn-group, .alert {
+    display: none !important;
+}
+.card {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+}
+.card-header {
+    background-color: #f8f9fa !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,267 @@
+<!-- gestaocombustivel/templates/gestaocombustivel/fornecedores_list.html -->
+{% extends 'gestaocombustivel/base.html' %}
+
+<!-- ADICIONE ESTA LINHA: Carrega os filtros customizados -->
+{% load custom_filters %}
+
+{% block title %}Portal STAE • Fornecedores de Combustível{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-truck text-primary me-2"></i>
+                Fornecedores de Combustível
+            </h1>
+            <small class="text-muted">Gestão de fornecedores e parceiros</small>
+        </div>
+        <div>
+            <a href="{% url 'ugea:lista_fornecedores' %}" class="btn btn-outline-primary" target="_blank">
+                <i class="fas fa-external-link-alt me-2"></i>Gerir na UGEA
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="combustivel-card p-4 mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Nome/Contacto</label>
+                <input type="text" name="q" class="form-control" placeholder="Pesquisar..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">NUIT</label>
+                <input type="text" name="nuit" class="form-control" placeholder="NUIT" value="{{ request.GET.nuit }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Status</label>
+                <select name="activo" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="true" {% if is_ativos %}selected{% endif %}>Ativos</option>
+                    <option value="false" {% if is_inativos %}selected{% endif %}>Inativos</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Fornecedores -->
+    <div class="combustivel-card p-4">
+        {% if fornecedores %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>NUIT</th>
+                        <th>Contacto</th>
+                        <th>Combustíveis</th>
+                        <th>Status</th>
+                        <th>Pedidos</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fornecedor in fornecedores %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle bg-primary text-white me-3">
+                                    {{ fornecedor.nome|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ fornecedor.nome }}</strong>
+                                    {% if fornecedor.email %}
+                                    <br><small class="text-muted">{{ fornecedor.email }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <code>{{ fornecedor.nuit }}</code>
+                        </td>
+                        <td>
+                            {{ fornecedor.contacto }}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <!-- Usa o filtro split customizado -->
+                                {% with tipos=fornecedor.tipos_combustivel|split:"," %}
+                                <!-- Limita a 4 tipos -->
+                                {% for tipo in tipos|slice:"0:4" %}
+                                {% if tipo.strip %}
+                                <span class="badge bg-info">{{ tipo.strip }}</span>
+                                {% endif %}
+                                {% endfor %}
+
+                                <!-- Mostra contador se houver mais de 4 -->
+                                {% if tipos|length > 4 %}
+                                <span class="badge bg-secondary"
+                                    title="Mais {{ tipos|length|add:'-4' }} tipos: {% for tipo in tipos|slice:'4:' %}{{ tipo.strip }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                                    +{{ tipos|length|add:"-4" }}
+                                </span>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if fornecedor.activo %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Ativo
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle me-1"></i>Inativo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% with total=fornecedor.pedidocombustivel_set.count %}
+                            <span class="badge bg-primary">{{ total }} pedidos</span>
+                            {% endwith %}
+                        </td>
+                        <td class="text-end">
+                            <span class="text-muted small">Gerido na UGEA</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if fornecedores.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if fornecedores.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ fornecedores.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for i in fornecedores.paginator.page_range %}
+                {% if fornecedores.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ i }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{
+                        i }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if fornecedores.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ fornecedores.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-truck fa-4x text-muted mb-3"></i>
+            <h5>Fornecedores na UGEA</h5>
+            <p class="text-muted">A gestão de fornecedores é centralizada.</p>
+            <a href="{% url 'ugea:lista_fornecedores' %}" class="btn btn-outline-primary" target="_blank">
+                <i class="fas fa-external-link-alt me-2"></i>Ir para UGEA
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ fornecedores|length }}</h5>
+                        <small>Total Fornecedores</small>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ fornecedores_ativos }}</h5>
+                        <small>Fornecedores Ativos</small>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ fornecedores_inativos }}</h5>
+                        <small>Fornecedores Inativos</small>
+                    </div>
+                    <i class="fas fa-ban fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="combustivel-stat-card p-4 text-white"
+                style="background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ total_pedidos }}</h5>
+                        <small>Total Pedidos</small>
+                    </div>
+                    <i class="fas fa-gas-pump fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    // Adicionar filtros avançados
+    document.addEventListener('DOMContentLoaded', function () {
+        // Adicionar toggle para filtros avançados
+        const filterToggle = document.createElement('button');
+        filterToggle.className = 'btn btn-outline-secondary btn-sm mt-2';
+        filterToggle.innerHTML = '<i class="fas fa-filter me-1"></i> Mais Filtros';
+        filterToggle.type = 'button';
+
+        const filterForm = document.querySelector('form[method="get"]');
+        if (filterForm) {
+            filterForm.parentNode.appendChild(filterToggle);
+        }
+    });
+</script>
+{% endblock %}

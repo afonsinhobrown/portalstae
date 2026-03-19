@@ -1,0 +1,234 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block page_title %}Mapa Interativo de Risco Eleitoral{% endblock %}
+{% block page_subtitle %}Visualização Geográfica da Abstenção e Desempenho{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <!-- Seletor de Ano -->
+    <div class="col-md-3">
+        <form method="get">
+            <label class="fw-bold small mb-1">Ano Eleitoral:</label>
+            <select name="ano" class="form-select" onchange="this.form.submit()">
+                {% for ano in anos_disponiveis %}
+                <option value="{{ ano }}" {% if ano == ano_selecionado %}selected{% endif %}>{{ ano }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    <!-- Filtro de Busca (Localizar Província) -->
+    <div class="col-md-4">
+        <label class="fw-bold small mb-1">Localizar Província:</label>
+        <select id="buscaProvincia" class="form-select" onchange="selecionarProvinciaBusca(this.value)">
+            <option value="">Selecione para focar...</option>
+            {% for key, dados in map_data.items %}
+            <option value="{{ key }}">{{ dados.nome_real }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Legenda Rápida -->
+    <div class="col-md-5 text-end">
+        <div class="d-inline-block text-start p-2 bg-white rounded shadow-sm">
+            <small class="d-block fw-bold mb-1">Nível de Abstenção:</small>
+            <span class="badge bg-success me-1">< 35%</span>
+            <span class="badge bg-warning text-dark me-1">35-44%</span>
+            <span class="badge bg-danger">>= 45%</span>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <!-- Painel Central: MAPA SVG -->
+    <div class="col-lg-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-body bg-light position-relative p-0 text-center" style="min-height: 600px; overflow: hidden;">
+                
+                <!-- SVG de Moçambique (Aproximado/Esquemático) -->
+                <svg viewBox="0 0 400 750" width="100%" height="600" style="background: #eef2f7;">
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                    </filter>
+
+                    <!-- Niassa (Norte Interior) -->
+                    <path id="path_Niassa" d="M120,50 L220,50 L200,150 L100,150 Z" 
+                          fill="{{ map_data.Niassa.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Niassa', '{{ map_data.Niassa.rate }}', '{{ map_data.Niassa.inscritos }}', '{{ map_data.Niassa.abstencoes_abs }}', '{{ map_data.Niassa.nulos_abs }}', '{{ map_data.Niassa.taxa_nulos }}')" />
+                    <text x="160" y="100" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Niassa</text>
+
+                    <!-- Cabo Delgado (Norte Litoral) -->
+                    <path id="path_Cabo_Delgado" d="M220,50 L320,80 L300,180 L200,150 Z" 
+                          fill="{{ map_data.Cabo_Delgado.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Cabo_Delgado', '{{ map_data.Cabo_Delgado.rate }}', '{{ map_data.Cabo_Delgado.inscritos }}', '{{ map_data.Cabo_Delgado.abstencoes_abs }}', '{{ map_data.Cabo_Delgado.nulos_abs }}', '{{ map_data.Cabo_Delgado.taxa_nulos }}')" />
+                    <text x="260" y="115" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">C. Delgado</text>
+
+                    <!-- Nampula (Abaixo de Cabo/Niassa) -->
+                    <path id="path_Nampula" d="M150,150 L300,180 L280,250 L150,230 Z" 
+                          fill="{{ map_data.Nampula.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Nampula', '{{ map_data.Nampula.rate }}', '{{ map_data.Nampula.inscritos }}', '{{ map_data.Nampula.abstencoes_abs }}', '{{ map_data.Nampula.nulos_abs }}', '{{ map_data.Nampula.taxa_nulos }}')" />
+                    <text x="220" y="200" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Nampula</text>
+
+                    <!-- Tete (Oeste) -->
+                    <path id="path_Tete" d="M20,150 L120,150 L150,230 L80,250 Z" 
+                          fill="{{ map_data.Tete.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Tete', '{{ map_data.Tete.rate }}', '{{ map_data.Tete.inscritos }}', '{{ map_data.Tete.abstencoes_abs }}', '{{ map_data.Tete.nulos_abs }}', '{{ map_data.Tete.taxa_nulos }}')" />
+                    <text x="80" y="200" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Tete</text>
+
+                    <!-- Zambezia (Centro Litoral) -->
+                    <path id="path_Zambezia" d="M150,230 L280,250 L240,350 L130,330 Z" 
+                          fill="{{ map_data.Zambezia.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Zambezia', '{{ map_data.Zambezia.rate }}', '{{ map_data.Zambezia.inscritos }}', '{{ map_data.Zambezia.abstencoes_abs }}', '{{ map_data.Zambezia.nulos_abs }}', '{{ map_data.Zambezia.taxa_nulos }}')" />
+                    <text x="200" y="290" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Zambézia</text>
+
+                    <!-- Manica (Centro Oeste) -->
+                    <path id="path_Manica" d="M80,250 L150,230 L130,330 L80,380 Z" 
+                          fill="{{ map_data.Manica.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Manica', '{{ map_data.Manica.rate }}', '{{ map_data.Manica.inscritos }}', '{{ map_data.Manica.abstencoes_abs }}', '{{ map_data.Manica.nulos_abs }}', '{{ map_data.Manica.taxa_nulos }}')" />
+                    <text x="110" y="300" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Manica</text>
+
+                    <!-- Sofala (Centro Litoral abaixo de Zambézia) -->
+                    <path id="path_Sofala" d="M130,330 L240,350 L200,420 L130,400 Z" 
+                          fill="{{ map_data.Sofala.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Sofala', '{{ map_data.Sofala.rate }}', '{{ map_data.Sofala.inscritos }}', '{{ map_data.Sofala.abstencoes_abs }}', '{{ map_data.Sofala.nulos_abs }}', '{{ map_data.Sofala.taxa_nulos }}')" />
+                    <text x="180" y="380" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Sofala</text>
+
+                    <!-- Inhambane (Sul Litoral) -->
+                    <path id="path_Inhambane" d="M130,400 L200,420 L160,550 L110,530 Z" 
+                          fill="{{ map_data.Inhambane.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Inhambane', '{{ map_data.Inhambane.rate }}', '{{ map_data.Inhambane.inscritos }}', '{{ map_data.Inhambane.abstencoes_abs }}', '{{ map_data.Inhambane.nulos_abs }}', '{{ map_data.Inhambane.taxa_nulos }}')" />
+                    <text x="150" y="480" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Inhambane</text>
+
+                    <!-- Gaza (Sul Interior) -->
+                    <path id="path_Gaza" d="M80,380 L130,400 L110,530 L50,550 Z" 
+                          fill="{{ map_data.Gaza.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Gaza', '{{ map_data.Gaza.rate }}', '{{ map_data.Gaza.inscritos }}', '{{ map_data.Gaza.abstencoes_abs }}', '{{ map_data.Gaza.nulos_abs }}', '{{ map_data.Gaza.taxa_nulos }}')" />
+                    <text x="90" y="470" fill="white" font-weight="bold" font-size="14" text-anchor="middle" pointer-events="none">Gaza</text>
+
+                    <!-- Maputo Provincia (Sul Extremo) -->
+                    <path id="path_Maputo_Provincia" d="M50,550 L110,530 L90,620 L40,600 Z" 
+                          fill="{{ map_data.Maputo_Provincia.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                          onclick="cliqueProvincia('Maputo_Provincia', '{{ map_data.Maputo_Provincia.rate }}', '{{ map_data.Maputo_Provincia.inscritos }}', '{{ map_data.Maputo_Provincia.abstencoes_abs }}', '{{ map_data.Maputo_Provincia.nulos_abs }}', '{{ map_data.Maputo_Provincia.taxa_nulos }}')" />
+                    <text x="70" y="580" fill="white" font-weight="bold" font-size="12" text-anchor="middle" pointer-events="none">Maputo P.</text>
+
+                    <!-- Maputo Cidade (Ponto) -->
+                    <circle id="path_Maputo_Cidade" cx="95" cy="590" r="15" 
+                            fill="{{ map_data.Maputo_Cidade.color|default:'#ccc' }}" stroke="white" stroke-width="2" class="map-region"
+                            onclick="cliqueProvincia('Maputo_Cidade', '{{ map_data.Maputo_Cidade.rate }}', '{{ map_data.Maputo_Cidade.inscritos }}', '{{ map_data.Maputo_Cidade.abstencoes_abs }}', '{{ map_data.Maputo_Cidade.nulos_abs }}', '{{ map_data.Maputo_Cidade.taxa_nulos }}')" />
+                    <text x="125" y="595" fill="#333" font-weight="bold" font-size="12" pointer-events="none">Maputo C.</text>
+                </svg>
+
+                <style>
+                    .map-region { cursor: pointer; transition: opacity 0.3s; filter: url(#shadow); }
+                    .map-region:hover { opacity: 0.8; stroke: #333; stroke-width: 3; }
+                </style>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Universal de Detalhes -->
+<div class="modal fade" id="modalDetalhesProvincia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="modalProvinciaTitulo">Detalhes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row text-center mb-4">
+                     <div class="col-6">
+                        <h2 class="fw-bold mb-0 text-primary" id="modalProvinciaTaxa">0%</h2>
+                        <span class="text-muted small">Abstenção</span>
+                     </div>
+                     <div class="col-6">
+                        <h2 class="fw-bold mb-0 text-warning" id="modalProvinciaNulos">0%</h2>
+                        <span class="text-muted small">Votos Nulos</span>
+                     </div>
+                </div>
+                
+                <h6 class="fw-bold border-bottom pb-2 mb-3">Dados Gerais</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Eleitores Inscritos:</span>
+                    <span class="fw-bold" id="modalInscritos">0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Abstenções (Absoluto):</span>
+                    <span class="fw-bold text-danger" id="modalAbsoluto">0</span>
+                </div>
+                 <div class="d-flex justify-content-between mb-2">
+                    <span>Votos Nulos (Absoluto):</span>
+                    <span class="fw-bold text-warning" id="modalNulosAbs">0</span>
+                </div>
+                
+                <hr>
+                <h6 class="fw-bold mb-2">Diagnóstico Automático</h6>
+                <p id="modalProvinciaTexto" class="text-start bg-light p-3 rounded small">...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mapa de nomes reais para exibição limpa
+    const nomesMap = {
+        'Cabo_Delgado': 'Cabo Delgado',
+        'Maputo_Provincia': 'Maputo Província',
+        'Maputo_Cidade': 'Maputo Cidade'
+    };
+
+    function cliqueProvincia(key, taxa, inscritos, absTotal, nulosTotal, taxaNulos) {
+        // Formatar Nome
+        let nomeReal = nomesMap[key] || key;
+        
+        // Popular Modal
+        document.getElementById('modalProvinciaTitulo').innerText = nomeReal;
+        document.getElementById('modalProvinciaTaxa').innerText = taxa.replace('.', ',') + '%';
+        
+        let t = parseFloat(taxa);
+        let tn = parseFloat(taxaNulos);
+        
+        document.getElementById('modalProvinciaNulos').innerText = taxaNulos.replace('.', ',') + '%';
+        
+        document.getElementById('modalInscritos').innerText = parseInt(inscritos).toLocaleString();
+        document.getElementById('modalAbsoluto').innerText = parseInt(absTotal).toLocaleString();
+        document.getElementById('modalNulosAbs').innerText = parseInt(nulosTotal).toLocaleString();
+
+        // Gerar Texto Inteligente
+        let texto = "";
+        if (t >= 45) texto = "CRÍTICO: Abstenção extremamente alta. Possível desengajamento massivo ou problemas logísticos.";
+        else if (t >= 35) texto = "ALERTA: Níveis de abstenção acima do recomendado. Monitorar distritos rurais.";
+        else texto = "ESTÁVEL: Boa participação eleitoral.";
+        
+        if (tn >= 5) texto += " <br><br><strong>Atenção:</strong> Taxa de nulos muito elevada ("+taxaNulos+"%), indicando falha na educação cívica ou protesto.";
+
+        document.getElementById('modalProvinciaTexto').innerHTML = texto;
+        
+        new bootstrap.Modal(document.getElementById('modalDetalhesProvincia')).show();
+    }
+    
+    function selecionarProvinciaBusca(key) {
+        if(!key) return;
+        // Simular clique no elemento SVG
+        const el = document.getElementById('path_' + key);
+        if(el) {
+            // Disparar evento de clique programaticamente
+            // Como os atributos estão no HTML, podemos só ler e chamar a função, mas o 'onclick' do SVG já tem os params.
+            // O jeito mais fácil é chamar o click() do DOM element
+            // Mas SVGElement.click() nem sempre funciona em todos browsers antigos, mas modernos sim.
+            // Alternativa: Ler os atributos e chamar cliqueProvincia.
+            // Vamos tentar o click() nativo.
+            var evt = new MouseEvent("click", {
+                view: window,
+                bubbles: true,
+                cancelable: true
+            });
+            el.dispatchEvent(evt);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Mudança de Categoria • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Mudança de Categoria</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_funcionarios' %}">Funcionários</a></li>
+                <li class="breadcrumb-item active">Mudar Categoria</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-exchange-alt me-2 text-primary"></i>Alterar Categoria do Funcionário
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Informações do Funcionário -->
+                <div class="mb-4 p-3 bg-light rounded">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                {{ funcionario.nome_completo|slice:":1" }}
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h5 class="fw-bold">{{ funcionario.nome_completo }}</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Nº Identificação</small>
+                                    <p class="fw-bold">{{ funcionario.numero_identificacao }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Categoria Atual</small>
+                                    <p class="fw-bold">{{ funcionario.categoria.get_categoria_display }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Escalão Atual</small>
+                                    <p class="fw-bold">{{ funcionario.categoria.escala }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Categoria Atual</label>
+                                <div class="p-3 bg-light rounded">
+                                    <h5 class="fw-bold text-primary">{{ funcionario.categoria.get_categoria_display }}</h5>
+                                    <p class="mb-0 text-muted">Escalão: {{ funcionario.categoria.escala }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nova Categoria *</label>
+                                <select name="categoria_nova" class="form-select" required>
+                                    <option value="">Selecione a nova categoria...</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}">
+                                        {{ categoria.get_categoria_display }} - Escalão {{ categoria.escala }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tipo de Mudança *</label>
+                                <select name="tipo" class="form-select" required>
+                                    <option value="">Selecione o tipo...</option>
+                                    <option value="progressao">Progressão</option>
+                                    <option value="reclassificacao">Reclassificação</option>
+                                    <option value="promocao">Promoção</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Data da Mudança *</label>
+                                <input type="date" name="data_mudanca" class="form-control" 
+                                       value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Motivo da Mudança *</label>
+                        <textarea name="motivo" class="form-control" rows="4" 
+                                  placeholder="Descreva o motivo da mudança de categoria..." required></textarea>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Salário Antigo (opcional)</label>
+                                <input type="number" name="salario_antigo" class="form-control" 
+                                       step="0.01" placeholder="Ex: 150000.00">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Novo Salário (opcional)</label>
+                                <input type="number" name="salario_novo" class="form-control" 
+                                       step="0.01" placeholder="Ex: 180000.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Informação</h5>
+                                <p class="mb-0">
+                                    Esta mudança será aplicada imediatamente e registada no histórico do funcionário.
+                                    Certifique-se de que todos os dados estão correctos antes de proceder.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{% url 'recursoshumanos:lista_funcionarios' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Tem certeza que deseja alterar a categoria deste funcionário?')">
+                            <i class="fas fa-save me-2"></i>Registar Mudança
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Histórico de Categorias -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history me-2 text-info"></i>Histórico de Categorias
+                </h5>
+            </div>
+            <div class="card-body">
+                {% with historico=funcionario.mudancas_categoria.all|slice:":3" %}
+                {% if historico %}
+                <div class="list-group list-group-flush">
+                    {% for mudanca in historico %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-{% if mudanca.tipo == 'progressao' %}primary{% elif mudanca.tipo == 'promocao' %}success{% else %}warning{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">{{ mudanca.categoria_antiga.get_categoria_display }} → {{ mudanca.categoria_nova.get_categoria_display }}</h6>
+                                <small class="text-muted">{{ mudanca.data_mudanca|date:"d/m/Y" }} • {{ mudanca.get_tipo_display }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Sem histórico de mudanças</p>
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'recursoshumanos:historico_funcionario' funcionario.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>Ver Histórico Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tipos de Mudança -->
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2 text-success"></i>Tipos de Mudança
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold text-primary mb-2">Progressão</h6>
+                    <p class="text-muted small mb-3">
+                        Avanço na carreira por tempo de serviço e mérito, dentro da mesma linha de carreira.
+                    </p>
+                    
+                    <h6 class="fw-bold text-success mb-2">Promoção</h6>
+                    <p class="text-muted small mb-3">
+                        Ascensão para posição superior, geralmente com mudança de função e responsabilidades.
+                    </p>
+                    
+                    <h6 class="fw-bold text-warning mb-2">Reclassificação</h6>
+                    <p class="text-muted small">
+                        Ajuste de categoria por reavaliação de competências, sem necessariamente ser promoção.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

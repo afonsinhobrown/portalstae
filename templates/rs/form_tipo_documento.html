@@ -1,0 +1,139 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}RS - LOGÍSTICA{% endblock %}
+{% block icon %}fas fa-file-signature{% endblock %}
+{% block dashboard_url %}{% url 'rs:documentos' %}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Configuração do Documento Oficial</h3>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 300px; gap: 30px;">
+        <!-- Lado Esquerdo: Formulário -->
+        <form method="post" id="docForm">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Nome do Documento</label>
+                    {{ form.nome }}
+                </div>
+                <div class="form-group">
+                    <label>Código Interno</label>
+                    {{ form.codigo }}
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Template HTML / Estrutura do Documento</label>
+                    {{ form.template_html }}
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; display: flex; gap: 15px;">
+                <button type="submit" class="action-btn">Salvar Configuração</button>
+                <a href="{% url 'rs:documentos' %}" class="action-btn secondary">Cancelar</a>
+            </div>
+        </form>
+
+        <!-- Lado Direito: Biblioteca de Modelos -->
+        <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <h4 style="margin-top:0; color:#1e293b;"><i class="fas fa-magic"></i> Modelos Rápidos</h4>
+            <p style="font-size:12px; color:#64748b;">Clique num modelo para carregar a estrutura base sugerida:</p>
+            
+            <div class="template-list" style="display: flex; flex-direction: column; gap:10px;">
+                <button type="button" class="tpl-btn" onclick="loadTpl('boletim')">
+                    <strong>Boletim de Voto</strong>
+                    <span>Quadrícula + Partidos</span>
+                </button>
+                <button type="button" class="tpl-btn" onclick="loadTpl('acta')">
+                    <strong>Acta de Operação</strong>
+                    <span>Campos de Contagem</span>
+                </button>
+                <button type="button" class="tpl-btn" onclick="loadTpl('edital')">
+                    <strong>Edital Oficial</strong>
+                    <span>Resultados em Tabela</span>
+                </button>
+                <button type="button" class="tpl-btn" onclick="loadTpl('cartao')">
+                    <strong>Cartão Eleitor (PVC)</strong>
+                    <span>Layout ID Card</span>
+                </button>
+            </div>
+            
+            <div style="margin-top:20px; padding-top:10px; border-top:1px solid #cbd5e1; font-size:11px; color:#94a3b8;">
+                <i class="fas fa-info-circle"></i> O carregamento do modelo substituirá o conteúdo atual do editor.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const templates = {
+        boletim: `<div class="boletim-container" style="border: 4px double #000; padding: 20px;">
+    <h2 style="text-align:center;">BOLETIM DE VOTO</h2>
+    <p style="text-align:center;">{{ eleicao|default:"ELEIÇÃO 2024" }}</p>
+    <table style="width:100%; border-collapse: collapse; margin-top:20px;">
+        <thead><tr style="background:#eee;">
+            <th style="border:1px solid #000; padding:10px;">PARTIDO / COLIGAÇÃO</th>
+            <th style="border:1px solid #000; padding:10px; width:100px;">SÍMBOLO</th>
+            <th style="border:1px solid #000; padding:10px; width:80px;">VOTO</th>
+        </tr></thead>
+        <tbody>
+            {% for p in partidos %}
+            <tr>
+                <td style="border:1px solid #000; padding:15px; font-weight:bold;">{{ p.partido.nome }}</td>
+                <td style="border:1px solid #000; text-align:center; padding:5px;"><div style="width:50px; height:50px; background:#ddd; margin:auto;"></div></td>
+                <td style="border:1px solid #000; text-align:center;"><div style="width:40px; height:40px; border:3px solid #000; margin:auto;"></div></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>`,
+        acta: `<div class="acta-container" style="font-family:serif; padding:10px;">
+    <h2 style="text-align:center; text-decoration:underline;">ACTA DE OPERAÇÕES DE VOTO</h2>
+    <p><strong>DISTRITO:</strong> {{ distrito }} | <strong>MESA Nº:</strong> {{ mesa }}</p>
+    <div style="border:1px solid #000; padding:15px; margin-top:20px;">
+        <h3>1. PARTICIPAÇÃO</h3>
+        <p>Inscritos: ________ | Votantes: ________</p>
+    </div>
+    <div style="margin-top:20px;">
+        <h3>2. CONTAGEM POR PARTIDO</h3>
+        <table style="width:100%;">
+            {% for p in votos.contagem %}
+            <tr><td>{{ p.partido }}</td><td style="text-align:right;">________ votos</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>`,
+        edital: `<div style="text-align:center; border:5px solid #000; padding:30px;">
+    <h1 style="font-size:32pt;">EDITAL</h1>
+    <h2 style="font-size:18pt;">MAPA DE RESULTADOS</h2>
+    <table style="width:100%; border-collapse: collapse; margin-top:30px; font-size:16pt;">
+        {% for p in partidos %}
+        <tr><td style="border:1px solid #000; padding:15px;">{{ p.partido.sigla }}</td><td style="border:1px solid #000; padding:15px; text-align:right; font-weight:bold;">_______</td></tr>
+        {% endfor %}
+    </table>
+</div>`,
+        cartao: `templates/credenciais/cartao_pvc.html`
+    };
+
+    function loadTpl(key) {
+        if(confirm("Deseja carregar este modelo? O conteúdo atual do editor será apagado.")) {
+            const textarea = document.querySelector('textarea[name="template_html"]');
+            textarea.value = templates[key];
+        }
+    }
+</script>
+
+<style>
+    .tpl-btn { background: white; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; cursor: pointer; text-align: left; transition: all 0.2s; }
+    .tpl-btn:hover { border-color: var(--primary); background: #f8fafc; }
+    .tpl-btn strong { display: block; font-size: 13px; color: #1e293b; }
+    .tpl-btn span { font-size: 11px; color: #64748b; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    textarea.form-control { font-family: 'Courier New', Courier, monospace; background: #fafafa; height: 400px; }
+</style>
+{% endblock %}

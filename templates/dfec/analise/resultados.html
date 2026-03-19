@@ -1,0 +1,914 @@
+<!-- templates/dfec/analise/resultados.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Resultados da Análise - DFEC{% endblock %}
+{% block page_title %}Resultados da Análise{% endblock %}
+{% block page_subtitle %}Análise detalhada por região e indicadores{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-download me-2"></i> Exportar
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf me-2"></i>Relatório PDF
+            </a></li>
+        <li><a class="dropdown-item" href="#" onclick="exportToExcel()">
+                <i class="fas fa-file-excel me-2"></i>Dados Excel
+            </a></li>
+        <li><a class="dropdown-item" href="#" onclick="exportToCSV()">
+                <i class="fas fa-file-csv me-2"></i>Dados CSV
+            </a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item" href="#" onclick="gerarRecomendacoes()">
+                <i class="fas fa-lightbulb me-2"></i>Gerar Recomendações
+            </a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Filtros -->
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-filter me-2"></i>Filtros da Análise
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3" id="filtersForm">
+                    <div class="col-md-3">
+                        <label class="form-label">Eleição</label>
+                        <select name="eleicao" class="form-select">
+                            <option value="">Todas as eleições</option>
+                            {% for eleicao in eleicoes %}
+                            <option value="{{ eleicao.id }}" {% if request.GET.eleicao==eleicao.id|stringformat:"s"
+                                %}selected{% endif %}>
+                                {{ eleicao.get_tipo_display }} {{ eleicao.ano }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Nível Geográfico</label>
+                        <select name="nivel" class="form-select">
+                            <option value="">Todos os níveis</option>
+                            <option value="PROVINCIA" {% if request.GET.nivel=='PROVINCIA' %}selected{% endif %}>
+                                Província</option>
+                            <option value="DISTRITO" {% if request.GET.nivel=='DISTRITO' %}selected{% endif %}>Distrito
+                            </option>
+                            <option value="POSTO" {% if request.GET.nivel=='POSTO' %}selected{% endif %}>Posto
+                                Administrativo</option>
+                            <option value="LOCALIDADE" {% if request.GET.nivel=='LOCALIDADE' %}selected{% endif %}>
+                                Localidade</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Indicador</label>
+                        <select name="indicador" class="form-select">
+                            <option value="">Todos os indicadores</option>
+                            <option value="ABSTENCOES" {% if request.GET.indicador=='ABSTENCOES' %}selected{% endif %}>
+                                Abstenções</option>
+                            <option value="NULOS" {% if request.GET.indicador=='NULOS' %}selected{% endif %}>Votos Nulos
+                            </option>
+                            <option value="BRANCOS" {% if request.GET.indicador=='BRANCOS' %}selected{% endif %}>Votos
+                                Brancos</option>
+                            <option value="COMPARECIMENTO" {% if request.GET.indicador=='COMPARECIMENTO' %}selected{%
+                                endif %}>Comparecimento</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Classificação</label>
+                        <select name="classificacao" class="form-select">
+                            <option value="">Todas as classificações</option>
+                            <option value="CRITICO" {% if request.GET.classificacao=='CRITICO' %}selected{% endif %}>
+                                Crítico</option>
+                            <option value="ALTO" {% if request.GET.classificacao=='ALTO' %}selected{% endif %}>Alto
+                            </option>
+                            <option value="MODERADO" {% if request.GET.classificacao=='MODERADO' %}selected{% endif %}>
+                                Moderado</option>
+                            <option value="BAIXO" {% if request.GET.classificacao=='BAIXO' %}selected{% endif %}>Baixo
+                            </option>
+                            <option value="EXCELENTE" {% if request.GET.classificacao=='EXCELENTE' %}selected{% endif
+                                %}>Excelente</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Província</label>
+                        <select name="provincia" class="form-select">
+                            <option value="">Todas as províncias</option>
+                            {% for provincia in provincias %}
+                            <option value="{{ provincia }}" {% if request.GET.provincia==provincia %}selected{% endif
+                                %}>{{ provincia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Prioridade</label>
+                        <select name="prioridade" class="form-select">
+                            <option value="">Todas as prioridades</option>
+                            <option value="4" {% if request.GET.prioridade=='4' %}selected{% endif %}>Crítica</option>
+                            <option value="3" {% if request.GET.prioridade=='3' %}selected{% endif %}>Alta</option>
+                            <option value="2" {% if request.GET.prioridade=='2' %}selected{% endif %}>Média</option>
+                            <option value="1" {% if request.GET.prioridade=='1' %}selected{% endif %}>Baixa</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Ordenar por</label>
+                        <select name="ordenar" class="form-select">
+                            <option value="-prioridade" {% if request.GET.ordenar=='-prioridade' %}selected{% endif %}>
+                                Prioridade (Alta → Baixa)</option>
+                            <option value="prioridade" {% if request.GET.ordenar=='prioridade' %}selected{% endif %}>
+                                Prioridade (Baixa → Alta)</option>
+                            <option value="-valor" {% if request.GET.ordenar=='-valor' %}selected{% endif %}>Valor (Alto
+                                → Baixo)</option>
+                            <option value="valor" {% if request.GET.ordenar=='valor' %}selected{% endif %}>Valor (Baixo
+                                → Alto)</option>
+                            <option value="nome_regiao" {% if request.GET.ordenar=='nome_regiao' %}selected{% endif %}>
+                                Nome da Região (A-Z)</option>
+                            <option value="-nome_regiao" {% if request.GET.ordenar=='-nome_regiao' %}selected{% endif
+                                %}>Nome da Região (Z-A)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Aplicar Filtros
+                            </button>
+                            <a href="{% url 'analise_resultados' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Limpar Filtros
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo Estatístico -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-primary border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Total de Análises</div>
+                        <div class="h3 mb-0">{{ total_analises }}</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-bar fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-danger border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Análises Críticas</div>
+                        <div class="h3 mb-0">{{ criticas_count }}</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-warning border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Média de Abstenção</div>
+                        <div class="h3 mb-0">{{ media_abstencao|floatformat:1 }}%</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-slash fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-success border-4 shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="text-muted">Média de Comparecimento</div>
+                        <div class="h3 mb-0">{{ media_comparecimento|floatformat:1 }}%</div>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-check fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visualizações Gráficas -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Distribuição por Classificação</h6>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active"
+                        onclick="changeChartType('bar')">Barras</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                        onclick="changeChartType('pie')">Pizza</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="classificacaoChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Top 5 Regiões Críticas</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for analise in top_criticas %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ analise.nome_regiao }}</h6>
+                            <small class="text-muted">
+                                {{ analise.eleicao.get_tipo_display }} {{ analise.eleicao.ano }}
+                                | {{ analise.get_indicador_display }}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-danger">{{ analise.valor|floatformat:1 }}%</span>
+                            <br>
+                            <small class="text-muted">{{ analise.get_nivel_display }}</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <p class="text-muted mb-0">Nenhuma região crítica</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mapa de Calor -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-map me-2"></i>Mapa de Calor por Província
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="mapaCalor" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Resultados -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Resultados Detalhados</h6>
+                <span class="badge bg-primary">{{ analises.count }} resultados</span>
+            </div>
+            <div class="card-body">
+                {% if analises %}
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Região</th>
+                                <th>Nível</th>
+                                <th>Eleição</th>
+                                <th>Indicador</th>
+                                <th>Valor</th>
+                                <th>Classificação</th>
+                                <th>Prioridade</th>
+                                <th>Tendência</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analise in analises %}
+                            <tr
+                                class="table-{% if analise.prioridade == 4 %}danger{% elif analise.prioridade == 3 %}warning{% elif analise.prioridade == 2 %}info{% else %}default{% endif %}">
+                                <td>
+                                    <strong>{{ analise.nome_regiao }}</strong>
+                                    {% if analise.nivel == 'PROVINCIA' %}
+                                    <br>
+                                    <small class="text-muted">Província</small>
+                                    {% elif analise.nivel == 'DISTRITO' %}
+                                    <br>
+                                    <small class="text-muted">Distrito</small>
+                                    {% elif analise.nivel == 'POSTO' %}
+                                    <br>
+                                    <small class="text-muted">Posto Administrativo</small>
+                                    {% else %}
+                                    <br>
+                                    <small class="text-muted">Localidade</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ analise.get_nivel_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ analise.eleicao.get_tipo_display }}
+                                    <br>
+                                    <small class="text-muted">{{ analise.eleicao.ano }}</small>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if analise.indicador == 'ABSTENCOES' %}warning{% elif analise.indicador == 'NULOS' %}danger{% elif analise.indicador == 'BRANCOS' %}info{% else %}success{% endif %}">
+                                        {{ analise.get_indicador_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar bg-{% if analise.classificacao == 'CRITICO' %}danger{% elif analise.classificacao == 'ALTO' %}warning{% elif analise.classificacao == 'MODERADO' %}info{% elif analise.classificacao == 'BAIXO' %}success{% else %}primary{% endif %}"
+                                                role="progressbar" style="width: {% widthratio analise.valor 1 1 %}%;">
+                                            </div>
+                                        </div>
+                                        <strong>{{ analise.valor|floatformat:1 }}%</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if analise.classificacao == 'CRITICO' %}danger{% elif analise.classificacao == 'ALTO' %}warning{% elif analise.classificacao == 'MODERADO' %}info{% elif analise.classificacao == 'BAIXO' %}success{% else %}primary{% endif %}">
+                                        {{ analise.get_classificacao_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if analise.prioridade == 4 %}
+                                    <span class="badge bg-danger">Crítica</span>
+                                    {% elif analise.prioridade == 3 %}
+                                    <span class="badge bg-warning">Alta</span>
+                                    {% elif analise.prioridade == 2 %}
+                                    <span class="badge bg-info">Média</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Baixa</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if analise.tendencia %}
+                                    <span
+                                        class="badge bg-{% if analise.tendencia == 'SUBINDO' %}danger{% elif analise.tendencia == 'DESCENDO' %}success{% else %}secondary{% endif %}">
+                                        <i
+                                            class="fas fa-{% if analise.tendencia == 'SUBINDO' %}arrow-up{% elif analise.tendencia == 'DESCENDO' %}arrow-down{% else %}minus{% endif %} me-1"></i>
+                                        {{ analise.get_tendencia_display }}
+                                    </span>
+                                    {% if analise.comparacao_ano_anterior %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ analise.comparacao_ano_anterior|floatformat:1 }}%
+                                    </small>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary">Sem comparação</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            onclick="verDetalhes('{{ analise.id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success"
+                                            onclick="gerarRecomendacao('{{ analise.id }}')">
+                                            <i class="fas fa-lightbulb"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info"
+                                            onclick="compararAnos('{{ analise.id }}')">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                {% if analises.has_other_pages %}
+                <nav aria-label="Paginação" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if analises.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ analises.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                Anterior
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for i in analises.paginator.page_range %}
+                        {% if analises.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ i }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                {{ i }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if analises.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ analises.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                Próxima
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma análise encontrada</h5>
+                    <p class="text-muted">Ajuste os filtros ou execute uma nova análise</p>
+                    <a href="{% url 'analisar_regiao' %}" class="btn btn-primary">
+                        <i class="fas fa-chart-line me-1"></i> Executar Nova Análise
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="modal fade" id="detalhesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes da Análise</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detalhesContent">
+                <!-- Conteúdo carregado via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="exportarDetalhes()">
+                    <i class="fas fa-download me-1"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<script>
+    // Gráfico de Classificação
+    let classificacaoChart;
+    let currentChartType = 'bar';
+
+    function initClassificacaoChart() {
+        const ctx = document.getElementById('classificacaoChart').getContext('2d');
+
+        const data = {
+            labels: ['Crítico', 'Alto', 'Moderado', 'Baixo', 'Excelente'],
+            datasets: [{
+                label: 'Número de Análises',
+                data: [
+                    {{ classificacoes.CRITICO |default: 0 }},
+            {{ classificacoes.ALTO |default: 0 }},
+            {{ classificacoes.MODERADO|default: 0
+    }},
+    { { classificacoes.BAIXO |default: 0 } },
+    { { classificacoes.EXCELENTE |default: 0 } }
+            ],
+    backgroundColor: [
+        'rgba(220, 53, 69, 0.7)',
+        'rgba(255, 193, 7, 0.7)',
+        'rgba(13, 202, 240, 0.7)',
+        'rgba(25, 135, 84, 0.7)',
+        'rgba(111, 66, 193, 0.7)'
+    ],
+        borderColor: [
+            'rgb(220, 53, 69)',
+            'rgb(255, 193, 7)',
+            'rgb(13, 202, 240)',
+            'rgb(25, 135, 84)',
+            'rgb(111, 66, 193)'
+        ],
+            borderWidth: 1
+        }]
+    };
+
+    const config = {
+        type: currentChartType,
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: currentChartType === 'bar' ? {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            } : {}
+        }
+    };
+
+    if (classificacaoChart) {
+        classificacaoChart.destroy();
+    }
+
+    classificacaoChart = new Chart(ctx, config);
+}
+
+    function changeChartType(type) {
+        currentChartType = type;
+        initClassificacaoChart();
+
+        // Atualizar botões ativos
+        document.querySelectorAll('#classificacaoChart').parentElement.parentElement.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    // Mapa de Calor
+    function initMapaCalor() {
+        const mapa = L.map('mapaCalor').setView([-18.6657, 35.5296], 5); // Centro de Moçambique
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(mapa);
+
+        // Dados de exemplo - em produção viriam do backend
+        const provinciasData = {
+            'Maputo': { lat: -25.9692, lng: 32.5732, value: 35.5 },
+            'Gaza': { lat: -23.3044, lng: 32.7181, value: 42.3 },
+            'Inhambane': { lat: -23.8650, lng: 35.3833, value: 28.7 },
+            'Sofala': { lat: -19.2033, lng: 34.8625, value: 38.9 },
+            'Manica': { lat: -19.1167, lng: 33.4833, value: 31.2 },
+            'Tete': { lat: -16.1564, lng: 33.5866, value: 45.1 },
+            'Zambézia': { lat: -17.8469, lng: 36.8871, value: 39.8 },
+            'Nampula': { lat: -15.1167, lng: 39.2667, value: 33.4 },
+            'Cabo Delgado': { lat: -12.9608, lng: 40.5078, value: 29.6 },
+            'Niassa': { lat: -13.3128, lng: 36.4883, value: 26.3 }
+        };
+
+        // Adicionar marcadores
+        Object.keys(provinciasData).forEach(provincia => {
+            const data = provinciasData[provincia];
+            const color = getColorForValue(data.value);
+
+            const marker = L.circleMarker([data.lat, data.lng], {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.7,
+                radius: 15
+            }).addTo(mapa);
+
+            marker.bindPopup(`
+            <strong>${provincia}</strong><br>
+            Taxa de Abstenção: ${data.value}%<br>
+            <button class="btn btn-sm btn-primary mt-2" onclick="filtrarPorProvincia('${provincia}')">
+                Ver Análises
+            </button>
+        `);
+        });
+
+        // Legenda
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            const grades = [20, 30, 40, 50];
+            const labels = [];
+
+            div.innerHTML = '<strong>Taxa de Abstenção (%)</strong><br>';
+
+            for (let i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getColorForValue(grades[i] + 1) + '"></i> ' +
+                    grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+
+            return div;
+        };
+        legend.addTo(mapa);
+    }
+
+    function getColorForValue(value) {
+        return value > 40 ? '#dc3545' :
+            value > 30 ? '#ffc107' :
+                value > 20 ? '#0dcaf0' :
+                    '#198754';
+    }
+
+    function filtrarPorProvincia(provincia) {
+        document.querySelector('select[name="provincia"]').value = provincia;
+        document.getElementById('filtersForm').submit();
+    }
+
+    // Funções AJAX
+    function verDetalhes(analiseId) {
+        fetch(`/api/analise/${analiseId}/detalhes/`)
+            .then(response => response.json())
+            .then(data => {
+                const content = document.getElementById('detalhesContent');
+                content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informações Gerais</h6>
+                        <dl class="row">
+                            <dt class="col-sm-4">Região:</dt>
+                            <dd class="col-sm-8">${data.nome_regiao}</dd>
+
+                            <dt class="col-sm-4">Nível:</dt>
+                            <dd class="col-sm-8">${data.nivel_display}</dd>
+
+                            <dt class="col-sm-4">Eleição:</dt>
+                            <dd class="col-sm-8">${data.eleicao_tipo} ${data.eleicao_ano}</dd>
+
+                            <dt class="col-sm-4">Indicador:</dt>
+                            <dd class="col-sm-8">${data.indicador_display}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Resultados</h6>
+                        <dl class="row">
+                            <dt class="col-sm-4">Valor:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-${data.classificacao_color}">
+                                    ${data.valor}%
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Classificação:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-${data.classificacao_color}">
+                                    ${data.classificacao_display}
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Prioridade:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-${data.prioridade_color}">
+                                    ${data.prioridade_display}
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Tendência:</dt>
+                            <dd class="col-sm-8">
+                                ${data.tendencia ? `
+                                    <span class="badge bg-${data.tendencia_color}">
+                                        ${data.tendencia_display}
+                                    </span>
+                                    ${data.comparacao_ano_anterior ? `
+                                        <br><small>Variação: ${data.comparacao_ano_anterior}%</small>
+                                    ` : ''}
+                                ` : '<span class="badge bg-secondary">Sem comparação</span>'}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Recomendação</h6>
+                        <div class="alert alert-${data.prioridade_color}">
+                            ${data.recomendacao}
+                        </div>
+                    </div>
+                </div>
+
+                ${data.atividade_sugerida ? `
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Atividade Sugerida</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>${data.atividade_sugerida.nome}</h6>
+                                <p class="mb-1">${data.atividade_sugerida.descricao}</p>
+                                <small class="text-muted">
+                                    Orçamento: ${data.atividade_sugerida.orcamento} MT
+                                    | Status: ${data.atividade_sugerida.status}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+
+                const modal = new bootstrap.Modal(document.getElementById('detalhesModal'));
+                modal.show();
+            })
+            .catch(error => {
+                showToast('Erro ao carregar detalhes: ' + error, 'danger');
+            });
+    }
+
+    function gerarRecomendacao(analiseId) {
+        fetch(`/api/analise/${analiseId}/gerar-recomendacao/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Recomendação gerada com sucesso', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Erro: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                showToast('Erro de conexão: ' + error, 'danger');
+            });
+    }
+
+    function gerarRecomendacoes() {
+        if (!confirm('Deseja gerar recomendações para todas as análises críticas?')) return;
+
+        fetch('/api/analise/gerar-recomendacoes/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                showToast(`${data.count} recomendações geradas`, 'success');
+                setTimeout(() => location.reload(), 1500);
+            })
+            .catch(error => {
+                showToast('Erro: ' + error, 'danger');
+            });
+    }
+
+    function compararAnos(analiseId) {
+        window.location.href = `/analise/comparar/?analise=${analiseId}`;
+    }
+
+    // Exportação
+    function exportToPDF() {
+        // Implementação da exportação para PDF
+        showToast('Exportando para PDF...', 'info');
+        window.open('/api/analise/exportar-pdf/?' + new URLSearchParams(window.location.search), '_blank');
+    }
+
+    function exportToExcel() {
+        showToast('Exportando para Excel...', 'info');
+        window.open('/api/analise/exportar-excel/?' + new URLSearchParams(window.location.search), '_blank');
+    }
+
+    function exportToCSV() {
+        showToast('Exportando para CSV...', 'info');
+        window.open('/api/analise/exportar-csv/?' + new URLSearchParams(window.location.search), '_blank');
+    }
+
+    function exportarDetalhes() {
+        // Exportar detalhes da análise atual
+        const analiseId = document.querySelector('#detalhesContent').dataset.analiseId;
+        if (analiseId) {
+            window.open(`/api/analise/${analiseId}/exportar/`, '_blank');
+        }
+    }
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', function () {
+        initClassificacaoChart();
+        initMapaCalor();
+
+        // Configurar DataTables
+        $('.datatable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-PT.json'
+            },
+            pageLength: 25,
+            order: [[6, 'desc']], // Ordenar por prioridade por padrão
+            responsive: true,
+            columnDefs: [
+                { orderable: false, targets: [8] } // Coluna de ações não ordenável
+            ]
+        });
+    });
+
+    // Toast notifications
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+        const container = document.getElementById('toastContainer') || createToastContainer();
+        container.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(container);
+        return container;
+    }
+</script>
+
+<style>
+    #mapaCalor {
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .info {
+        padding: 6px 8px;
+        font: 14px/16px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+    }
+
+    .info h4 {
+        margin: 0 0 5px;
+        color: #777;
+    }
+
+    .legend {
+        line-height: 18px;
+        color: #555;
+    }
+
+    .legend i {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.7;
+    }
+
+    .chart-area {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}

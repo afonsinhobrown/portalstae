@@ -1,0 +1,19 @@
+{
+  "site_package_search_strategy": "all",
+  "source_directories": [
+    {
+      "root": "."
+    }
+  ],
+  "search_path": [
+    ".",
+    "venv/Lib/site-packages"
+  ],
+  "exclude": [
+    ".*/venv/.*",
+    ".*/migrations/.*",
+    ".*/staticfiles/.*",
+    ".*/media/.*"
+  ],
+  "python_version": "3.12"
+}

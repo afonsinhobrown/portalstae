@@ -1,0 +1,165 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}{{ documento.titulo }} • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">📄 {{ documento.titulo }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:documentos_institucionais' %}">Documentos</a></li>
+                    <li class="breadcrumb-item active">{{ documento.titulo|truncatechars:30 }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'recursoshumanos:download_documento' documento.id %}" class="btn btn-success">
+                <i class="fas fa-download me-2"></i>Download
+            </a>
+            <a href="{% url 'recursoshumanos:documentos_institucionais' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações do Documento -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Título:</th>
+                            <td>{{ documento.titulo }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tipo:</th>
+                            <td>
+                                <span class="badge bg-info">{{ documento.get_tipo_display }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Data:</th>
+                            <td>{{ documento.data_documento|date:"d/m/Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if documento.status == 'publicado' %}
+                                <span class="badge bg-success">{{ documento.get_status_display }}</span>
+                                {% elif documento.status == 'rascunho' %}
+                                <span class="badge bg-warning">{{ documento.get_status_display }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ documento.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Público:</th>
+                            <td>
+                                {% if documento.publico %}
+                                <span class="badge bg-success">Sim</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Não</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Criado por:</th>
+                            <td>{{ documento.criado_por.get_full_name|default:documento.criado_por.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Criação:</th>
+                            <td>{{ documento.data_criacao|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Última atualização:</th>
+                            <td>{{ documento.data_atualizacao|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Arquivo:</th>
+                            <td>
+                                <small>{{ documento.arquivo.name|cut:"documentos/" }}</small><br>
+                                <small class="text-muted">{{ documento.arquivo.size|filesizeformat }}</small>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    {% if not documento.publico %}
+                    <div class="mt-3">
+                        <h6><i class="fas fa-users me-2"></i>Destinatários</h6>
+                        <ul class="list-unstyled">
+                            {% if documento.setores_destino.all %}
+                            <li><strong>Setores:</strong>
+                                {% for setor in documento.setores_destino.all %}
+                                <span class="badge bg-primary ms-1">{{ setor.codigo }}</span>
+                                {% endfor %}
+                            </li>
+                            {% endif %}
+                            {% if documento.funcionarios_destino.all %}
+                            <li><strong>Funcionários:</strong>
+                                {% for func in documento.funcionarios_destino.all %}
+                                <span class="badge bg-success ms-1">{{ func.nome_completo|truncatechars:15 }}</span>
+                                {% endfor %}
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Descrição e Pré-visualização -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-align-left me-2"></i>Descrição</h5>
+                </div>
+                <div class="card-body">
+                    {% if documento.descricao %}
+                    <p>{{ documento.descricao|linebreaks }}</p>
+                    {% else %}
+                    <p class="text-muted fst-italic">Nenhuma descrição fornecida.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Pré-visualização -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-file me-2"></i>Pré-visualização</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        {% if documento.arquivo.name|lower|slice:"-4:" == '.pdf' %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <p class="mb-0">Documento PDF - Faça download para visualizar</p>
+                        </div>
+                        {% elif documento.arquivo.name|lower|slice:"-4:" in '.doc,.docx' %}
+                        <i class="fas fa-file-word fa-3x text-primary mb-3"></i>
+                        <p>Documento Word</p>
+                        {% elif documento.arquivo.name|lower|slice:"-4:" in '.xls,.xlsx' %}
+                        <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                        <p>Planilha Excel</p>
+                        {% elif documento.arquivo.name|lower|slice:"-4:" in '.jpg,.jpeg,.png,.gif' %}
+                        <img src="{{ documento.arquivo.url }}" alt="{{ documento.titulo }}" 
+                             class="img-fluid rounded" style="max-height: 400px;">
+                        {% else %}
+                        <i class="fas fa-file fa-3x text-secondary mb-3"></i>
+                        <p>{{ documento.arquivo.name|cut:"documentos/" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

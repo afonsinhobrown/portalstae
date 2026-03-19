@@ -1,0 +1,508 @@
+
+--- Possible Model found on Page 4 ---
+4 
+ 
+“MODELO DE NOTA DE PEDIDO DE EMISSÃO DE GUIA DE VENCIMENTOS” ........................................ 83 
+“MODELO DE GUIA DE MARCHA POR MOTIVO DE TRANSFERÊNCIA” ................................................... 84 
+IX.  SISTEMA DE GESTÃO DE DESEMPENHO .......................................................................................... 85 
+9.1.1.  Instrumentos de avaliação de desempenho: ...................................................................................... 85 
+9.1.2.  Segmentos a avaliar: ......................................................................................................................... 86 
+9.1.3.  Procedimentos para a avaliação de desempenho ............................................................................. 86 
+9.2.  BÓNUS DE RENDIBILIDADE (ARTIGO 60 DO REGFAE) ...................................................................... 87 
+9.2.1.  Condições para atribuição ................................................................................................................ 87 
+9.2.2.  Procedimentos para atribuição do bónus de rendibilidade .............................................................. 87 
+“MODELO DE PROPOSTA DE ATRIBUIÇÃO DO BÓNUS DE RENDIBILIDADE” ....................................... 89 
+9.3.  DISTINÇÕES E PRÉMIOS ....................................................................................................................... 90 
+9.3.1.  Distinções previstas; ......................................................................................................................... 90 
+9.3.2.  Prémios previstos: ............................................................................................................................. 90 
+9.3.3.  Procedimentos para atribuição das distinções e prémios ................................................................. 91 
+“MODELO DE EXTRACTO DO DESPACHO DE CONCESSÃO DE DIPLOMA DE HONRA” ....................... 92 
+“MODELO DE ORDEM DE SERVIÇO QUE ATRIBUI A DISTINÇÃO DE LOUVOR PÚBLICO” .................. 93 
+X.  FÉRIAS, FALTAS E LICENÇAS (ARTIGOS 63 A 67 DO EGFAE) ...................................................... 94 
+10.1.  FÉRIAS ANUAIS ...................................................................................................................................... 94 
+10.1.1.  Condição exigida para o gozo da licença anual: .............................................................................. 95 
+10.1.2.  Procedimentos para o gozo de férias anuais ..................................................................................... 95 
+10.2.  LICENÇAS ................................................................................................................................................ 96 
+10.2.1.  Licença por doença ........................................................................................................................... 97 
+10.2.2.  Licença por luto ................................................................................................................................. 99 
+10.2.3.  Licença de Parto ............................................................................................................................... 99 
+10.2.4.  Licença de casamento, bodas de prata e de ouro ............................................................................ 100 
+10.2.5.  Licença registada ............................................................................................................................ 101 
+10.2.6.  Licença Especial .............................................................................................................................. 102 
+10.2.7.  Licença ilimitada (artigo 107 do REGFAE) .................................................................................... 103 
+10.2.8.  Licença para acompanhamento de cônjuge colocado em missão de serviço no estrangeiro .......... 104 
+10.3.  FALTAS .................................................................................................................................................. 106 
+“MODELO DE JUSTIFICAÇÃO DE FALTAS” .................................................................................................. 107 
+“MODELO DE MAPA DE ASSIDUIDADE MENSAL” ..................................................................................... 109 
+“FICHA DE ASSIDUIDAE ANUAL” .................................................................................................................. 110 
+“MODELO DE REQUERIMENTO PARA CONCESSÃO DAS FÉRIAS ANUAIS” ......................................... 111 
+“MODELO DE REQUISIÇÃO DE PASSAGEM PARA APRESENTAÇÃO À JUNTA NACIONAL DE SAÚDE 
+A SER REMETIDA AO DAF PROVINCIAL”..................................................................................................... 112 
+“MODELO DE GUIA DE MARCHA PARA DESLOCAÇÃO POR MOTIVO DE DOENÇA” .......................... 113 
+“MODELO DE REQUERIMENTO PARA CONCESSÃO DA LICENÇA REGISTADA” ................................ 114 
+“MODELO DE DESPACHO DA CONCESSÃO DA LICENÇA REGISTADA” ................................................ 115 
+“MODELO DE REQUERIMENTO PARA CONCESSÃO DA LICENÇA ILIMITADA” .................................. 116 
+“MODELO DE DESPACHO DA CONCESSÃO DA LICENÇA ILIMITADA” ................................................. 117 
+“MODELO DE REQERIMENTO PARA CONCESSÃO DA LICENÇA PARA ACOMPANHAMENTO DE 
+CÔNJUGE” ........................................................................................................................................................... 118 
+--------------------------------------------------
+
+--- Possible Model found on Page 5 ---
+5 
+ 
+“MODELO DE DESPACHO DA CONCESSÃO DA LICENÇA PARA ACOMPANHAMENTO DO CONJUGE”
+  119 
+XI.  CONTROLO DE EFECTIVIDADE ........................................................................................................ 120 
+11.1.1.  Procedimentos para o pedido e concessão da certidão de efectividade .......................................... 121 
+“MODELO DE CERTIDÃO DE EFECTIVIDADE” ............................................................................................ 122 
+“MODELO DE PEDIDO DE FIXAÇÃO DE ENCARGOS POR TEMPO NÃO CONTADO PARA 
+APOSENTAÇÃO” ................................................................................................................................................ 123 
+“MODELO DE INFORMAÇÃO DE PEDIDO DE FIXAÇÃO DE ENCARGOS PARA APOSENTAÇÃO” ..... 124 
+“MODELO DE PEDIDO DE CONTAGEM DE TEMPO” ................................................................................... 165 
+“MODELO DE DESPACHO DE CONTAGEM DE TEMPO DE SERVIÇO ...................................................... 167 
+DESPACHO” ........................................................................................................................................................ 167 
+XII. REMUNERAÇÕES ................................................................................................................................. 125 
+12.1.  VENCIMENTO ....................................................................................................................................... 125 
+12.1.1.  Processamento de vencimento e outras remunerações ................................................................... 126 
+12.2.  TIPOS DE REMUNERAÇÕES ............................................................................................................... 126 
+12.2.1.  Remuneração em período de formação/funcionário estudante (artigos 55 e 56 do Estatuto Geral 
+dos Funcionários e Agentes do Estado), conjugado com o artigo nº 70 do REGFAE. ..................................... 127 
+12.2.2.  Remuneração por trabalho extraordinário (artigo 58 do Estatuto Geral dos Funcionários e agentes 
+do Estado) 127 
+12.2.3.  Remuneração por trabalho nocturno .............................................................................................. 128 
+12.2.4.  Remuneração por substituição ........................................................................................................ 129 
+12.2.5.  Remuneração por trabalho em regime de turnos (artigo 69 do Regulamento do Estatuto Geral dos 
+Funcionários e agentes do Estado) ................................................................................................................... 129 
+12.2.6.  Décimo terceiro vencimento ............................................................................................................ 130 
+12.3.  SUPLEMENTOS ..................................................................................................................................... 130 
+12.3.1.  12.3.1 Procedimentos para o pagamento dos suplementos ............................................................. 131 
+12.3.2.  Bónus especial ................................................................................................................................. 131 
+12.3.3.  Gratificação de chefia (artigo 62 do Decreto nº 54/2009, de 8 de Setembro) ................................ 132 
+12.3.4.  Subsídio de localização ................................................................................................................... 132 
+“FICHA DE HORAS EXTRAORDINARIAS” .................................................................................................... 134 
+XIII. PREVIDÊNCIA SOCIAL ........................................................................................................................ 135 
+13.1.  ASSISTÊNCIA MÉDICA E MEDICAMENTOSA ................................................................................. 135 
+13.1.1.  Membros do agregado familiar com direito a assistência médica e medicamentosa: .................... 135 
+13.1.2.  Abrangência da assistência médica: ............................................................................................... 135 
+13.1.3.  Condições para o gozo de assistência médica medicamentosa ....................................................... 136 
+13.1.4.  Papel do sector de recursos humanos na emissão do cartão .......................................................... 137 
+13.2.  SUBSÍDIO DE FUNERAL: ..................................................................................................................... 137 
+“MODELO DE DECLARAÇÃO” ........................................................................................................................ 138 
+13.3.  ACIDENTE EM MISSÃO DE SERVIÇO (ARTIGO 101 DO REGFAE) ................................................... 138 
+13.3.1.  Procedimentos a se ter em conta: .................................................................................................... 139 
+“MODELO DE PARTICIPAÇAÕ DE ACIDENTE EM MISSAO DE SERVIÇO” ............................................. 141 
+“MODELO DE AUTO DE NOTICIA DE ACIDENTE EM MISSAO DE SERVIÇO” ........................................ 142 
+13.4.  PENSÃO DE SOBREVIVÊNCIA ........................................................................................................... 143 
+--------------------------------------------------
+
+--- Possible Model found on Page 94 ---
+94 
+ 
+X. FÉRIAS, FALTAS E LICENÇAS (artigos 63 a 67 do EGFAE)  
+ 
+10.1. FÉRIAS ANUAIS 
+As férias são um direito que assiste aos funcionários e agentes do Estado (alínea g) do artigo 42 
+do EGFAE). 
+ 
+As férias tem como objectivo proporcionar ao funcionário ou agente do Estado um descanso 
+anual por o um período 30 dias. 
+ 
+O período de férias deve ser acordado entre os funcionários  o responsável do sector. 
+ 
+Ate 15 de Dezembro de cada ano as unidades orgânicas devem elaborar e aprovar o plano de 
+férias para o ano seguinte de acordo com os interesses dos serviços e dos interessados, sem 
+prejuízo de assegurar o regular funcionamento dos serviços. 
+ 
+ O plano de férias é globalizado pelo sector de recursos humanos e deve ser homologado pelo 
+dirigente competente. 
+ 
+O gozo de férias não prejudica o direito a remuneração. 
+ 
+As férias comportam 30 dias de calendário e só podem ser interrompidas por motivos imperiosos 
+de serviço. As férias podem ser gozadas em dois períodos a pedido dos interessados. 
+ 
+O direito de gozo de férias caduca no final de ano civil a que diz respeito, salvo se, por motivos 
+de imperiosa necessidade dos serviços e não tiverem sido gozados nesse ano. 
+ 
+--------------------------------------------------
+
+--- Possible Model found on Page 95 ---
+95 
+ 
+Os funcionários que, por motivo de imperiosa nece ssidade de serviço, tenham sido impedidos de 
+gozar as suas férias durante o ano civil, podem transitar para o ano seguinte, acumulando até 60 
+dias, altura em que obrigatoriamente terão que gozar, sob pena de caducidade. 
+ 
+ O funcionário pode pedir a acumulação de 15 dias por cada ano civil, até ao limite de 2 anos 
+consecutivos. 
+ 
+10.1.1. Condição exigida para o gozo da licença anual: 
+ Prestação ininterrupta de 12 meses de serviço; 
+ Requerimento do funcionário ou agente do Estado interessado e são concedidas por cada 
+ano civil; e 
+ Autorização superior, podendo, por interesse e a pedido do interessado, ser gozada em 2 
+períodos. 
+ 
+Iniciado o seu gozo, as férias só podem ser interrompidas (por decisão superior) com fundamento 
+em motivos imperiosos de serviço. O gozo das mesmas deve 
+ ser feito dentro do ano civil a que as mesmas dizem respeito. O seu gozo não prejudica o direito 
+às remunerações próprias do cargo ou função. 
+ 
+As férias (que caducam no final do ano a que diz respeito e, portanto, nele devem ser gozadas) 
+podem transitar para o ano seguinte desde que tenha sido impedido o seu gozo por motivo de 
+imperiosa necessidade de serviço, acumulando-se até 60 dias, altura em que obrigatoriamente  
+terão de ser gozadas sob pena de caducidade. O funcionário pode pedir a acumulação de 15 dias 
+por cada ano civil, até ao limite de 2 anos consecutivos. 
+ 
+10.1.2. Procedimentos para o gozo de férias anuais 
+ O funcionário ou agente preenche requerimento de solicitação das férias anuais a 
+submeter ao dirigente do sector, em caso do funcionário pertencer a uma unidade 
+orgânica subordinada ao dirigente competente para autorizar o pedido carece de parecer; 
+--------------------------------------------------
+
+--- Possible Model found on Page 104 ---
+104 
+ 
+ Durante a licença o funcionário não pode apresentar-se em concursos nem exercer 
+qualquer actividade na função pública; 
+ A licença ilimitada implica a abertura de vaga no quadro de pessoal; 
+ O funcionário pode requerer a interrupção da  licença ilimitada após um período mínimo 
+de um ano reingressando, desde que haja vaga , na respectiva carreira, classe, escalão ou 
+categoria profissional que detinha, ficando obrigado a exercer a sua actividade no local 
+que lhe for designado; 
+ Decorrido um ano após o pedido de reingresso, se mantiver a situação de inexistência de 
+vaga o funcionário passará à situação de supranumerário, devendo exercer funções não 
+inferiores à carreira, classe e escalão ou categoria profissional que tiver atribuída; e 
+ O funcionário pode beneficiar do direito da  aposentação desde que reúna os requisitos 
+exigidos pelos artigos 140 e 143 do EGFAE e os seus herdeiros terão direito à pensão de 
+sobrevivência nos termos do artigo 163 do mesmo diploma. 
+ 
+10.2.7.2. Procedimentos para a concessão da licença ilimitada 
+ O funcionário submete um requerimento solicitando a licença ilimitada ao sector de 
+recursos humanos; 
+ O sector de recursos humanos emite um parecer para decisão do dirigente competente 
+para autorizar e este emite despacho autorizando licença; 
+ O despacho é remetido ao sector de recursos humanos; 
+ O sector de recursos humanos informa ao sector de administração e finanças para efeitos 
+de cancelamento dos vencimentos; e 
+ O sector de recursos humanos arquiva o requerimento no processo individual 
+actualizando o Registo de Documentos e in forma o Sector onde o funcionário estiver 
+afecto através de nota. 
+ 
+10.2.8. Licença para acompanhamento de cônjuge colocado em missão de serviço no 
+estrangeiro 
+Pelo Decreto nº. 47/2000, de 5 de Dezembro, foi criada uma licença sem vencimento para 
+funcionários cônjuges de funcionários colocados no estrangeiro, por período superior a 90 dias 
+--------------------------------------------------
+
+--- Possible Model found on Page 105 ---
+105 
+ 
+ou indeterminado, em missão de representação de interesses do país ou em organizações 
+internacionais. 
+ 
+10.2.8.1. Características da licença para acompanhamento de cônjuge colocado em 
+missão de serviço no estrangeiro 
+ O período desta licença não conta para quaisquer efeitos excepto para aposentação, desde 
+que o interessado satisfaça os respectivos encargos, nos termos do artigo 151 do EGFAE; 
+ O início da licença pode ter lugar em data posterior ao início de funções do cônjuge no 
+estrangeiro e o regresso pode ser antecipado a pedido do funcionário; 
+ Finda a missão do cônjuge no estrangeiro, o funcionário deve requerer o regresso á 
+actividade, no prazo de 90 dias a contar dos termos da missão. A falta de apresentação do 
+requerimento determina a exoneração do funcionário; 
+ No caso de ter sido preenchida a vaga, o funcionário fica a aguardar a primeira vaga na 
+situação de supranumerário com todos os direitos inerentes à efectividade de funções, 
+beneficiando de eventual revalorização de que, entretanto, tenha sido objecto a carreira 
+ou categoria onde estava enquadrado; 
+ No caso de extinção da carreira ou categoria onde estava enquadrado será colocado numa 
+outra equivalente; 
+ 
+10.2.8.2. Procedimentos para a concessão da licença para acompanhamento de cônjuge 
+colocado em missão de serviço no estrangeiro 
+ O funcionário submete um requerimento solicitando a licença ao sector de recursos 
+humanos; 
+ O sector de recursos humanos informa emite um parecer para Dirigente competente e este 
+emite despacho autorizando licença; 
+ O despacho é remetido ao sector de recursos humanos; 
+ O sector de recursos humanos arquiva o requerimento no processo individual 
+actualizando o Registo de Documentos e in forma o Sector onde o funcionário estiver 
+afecto através de nota; 
+ O sector de recursos humanos informa o inicio da licença à área de administração e 
+finanças para efeitos suspensão dos vencimentos; 
+--------------------------------------------------
+
+--- Possible Model found on Page 111 ---
+111 
+ 
+J U L H O                
+AGOSTO               
+SETEMB               
+O U T U B                
+NOVEMB               
+DEZEMB               
+ 
+LR- LICENÇA REGISTADA 
+ 
+ 
+ 
+“MODELO DE REQUERIMENTO PARA CONCESSÃO DAS FÉRIAS ANUAIS” 
+ 
+Exmo Senhor______________________________________________________ 
+                                                                                      
+(a)_______________________________(b)____________________colocado em__________________, 
+requer à V. Exª. A concessão das férias anuais  a que se refere o artigo 63 do EGFAE. 
+ 
+Pede deferimento 
+ 
+_________________, ____de____________________de_____ 
+Assinatura do funcionário 
+ 
+INFORMAÇÃO 
+ 
+No ano anterior o requerente gozou____dias de licença anual e deu as seguintes faltas: 
+ Justificadas ao abrigo da alínea a) do nº.1 do artigo 91 do REGFAE____; 
+ Justificadas ao abrigo da alínea b) do nº.1 e do nº. 2 do artigo 91  do REGFAE____; 
+ Licença por doença ___; 
+--------------------------------------------------
+
+--- Possible Model found on Page 112 ---
+112 
+ 
+ Injustificadas ______. 
+O requerente tem direito a______dias de licença anual. 
+______/______/_______ 
+Assinatura do informante____________________ 
+____________ 
+(a) Nome completo do funcionário 
+(b) Carreira do funcionário. 
+ 
+ 
+“MODELO DE REQUISIÇÃO DE PASSAGEM PARA APRESENTAÇÃO À 
+JUNTA NACIONAL DE SAÚDE A SER REMETIDA AO DAF PROVINCIAL” 
+ 
+GOVERNO PROVINCIAL/GOVERNO DISTRITAL____________________________ 
+DIRECÇÃO PROVINCIAL__________________________ 
+REQUISIÇÃO DE PASSAGEM 
+ 
+Requisita-se o abono de passagem de ida e volta, por via aérea, a favor do (a)_______________, 
+(b)________________________________, que, de acordo com o parecer da Junta Provincial de Saúde 
+deve ser presente à Junta Nacional de Saúde nos termos do artigo 70 conjugado com o artigo 71 do 
+EGFAE. 
+Acompanha-o sua esposa(ou outro familiar)_____________________, de acordo com o mesmo parecer. 
+Tem passagem reservada para o voo do próximo dia_______ 
+_________________, ____de____________________de_____ 
+ 
+O CHEFE DE DEPARTAMENTO/REPARTIÇÃO 
+_________________________________ 
+ 
+_____________ 
+--------------------------------------------------
+
+--- Possible Model found on Page 114 ---
+114 
+ 
+ 
+______________ 
+(a) Nome do doente 
+(b) Categoria/carreira do funcionário se for ele o doente ou grau de parentesco seguido do 
+nome e categoria/carreira do funcionário. 
+(c) Grau de parentesco 
+(d) Nome do acompanhante 
+(e) Responsável competente para assinar a guia 
+ 
+ 
+ 
+“MODELO DE REQUERIMENTO PARA CONCESSÃO DA LICENÇA 
+REGISTADA” 
+ 
+EXMO SENHOR________________________________ 
+ 
+Excelência, 
+(a)________________________(b) ____________________________, de nomeação definitiva, colocado 
+em ________________________, requer a V. Exª. A concessão da licença registada a que se refere o 
+artigo 67  do EGFAE conjugado com artigo 106 do REGFAE, por motivo de__________________ 
+ 
+Pede deferimento, 
+_________________, ____de____________________de_____ 
+ 
+(Assinatura do funcionário)_______________________________________ 
+ 
+INFORMAÇÃO 
+ 
+O requerente é (ou não é) de nomeação definitiva, gozou,(ou não gozou) licença registada 
+em______________________ 
+ 
+E (ou não é) exactor de Fazenda. (no caso de ser, deve ser informado se apresentou ou não o 
+processo de contas). 
+--------------------------------------------------
+
+--- Possible Model found on Page 115 ---
+115 
+ 
+ Tem( ou não tem) direito à licença registada nos termos do artigo 67  do 
+EGFAE. 
+ 
+____/____/______ 
+Assinatura do informante________________________ 
+ 
+__________ 
+(a) Nome do funcionário 
+(b) categoria/carreira ou função do funcionário 
+ 
+ 
+ 
+“MODELO DE DESPACHO DA CONCESSÃO DA LICENÇA REGISTADA” 
+ 
+MINISTÉRIO/GOVERNO PROVINCIAL/GOVERNO DISTRITAL____________________________ 
+ 
+DESPACHO 
+ 
+(a)____________________________(b) ___________________ concedidos____ meses de licença 
+registada a partir de _____________________ nos termos dos artigos 67 do EGFAE e 106 do REGFAE. 
+ 
+_________________, ____de____________________de_____ 
+ 
+O MINISTRO/GOVERNADOR PROVINCIAL/ADMINISTRADOR DISTRITAL 
+ 
+____________ 
+a) Nome do funcionário 
+b) (Categoria/carreira ou função do funcionário 
+ 
+--------------------------------------------------
+
+--- Possible Model found on Page 116 ---
+116 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+“MODELO DE REQUERIMENTO PARA CONCESSÃO DA LICENÇA 
+ILIMITADA” 
+ 
+SENHOR______________________________________________________________ 
+  
+ Excelência, 
+ 
+ (a)________________________(b)____________________________, de nomeação definitiva, 
+colocado em________________________, requer a V. Exª. A concessão da licença ilimitada a que se 
+referem os artigos 67 e 107 do EGFAE e do REGFAE, respectivamente o Decreto nº. 65/99, de 5 de 
+Outubro, por motivo de__________________ 
+ 
+Pede deferimento, 
+_________________, ____de____________________de_____ 
+ 
+(Assinatura do funcionário)_______________________________________ 
+ 
+ 
+INFORMAÇÃO 
+ 
+O requerente é (ou não é) de nomeação definitiva. 
+--------------------------------------------------
+
+--- Possible Model found on Page 117 ---
+117 
+ 
+ È (ou não é) exactor de Fazenda. (no caso de ser, deve ser informado se 
+apresentou ou não o processo de contas). 
+ Tem ( ou não tem) direito à licença ilimitada nos termos do artigo 107 do 
+REGFAE  e do Decreto nº. 65/99, de 5 de Outubro. 
+ 
+____/____/______ 
+Assinatura do informante________________________ 
+ 
+__________ 
+(a) Nome do funcionário 
+(b) Categoria/carreira ou função do funcionário 
+ 
+ 
+“MODELO DE DESPACHO DA CONCESSÃO DA LICENÇA ILIMITADA” 
+ 
+MINISTÉRIO/GOVERNO PROVINCIAL/GOVERNO DISTRITAL)____________________________ 
+ 
+DESPACHO 
+ 
+(a)____________________________(b)___________________concedida a 
+licença ilimitada a partir de_____________________nos termos do 107 do REGFAE do 
+Decreto nº. 65/99, de 5 de Outubro. 
+ 
+_________________, ____de____________________de_____ 
+O MINISTRO/GOVERNADOR PROVINCIAL/ADMINISTRADOR DISTRITAL 
+ 
+_____________ 
+(a) Nome do funcionário 
+(b) (Categoria/carreira ou função do funcionário 
+ 
+--------------------------------------------------
+
+--- Possible Model found on Page 118 ---
+118 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+“MODELO DE REQERIMENTO PARA CONCESSÃO DA LICENÇA PARA 
+ACOMPANHAMENTO DE CÔNJUGE” 
+ 
+EXMO SENHOR_________________________________________________________ 
+  
+ Excelência, 
+ 
+ (a)________________________(b)____________________________,colocado 
+em________________________, requer a V. Exª. a concessão da licença  sem vencimentos, para 
+acompanhamento de cônjuge a que se refere o nº. 8 do artigo 67 do EGFAE Decreto nº. 47/2000, de 5 de 
+Dezembro,  com efeitos a partir de _____/____/____ em virtude de (seu marido ou sua 
+esposa)_____________________(c)__________________funcionário do (d)____________________ 
+ter sido colocado em______________onde vai exercer a missão de (f)__________________ 
+ 
+Pede deferimento, 
+_________________, ____de____________________de_____ 
+ 
+(Assinatura do funcionário)_______________________________________ 
+ 
+______________ 
+--------------------------------------------------
+
+--- Possible Model found on Page 119 ---
+119 
+ 
+(a) Nome do funcionário 
+(b) Categoria/carreira ou função do funcionário 
+(c) Nome do cônjuge 
+(d) Sector onde presta serviço 
+(e) País onde foi colocado 
+(f) Missão que vai exercer 
+ 
+ 
+ 
+“MODELO DE DESPACHO DA CONCESSÃO DA LICENÇA PARA 
+ACOMPANHAMENTO DO CONJUGE” 
+ 
+MINISTÉRIO(GOVERNO PROVINCIAL/GOVERNO DISTRITAL)____________________________ 
+ 
+DESPACHO 
+ 
+(a)____________________________(b)___________________concedida a 
+licença  sem vencimentos, para acompanhamento do cônjuge a que se refere o nº. 8 do 
+artigo 67 do EGFAE o Decreto nº. 47/2000, de 5 de Dezembro com efeitos a partir 
+de_____________________. 
+ 
+ 
+_________________, ____de____________________de_____ 
+ 
+O MINISTRO/GOVERNADOR PROVINCIAL/ADMINISTRADOR DISTRITAL 
+_______________ 
+(a) Nome do funcionário 
+(b) (Categoria/carreira ou função do funcionário 
+--------------------------------------------------

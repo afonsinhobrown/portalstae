@@ -1,0 +1,118 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Presenças • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Controlo de Presenças</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">RH</a></li>
+                <li class="breadcrumb-item active">Presenças</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'recursoshumanos:registar_presenca' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Nova Presença
+        </a>
+    </div>
+</div>
+
+<div class="rh-card">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-calendar-check me-2 text-success"></i>
+            Registos de Presença
+        </h5>
+        <div class="d-flex gap-2">
+            <input type="date" class="form-control" value="{{ data_filter }}" id="dataFilter">
+            <select class="form-select" id="funcionarioFilter">
+                <option value="">Todos funcionários</option>
+                {% for func in funcionarios %}
+                <option value="{{ func.id }}" {% if funcionario_filter == func.id|stringformat:"i" %}selected{% endif %}>
+                    {{ func.nome_completo }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if presencas %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Funcionário</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th>Horas</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for presenca in presencas %}
+                    <tr>
+                        <td>
+                            <strong>{{ presenca.funcionario.nome_completo }}</strong>
+                            <br>
+                            <small class="text-muted">{{ presenca.funcionario.sector }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ presenca.data|date:"d/m/Y" }}</strong>
+                        </td>
+                        <td>
+                            {% if presenca.presente %}
+                            <span class="badge bg-success">Presente</span>
+                            {% else %}
+                            <span class="badge bg-danger">Ausente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ presenca.horas_trabalhadas }}h
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ presenca.observacao|default:"-" }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhum registo de presença</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dataFilter = document.getElementById('dataFilter');
+    const funcionarioFilter = document.getElementById('funcionarioFilter');
+    
+    function applyFilters() {
+        const params = new URLSearchParams();
+        
+        if (dataFilter.value) {
+            params.set('data', dataFilter.value);
+        }
+        
+        if (funcionarioFilter.value) {
+            params.set('funcionario', funcionarioFilter.value);
+        }
+        
+        window.location.href = '?' + params.toString();
+    }
+    
+    dataFilter.addEventListener('change', applyFilters);
+    funcionarioFilter.addEventListener('change', applyFilters);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Aprovar Férias • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-check-circle me-2 text-success"></i>
+                    Analisar Pedido de Férias
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <!-- Informações do Pedido -->
+                <div class="alert alert-info">
+                    <h6 class="fw-bold">Detalhes do Pedido</h6>
+                    <p class="mb-1"><strong>Funcionário:</strong> {{ pedido.funcionario.nome_completo }}</p>
+                    <p class="mb-1"><strong>Sector:</strong> {{ pedido.funcionario.sector.nome }}</p>
+                    <p class="mb-1"><strong>Período:</strong> {{ pedido.data_inicio|date:"d/m/Y" }} a {{ pedido.data_fim|date:"d/m/Y" }}</p>
+                    <p class="mb-0"><strong>Dias solicitados:</strong> {{ pedido.dias_solicitados }}</p>
+                </div>
+                
+                {% if pedido.observacao %}
+                <div class="alert alert-light">
+                    <h6 class="fw-bold">Observações do Funcionário</h6>
+                    <p class="mb-0">{{ pedido.observacao }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Form de Aprovação -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Decisão</label>
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="acao" value="aprovar" 
+                                    class="btn btn-success btn-lg">
+                                <i class="fas fa-check me-2"></i>Aprovar Pedido
+                            </button>
+                            <button type="submit" name="acao" value="rejeitar" 
+                                    class="btn btn-danger btn-lg">
+                                <i class="fas fa-times me-2"></i>Rejeitar Pedido
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campo para observações -->
+                    <div class="mb-3">
+                        <label for="observacoes" class="form-label fw-bold">Observações (opcional)</label>
+                        <textarea class="form-control" id="observacoes" name="observacoes"
+                                  rows="3" placeholder="Adicione observações sobre sua decisão..."></textarea>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'recursoshumanos:lista_pedidos_ferias' %}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

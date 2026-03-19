@@ -1,0 +1,88 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Solicitar Manutenção • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-tools me-2 text-warning"></i>
+                    Solicitar Manutenção de Viatura
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Viatura *</label>
+                            {{ form.viatura }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tipo de Manutenção *</label>
+                            {{ form.tipo_manutencao }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descrição *</label>
+                            {{ form.descricao }}
+                            <small class="form-text text-muted">Descreva o problema ou serviço necessário</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Data Agendada *</label>
+                            {{ form.data_agendada }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Kilometragem Actual</label>
+                            {{ form.kilometragem_actual }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Prioridade *</label>
+                            {{ form.prioridade }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Oficina (Prestador Autorizado) *</label>
+                            {{ form.fornecedor }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Contrato de Suporte</label>
+                            {{ form.contrato }}
+                            <small class="form-text text-muted">Apenas contratos ativos serão exibidos.</small>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Observações</label>
+                            {{ form.observacoes }}
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'gestaocombustivel:dashboard_combustivel' %}"
+                                    class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-paper-plane me-2"></i>
+                                    Solicitar Manutenção
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Dashboard - Credenciais STAE{% endblock %}
+
+{% block page_title %}Dashboard do Sistema de Credenciais{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Stat Cards -->
+    <div class="col-md-3 mb-4">
+        <div class="card card-stae stat-card">
+            <div class="card-body">
+                <div class="icon text-primary">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h5 class="card-title">Solicitantes</h5>
+                <div class="number">{{ total_solicitantes }}</div>
+                <p class="text-muted mb-0">Activos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card card-stae stat-card">
+            <div class="card-body">
+                <div class="icon text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h5 class="card-title">Pedidos Pendentes</h5>
+                <div class="number">{{ pedidos_pendentes }}</div>
+                <p class="text-muted mb-0">Aguardando análise</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card card-stae stat-card">
+            <div class="card-body">
+                <div class="icon text-success">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <h5 class="card-title">Credenciais Activas</h5>
+                <div class="number">{{ credenciais_activas }}</div>
+                <p class="text-muted mb-0">Válidas e emitidas</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <a href="{% url 'credenciais:lista_eventos' %}" class="text-decoration-none">
+            <div class="card card-stae stat-card">
+                <div class="card-body">
+                    <div class="icon text-info">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h5 class="card-title text-dark">Eventos Activos</h5>
+                    <div class="number text-dark">{{ eventos_activos }}</div>
+                    <p class="text-muted mb-0">Em andamento</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Emergency Warnings -->
+    {% if bloqueios_ativos %}
+    <div class="col-12 mb-4">
+        <div class="alert alert-danger">
+            <h5><i class="fas fa-exclamation-triangle"></i> ALERTA DE EMERGÊNCIA</h5>
+            <p>Existem bloqueios de emergência activos:</p>
+            <ul>
+                {% for bloqueio in bloqueios_ativos %}
+                <li><strong>{{ bloqueio.nome }}</strong> - {{ bloqueio.credenciais_afetadas }} credenciais afectadas
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'credenciais:emergencia_bloqueio' %}" class="btn btn-outline-light">Gerir Emergência</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Pedidos -->
+    <div class="col-md-8 mb-4">
+        <div class="card card-stae">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Pedidos Recentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nº Pedido</th>
+                                <th>Solicitante</th>
+                                <th>Tipo</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pedido in pedidos_recentes %}
+                            <tr>
+                                <td>{{ pedido.numero_pedido }}</td>
+                                <td>{{ pedido.solicitante.nome_completo }}</td>
+                                <td>{{ pedido.tipo_credencial.nome }}</td>
+                                <td>{{ pedido.data_pedido|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="badge badge-{{ pedido.status }}">{{ pedido.get_status_display }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'credenciais:analisar_pedido' pedido.id %}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Nenhum pedido encontrado</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <a href="{% url 'credenciais:lista_pedidos' %}" class="btn btn-primary">Ver Todos os Pedidos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="col-md-4 mb-4">
+        <div class="card card-stae">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Estatísticas por Tipo</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for stat in pedidos_por_tipo %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ stat.tipo_credencial__nome|default:"Sem tipo" }}
+                        <span class="badge bg-primary rounded-pill">{{ stat.total }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        Nenhuma estatística disponível
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card card-stae mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Actividade Recente</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for audit in auditoria_recente %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small class="text-muted">{{ audit.get_acao_display }}</small>
+                            <small>{{ audit.data_hora|timesince }} atrás</small>
+                        </div>
+                        <small>
+                            {% if audit.usuario %}
+                            Por: {{ audit.usuario.username }}
+                            {% endif %}
+                            {% if audit.credencial %}
+                            - Credencial: {{ audit.credencial.numero_credencial }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        Nenhuma actividade recente
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'credenciais:auditoria' %}" class="btn btn-sm btn-outline-primary">Ver Auditoria
+                        Completa</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-12">
+        <div class="card card-stae">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Acções Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Standard Actions -->
+                    <div class="col-md-2 mb-3">
+                        <a href="{% url 'credenciais:pedir_credencial' %}"
+                            class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center flex-column py-3">
+                            <i class="fas fa-plus-circle mb-2 fa-lg"></i> Novo Pedido
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{% url 'credenciais:verificar_credencial' %}"
+                            class="btn btn-success w-100 h-100 d-flex align-items-center justify-content-center flex-column py-3">
+                            <i class="fas fa-qrcode mb-2 fa-lg"></i> Verificar
+                        </a>
+                    </div>
+                    
+                    <!-- NEW MODULES -->
+                    <div class="col-md-2 mb-3">
+                        <a href="{% url 'credenciais:dfec_dashboard' %}"
+                            class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center flex-column py-3"
+                            style="background-color: #6610f2; border-color: #6610f2;">
+                            <i class="fas fa-graduation-cap mb-2 fa-lg"></i> Formação (DFEC)
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{% url 'credenciais:cert_dashboard' %}"
+                            class="btn btn-warning w-100 h-100 d-flex align-items-center justify-content-center flex-column py-3"
+                            style="background-color: #fd7e14; border-color: #fd7e14; color: white;">
+                            <i class="fas fa-certificate mb-2 fa-lg"></i> Certificados
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="{% url 'credenciais:func_configurar_lote' %}"
+                            class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center flex-column py-3">
+                            <i class="fas fa-id-badge mb-2 fa-lg"></i> Funcionários STAE
+                        </a>
+                    </div>
+
+                    <!-- Other Utils -->
+                    <div class="col-md-2 mb-3">
+                        <a href="{% url 'credenciais:lista_eventos' %}"
+                            class="btn btn-dark w-100 h-100 d-flex align-items-center justify-content-center flex-column py-3">
+                            <i class="fas fa-calendar-alt mb-2 fa-lg"></i> Eventos (Geral)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

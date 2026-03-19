@@ -1,0 +1,71 @@
+<!-- recursoshumanos/templates/recursoshumanos/licencas/minhas.html -->
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Minhas Licenças • Sistema RH{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Minhas Licenças</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Minhas Licenças</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Histórico de Licenças</h5>
+    </div>
+    <div class="card-body">
+        {% if licencas %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Período</th>
+                        <th>Tipo</th>
+                        <th>Dias</th>
+                        <th>Status</th>
+                        <th>Documento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for licenca in licencas %}
+                    <tr>
+                        <td>{{ licenca.data_inicio|date:"d/m/Y" }} - {{ licenca.data_fim|date:"d/m/Y" }}</td>
+                        <td>{{ licenca.get_tipo_display }}</td>
+                        <td>{{ licenca.dias_utilizados }}</td>
+                        <td>
+                            <span
+                                class="badge bg-{% if licenca.status == 'aprovado' or licenca.status == 'concluido' %}success{% elif licenca.status == 'pendente' %}warning{% elif licenca.status == 'rejeitado' %}danger{% else %}secondary{% endif %}">
+                                {{ licenca.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if licenca.status == 'aprovado' or licenca.documento_ferias %}
+                            <a href="{% url 'recursoshumanos:download_licenca_pdf' licenca.id %}"
+                                class="btn btn-sm btn-outline-primary" title="Baixar Documento Oficial">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-calendar-alt fa-2x text-muted mb-3"></i>
+            <p class="text-muted mb-0">Nenhuma licença registrada</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

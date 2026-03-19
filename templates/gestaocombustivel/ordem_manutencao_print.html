@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ordem de Manutenção #{{ manutencao.id }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .page-container {
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #ffc107;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .logo h1 {
+            font-size: 26px;
+            margin: 0;
+            color: #ffc107;
+            font-weight: 800;
+        }
+
+        .logo p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .meta {
+            text-align: right;
+        }
+
+        .meta h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .meta p {
+            margin: 3px 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0 15px 0;
+            text-transform: uppercase;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .field span {
+            display: block;
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 3px;
+        }
+
+        .description-box {
+            min-height: 100px;
+            border: 1px solid #eee;
+            padding: 15px;
+            font-size: 14px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature {
+            width: 30%;
+            border-top: 1px solid #333;
+            text-align: center;
+            padding-top: 10px;
+            font-size: 12px;
+        }
+
+        .no-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #ffc107;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print">IMPRIMIR ORDEM</button>
+
+    <div class="page-container">
+        <div class="header">
+            <div class="logo">
+                <h1>PORTAL STAE</h1>
+                <p>Gestão de Manutenções</p>
+            </div>
+            <div class="meta">
+                <h3>ORDEM DE SERVIÇO #{{ manutencao.id }}</h3>
+                <p>Status: {{ manutencao.get_status_display|upper }}</p>
+                <p>Data Agendada: {{ manutencao.data_agendada|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        <div class="section-title">Dados da Viatura</div>
+        <div class="details-grid">
+            <div class="field">
+                <label>Viatura / Matrícula</label>
+                <span>{{ manutencao.viatura.matricula }}</span>
+            </div>
+            <div class="field">
+                <label>Marca / Modelo</label>
+                <span>{{ manutencao.viatura.marca }} {{ manutencao.viatura.modelo }}</span>
+            </div>
+            <div class="field">
+                <label>Tipo de Manutenção</label>
+                <span>{{ manutencao.get_tipo_manutencao_display }}</span>
+            </div>
+            <div class="field">
+                <label>Quilometragem no Ato</label>
+                <span>{{ manutencao.kilometragem_actual|default:"--" }} KM</span>
+            </div>
+        </div>
+
+        <div class="section-title">Dados da Oficina</div>
+        <div class="details-grid">
+            <div class="field">
+                <label>Prestador Autorizado</label>
+                <span>{{ manutencao.fornecedor.nome }}</span>
+            </div>
+            <div class="field">
+                <label>Contrato Aplicado</label>
+                <span>{{ manutencao.contrato.numero_contrato|default:"Sem contrato vinculado" }}</span>
+            </div>
+            <div class="field">
+                <label>Custo Estimado / Contrato</label>
+                <span>{{ manutencao.custo_previsto|default:"0.00" }} MT</span>
+            </div>
+        </div>
+
+        <div class="section-title">Descrição dos Serviços Solicitados</div>
+        <div class="description-box">
+            {{ manutencao.descricao|linebreaks }}
+        </div>
+
+        {% if manutencao.status == 'concluida' %}
+        <div class="section-title">Relatório de Execução</div>
+        <div class="description-box">
+            {{ manutencao.relatorio_manutencao|linebreaks }}
+            <p><strong>Custo Real:</strong> {{ manutencao.custo_real|default:"0.00" }} MT</p>
+        </div>
+        {% endif %}
+
+        <div class="footer" style="margin-top: 80px;">
+            <div class="signature">
+                <strong>Solicitado por:</strong><br>
+                <small>{{ manutencao.registado_por.username }}</small>
+            </div>
+            <div class="signature">
+                <strong>Autorizado por (Transportes):</strong><br>
+                <br>
+            </div>
+            <div class="signature">
+                <strong>Recepção da Oficina:</strong><br>
+                <br>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

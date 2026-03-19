@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido Submetido - STAE</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --stae-primary: #0056b3;
+            --stae-success: #28a745;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .success-container {
+            max-width: 800px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .success-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            border-top: 5px solid var(--stae-success);
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background-color: var(--stae-success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 3rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .steps-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .steps-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background-color: #dee2e6;
+            z-index: 1;
+        }
+
+        .step-item {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background-color: #dee2e6;
+            color: #6c757d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+
+        .step-item.active .step-number {
+            background-color: var(--stae-primary);
+            color: white;
+        }
+
+        .step-item.completed .step-number {
+            background-color: var(--stae-success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--stae-primary);
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .contact-info {
+            background-color: #e7f1ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .btn-custom {
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+
+            <h1 class="text-success mb-3">Pedido Submetido com Sucesso!</h1>
+            <p class="lead mb-4">O seu pedido de credencial foi recebido e está agora em processo de análise.</p>
+
+            <div class="steps-timeline">
+                <div class="step-item completed">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Pedido Submetido</div>
+                </div>
+                <div class="step-item active">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Em Análise</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Decisão</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Emissão</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h5><i class="fas fa-info-circle text-primary"></i> O que acontece agora?</h5>
+                <ul class="mb-0">
+                    <li>O seu pedido será analisado pela equipa do STAE</li>
+                    <li>Receberá um email de confirmação com o número do pedido</li>
+                    <li>Será contactado para eventuais esclarecimentos adicionais</li>
+                    <li>O processo de análise pode levar até 5 dias úteis</li>
+                </ul>
+            </div>
+
+            <div class="contact-info">
+                <h5><i class="fas fa-headset text-primary"></i> Contactos de Suporte</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><i class="fas fa-phone"></i> <strong>Telefone:</strong><br>+258 84 123 4567</p>
+                        <p><i class="fas fa-envelope"></i> <strong>Email:</strong><br>credenciais@stae.gov.mz</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><i class="fas fa-clock"></i> <strong>Horário de Atendimento:</strong><br>Segunda a Sexta: 8h00 - 17h00</p>
+                        <p><i class="fas fa-map-marker-alt"></i> <strong>Localização:</strong><br>Maputo, Moçambique</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle"></i> Importante</h6>
+                <p class="mb-0">Guarde o número de referência do pedido. Será necessário para acompanhamento.</p>
+            </div>
+
+            <div class="d-flex justify-content-center mt-4">
+                <a href="/" class="btn btn-outline-primary btn-custom">
+                    <i class="fas fa-home"></i> Página Inicial
+                </a>
+                <a href="{% url 'credenciais:pedido_remoto' %}" class="btn btn-primary btn-custom">
+                    <i class="fas fa-plus-circle"></i> Novo Pedido
+                </a>
+            </div>
+
+            <div class="mt-5">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt"></i> Os seus dados estão protegidos de acordo com a Lei de Proteção de Dados Pessoais.
+                </small>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <img src="https://via.placeholder.com/150x50/0056b3/ffffff?text=STAE" alt="Logo STAE" class="img-fluid">
+            <p class="text-muted mt-2">Secretariado Técnico de Administração Eleitoral</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin RH - Portal STAE</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --dark: #34495e;
+            --light: #ecf0f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .admin-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-title h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .admin-title .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 0.2rem;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .admin-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.warning {
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .stat-card.success {
+            border-left-color: var(--success);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .card-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .pedido-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--light);
+        }
+
+        .pedido-item:last-child {
+            border-bottom: none;
+        }
+
+        .pedido-info h4 {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .pedido-meta {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pendente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-aprovado {
+            background: #d1edff;
+            color: var(--secondary);
+        }
+
+        .quick-actions {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--dark);
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--secondary);
+            transform: translateX(5px);
+        }
+
+        .action-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .action-text h4 {
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .action-text p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-nav {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Administrativo -->
+    <header class="admin-header">
+        <nav class="admin-nav">
+            <div class="admin-title">
+                <h1>👥 Recursos Humanos - Administração</h1>
+                <div class="subtitle">Painel de Controlo e Gestão de Funcionários</div>
+            </div>
+            <div class="admin-actions">
+                <a href="{% url 'recursoshumanos:lista_funcionarios' %}" class="btn btn-primary">Gerir Funcionários</a>
+                <a href="{% url 'recursoshumanos:lista_pedidos_ferias' %}" class="btn btn-warning">Pedidos de Férias</a>
+                <a href="/admin/" class="btn btn-success">Admin Django</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="admin-container">
+        <!-- Estatísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_funcionarios }}</div>
+                <div class="stat-label">Total de Funcionários</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number">{{ pedidos_pendentes }}</div>
+                <div class="stat-label">Pedidos Pendentes</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-number">{{ ferias_activas }}</div>
+                <div class="stat-label">Em Férias Actualmente</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number">{{ total_funcionarios|add:-ferias_activas }}</div>
+                <div class="stat-label">Funcionários Activos</div>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <!-- Coluna Principal -->
+            <div class="main-content">
+                <!-- Pedidos Pendentes -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📋 Pedidos de Férias Pendentes</div>
+                        <a href="{% url 'recursoshumanos:lista_pedidos_ferias' %}" class="card-link">Ver Todos →</a>
+                    </div>
+
+                    {% if pedidos_recentes %}
+                        {% for pedido in pedidos_recentes %}
+                        <div class="pedido-item">
+                            <div class="pedido-info">
+                                <h4>{{ pedido.funcionario.nome_completo }}</h4>
+                                <div class="pedido-meta">
+                                    {{ pedido.data_inicio|date:"d/m/Y" }} a {{ pedido.data_fim|date:"d/m/Y" }} • {{ pedido.dias_solicitados }} dias
+                                </div>
+                            </div>
+                            <a href="{% url 'recursoshumanos:aprovar_ferias' pedido.id %}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                                Analisar
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            📭 Nenhum pedido pendente
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Funcionários de Férias -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <div class="card-title">🏖️ Funcionários de Férias</div>
+                        <a href="{% url 'recursoshumanos:calendario_ferias' %}" class="card-link">Calendário →</a>
+                    </div>
+
+                    {% if ferias_activas_list %}
+                        {% for ferias in ferias_activas_list %}
+                        <div class="pedido-item">
+                            <div class="pedido-info">
+                                <h4>{{ ferias.funcionario.nome_completo }}</h4>
+                                <div class="pedido-meta">
+                                    {{ ferias.data_inicio|date:"d/m/Y" }} a {{ ferias.data_fim|date:"d/m/Y" }} • {{ ferias.dias_solicitados }} dias
+                                </div>
+                            </div>
+                            <div class="status-badge status-aprovado">Em Férias</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 2rem; color: #666;">
+                            ✅ Nenhum funcionário de férias
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar de Ações Rápidas -->
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">⚡ Acções Rápidas</div>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="{% url 'recursoshumanos:adicionar_funcionario' %}" class="action-btn">
+                            <div class="action-icon">👤</div>
+                            <div class="action-text">
+                                <h4>Adicionar Funcionário</h4>
+                                <p>Registar novo colaborador</p>
+                            </div>
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:registar_presenca' %}" class="action-btn">
+                            <div class="action-icon">📝</div>
+                            <div class="action-text">
+                                <h4>Registar Presenças</h4>
+                                <p>Controlo de assiduidade</p>
+                            </div>
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:progressao_automatica' %}" class="action-btn">
+                            <div class="action-icon">📈</div>
+                            <div class="action-text">
+                                <h4>Progressão Automática</h4>
+                                <p>Mudança de escalão</p>
+                            </div>
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:lista_promocoes' %}" class="action-btn">
+                            <div class="action-icon">⬆️</div>
+                            <div class="action-text">
+                                <h4>Promoções</h4>
+                                <p>Ver pedidos pendentes</p>
+                            </div>
+                        </a>
+
+                        <a href="{% url 'recursoshumanos:relatorio_avaliacoes' %}" class="action-btn">
+                            <div class="action-icon">⭐</div>
+                            <div class="action-text">
+                                <h4>Avaliações</h4>
+                                <p>Relatório anual</p>
+                            </div>
+                        </a>
+
+                        <a href="/admin/recursoshumanos/" class="action-btn">
+                            <div class="action-icon">⚙️</div>
+                            <div class="action-text">
+                                <h4>Admin Avançado</h4>
+                                <p>Gestão completa</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; color: #666; margin-top: 3rem;">
+        <p>🏛️ Secretariado Técnico de Administração Eleitoral • Sistema de Recursos Humanos</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+            <a href="/" style="color: #3498db; text-decoration: none;">← Voltar ao Portal Principal</a>
+        </p>
+    </footer>
+</body>
+</html>

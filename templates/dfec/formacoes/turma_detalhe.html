@@ -1,0 +1,259 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{{ turma.nome }} - {{ turma.formacao.nome }}{% endblock %}
+{% block page_title %}Detalhes da Turma{% endblock %}
+{% block page_subtitle %}{{ turma.nome }} | {{ turma.formacao.nome }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dfec:formacao_detalhe' turma.formacao.pk %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-2"></i>Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informações da Turma e Formadores -->
+    <div class="col-xl-4 col-md-5 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Equipe da Turma</h6>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddFormadorBulk" title="Adicionar Formadores">
+                    <i class="fas fa-user-plus"></i> <span class="d-none d-lg-inline ps-1">Adicionar</span>
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Seletor Rápido de Principal (Existentes na equipe ou plano) -->
+                {% if formadores_list %}
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="associar_formador" value="1">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Definir Principal</label>
+                    <div class="input-group">
+                        <select name="formador_principal" class="form-select form-select-sm">
+                            <option value="">Selecione...</option>
+                            {% for f in formadores_list %}
+                            <option value="{{ f.pk }}" {% if f.selected %}selected{% endif %}>{{ f.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">OK</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-warning small mb-3">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Não há formadores no Plano. <a href="{% url 'dfec:plano_formadores' turma.formacao.atividade.plano.pk %}" class="alert-link">Gerir Plano</a>
+                </div>
+                {% endif %}
+
+                <h6 class="fw-bold mb-3 border-bottom pb-2">Formadores Atribuídos</h6>
+
+                <div class="list-group list-group-flush mb-4">
+                    <!-- Principal -->
+                    {% if turma.formador_principal %}
+                    <div class="list-group-item px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold text-primary">
+                                    {{ turma.formador_principal.get_full_name|default:turma.formador_principal.username }} <span class="badge bg-primary ms-1" style="font-size: 0.6em;">PRINCIPAL</span>
+                                </div>
+                                <small class="text-muted">Username: {{ turma.formador_principal.username }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning py-2 small">Sem formador principal definido.</div>
+                    {% endif %}
+
+                    <!-- Auxiliares -->
+                    {% for aux in auxiliares %}
+                    <div class="list-group-item px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="ms-2">
+                                <div class="fw-bold">{{ aux.get_full_name|default:aux.username }}</div>
+                                <small class="text-muted">Auxiliar ({{ aux.username }})</small>
+                            </div>
+                            <form method="post" onsubmit="return confirm('Remover este formador da turma?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="remover_formador" value="1">
+                                <input type="hidden" name="user_id" value="{{ aux.pk }}">
+                                <button type="submit" class="btn btn-link text-danger p-0" title="Remover">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="bg-light p-3 rounded border">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-4">Início:</dt>
+                        <dd class="col-sm-8 text-end">{{ turma.data_inicio|default:"-" }}</dd>
+                        <dt class="col-sm-4">Fim:</dt>
+                        <dd class="col-sm-8 text-end">{{ turma.data_fim|default:"-" }}</dd>
+                        <dt class="col-sm-4">Alunos:</dt>
+                        <dd class="col-sm-8 text-end fw-bold">{{ lista_participantes|length }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Participantes e Notas -->
+    <div class="col-xl-8 col-md-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Pauta e Notas</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="lancar_notas" value="1">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Participante</th>
+                                    <th style="width: 150px;">Nota (0-20)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in lista_participantes %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ item.participante.nome_completo }}</div>
+                                        <small class="text-muted"><i class="fas fa-id-card me-1"></i>{{ item.participante.bilhete_identidade }}</small>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="nota_{{ item.participante.id }}" class="form-control" step="0.1" min="0" max="20" placeholder="0.0" value="{% if item.avaliacao %}{{ item.avaliacao.classificacao_final|stringformat:'.1f' }}{% endif %}">
+                                    </td>
+                                    <td>
+                                        {% if item.avaliacao %}
+                                        <span class="badge bg-{% if item.avaliacao.aprovado %}success{% else %}danger{% endif %}">
+                                            {{ item.avaliacao.status_final|upper }}
+                                        </span>
+                                        <div class="small text-muted mt-1">{{ item.avaliacao.classificacao_final|floatformat:1 }} val.</div>
+                                        {% else %}
+                                        <span class="badge bg-secondary">PENDENTE</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">
+                                        <i class="fas fa-users-slash fa-2x mb-3"></i><br>
+                                        Nenhum participante inscrito nesta turma.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if lista_participantes %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-3 border-top">
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fas fa-save me-2"></i>Salvar Notas
+                        </button>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Formadores (Bulk com Checkbox e Search) -->
+<div class="modal fade" id="modalAddFormadorBulk" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="associar_formadores_bulk" value="1">
+                <div class="modal-header">
+                    <h5 class="modal-title">Selecionar Formadores do Plano</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="filtroFormadores" class="form-control" placeholder="Buscar por Nome ou BI...">
+                        </div>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width: 40px;"><input type="checkbox" id="checkAllFormadores"></th>
+                                    <th>Formador</th>
+                                    <th>BI (Username)</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaFormadoresBody">
+                                {% for f in formadores_list %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="formadores_ids" value="{{ f.pk }}" {% if f.selected %}disabled{% endif %}>
+                                    </td>
+                                    <td class="nome-formador fw-bold">{{ f.label }}</td>
+                                    <td class="bi-formador text-muted">{{ f.username }}</td>
+                                    <td class="text-center">
+                                        {% if f.selected %}
+                                        <span class="badge bg-primary">Principal</span>
+                                        {% else %}
+                                        <!-- Aqui idealmente checaríamos se já é auxiliar também, mas a view passa formadores_list com todos.
+                                             Vou deixar como "Disponível" por enquanto, a view trata duplicatas. -->
+                                        <span class="badge bg-secondary">Disponível</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-2 small">
+                        <i class="fas fa-info-circle me-1"></i> Selecione entre 3 a 6 formadores no total para a turma.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Adicionar Selecionados
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filtro da tabela de formadores
+        const inputFiltro = document.getElementById('filtroFormadores');
+        const linhas = document.querySelectorAll('#listaFormadoresBody tr');
+
+        inputFiltro.addEventListener('keyup', function() {
+            const termo = this.value.toLowerCase();
+            linhas.forEach(row => {
+                const texto = row.innerText.toLowerCase();
+                row.style.display = texto.includes(termo) ? '' : 'none';
+            });
+        });
+
+        // Check All
+        const checkAll = document.getElementById('checkAllFormadores');
+        checkAll.addEventListener('change', function() {
+            const checks = document.querySelectorAll('input[name="formadores_ids"]:not(:disabled)');
+            checks.forEach(chk => {
+                // Só checa as linhas visíveis para ser mais inteligente com o filtro
+                if (chk.closest('tr').style.display !== 'none') {
+                    chk.checked = this.checked;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

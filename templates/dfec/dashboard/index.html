@@ -1,0 +1,410 @@
+<!-- templates/dfec/dashboard/index.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - DFEC{% endblock %}
+{% block page_title %}Dashboard Principal{% endblock %}
+{% block page_subtitle %}Visão geral do sistema de gestão de educação cívica{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-plus me-1"></i> Novo
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'planificacao_novo' %}">
+                <i class="fas fa-calendar-plus me-2"></i>Nova Atividade
+            </a></li>
+        <li><a class="dropdown-item" href="#">
+                <i class="fas fa-user-plus me-2"></i>Nova Formação
+            </a></li>
+        <li><a class="dropdown-item" href="{% url 'importar_dados_eleicao' %}">
+                <i class="fas fa-file-import me-2"></i>Importar Dados
+            </a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Cards de Estatísticas -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-primary border-4 shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                            Atividades Ativas
+                        </div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">{{ estatisticas.atividades_ativas }}</div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span class="text-success me-2">
+                                <i class="fas fa-arrow-up"></i> 12%
+                            </span>
+                            <span>Últimos 30 dias</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-success border-4 shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                            Formandos Ativos
+                        </div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">{{ estatisticas.participantes_ativos }}</div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span class="text-success me-2">
+                                <i class="fas fa-arrow-up"></i> 8%
+                            </span>
+                            <span>Em formação</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-warning border-4 shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                            Formações em Curso
+                        </div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">{{ estatisticas.formacoes_ativas }}</div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span class="text-warning me-2">
+                                <i class="fas fa-pause"></i> 2 próximas
+                            </span>
+                            <span>Para iniciar</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-danger border-4 shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs fw-bold text-danger text-uppercase mb-1">
+                            Análises Críticas
+                        </div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">{{ estatisticas.analises_criticas }}</div>
+                        <div class="mt-2 mb-0 text-muted text-xs">
+                            <span class="text-danger me-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </span>
+                            <span>Requerem atenção</span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de Atividades por Status -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 fw-bold text-primary">Atividades por Status</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow">
+                        <a class="dropdown-item" href="#">Ver detalhes</a>
+                        <a class="dropdown-item" href="#">Exportar dados</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="atividadesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas Recentes -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 fw-bold text-warning">Alertas Recentes</h6>
+                <span class="badge bg-danger">{{ alertas|length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="alert-list">
+                    {% if alertas %}
+                    {% for alerta in alertas %}
+                    <div class="alert alert-{% if alerta.nivel == 'CRITICO' %}danger{% elif alerta.nivel == 'ALERTA' %}warning{% else %}info{% endif %}
+                                alert-dismissible fade show mb-3" role="alert">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-{% if alerta.tipo == 'PRAZO' %}clock{% elif alerta.tipo == 'ORCAMENTO' %}money-bill-wave{% else %}exclamation-triangle{% endif %}
+                                          fa-2x mt-1"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="alert-heading">{{ alerta.titulo }}</h6>
+                                <p class="mb-0 small">{{ alerta.mensagem|truncatechars:100 }}</p>
+                                <small class="text-muted">{{ alerta.criado_em|timesince }} atrás</small>
+                                {% if alerta.acao_sugerida %}
+                                <div class="mt-2">
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Ação Sugerida</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="text-muted">Sem alertas pendentes</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="#" class="btn btn-sm btn-outline-warning">Ver todos os alertas</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Próximas Atividades -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Próximas Atividades</h6>
+            </div>
+            <div class="card-body">
+                {% if proximas_atividades %}
+                <div class="timeline">
+                    {% for atividade in proximas_atividades %}
+                    <div class="timeline-item mb-3">
+                        <div class="timeline-marker
+                            {% if atividade.status == 'PLANEADO' %}bg-info
+                            {% elif atividade.status == 'INICIADO' %}bg-primary
+                            {% elif atividade.status == 'EM_EXECUCAO' %}bg-success
+                            {% else %}bg-secondary{% endif %}">
+                        </div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">{{ atividade.nome }}</h6>
+                                <span class="badge bg-{% if atividade.atrasado %}danger{% else %}info{% endif %}">
+                                    {{ atividade.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-1">
+                                <i class="far fa-calendar me-1"></i>
+                                {{ atividade.data_inicio_planeada|date:"d/m/Y" }} -
+                                {{ atividade.data_fim_planeada|date:"d/m/Y" }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ atividade.responsavel_principal.get_full_name }}
+                                </small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Ver detalhes</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Sem atividades agendadas</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'planificacao_lista' %}" class="btn btn-sm btn-primary w-100">
+                    Ver todas as atividades
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribuição por Província -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Distribuição por Província</h6>
+                <select class="form-select form-select-sm w-auto">
+                    <option>Últimos 30 dias</option>
+                    <option>Últimos 90 dias</option>
+                    <option>Este ano</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4">
+                    <canvas id="provinciasChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    <span class="me-3">
+                        <i class="fas fa-circle text-primary"></i> Maputo
+                    </span>
+                    <span class="me-3">
+                        <i class="fas fa-circle text-success"></i> Gaza
+                    </span>
+                    <span class="me-3">
+                        <i class="fas fa-circle text-info"></i> Sofala
+                    </span>
+                    <span>
+                        <i class="fas fa-circle text-warning"></i> Outras
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Ações Rápidas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'dfec:objetivos_lista' %}" class="btn btn-outline-dark w-100 h-100 py-3">
+                            <i class="fas fa-bullseye fa-2x mb-2"></i><br>
+                            <span>Objetivos Institucionais</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'importar_dados_eleicao' %}" class="btn btn-outline-primary w-100 h-100 py-3">
+                            <i class="fas fa-file-import fa-2x mb-2"></i><br>
+                            <span>Importar Dados</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'analisar_regiao' %}" class="btn btn-outline-success w-100 h-100 py-3">
+                            <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+                            <span>Analisar Região</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="#" class="btn btn-outline-info w-100 h-100 py-3">
+                            <i class="fas fa-qrcode fa-2x mb-2"></i><br>
+                            <span>Validar QR Code</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="#" class="btn btn-outline-warning w-100 h-100 py-3">
+                            <i class="fas fa-file-pdf fa-2x mb-2"></i><br>
+                            <span>Gerar Relatório</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de Atividades por Status
+    var ctx1 = document.getElementById('atividadesChart').getContext('2d');
+    var atividadesChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: ['Planeado', 'Iniciado', 'Em Execução', 'Finalizado', 'Suspenso'],
+            datasets: [{
+                label: 'Número de Atividades',
+                data: [12, 19, 8, 15, 3],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgmas(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 5
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Distribuição por Província
+    var ctx2 = document.getElementById('provinciasChart').getContext('2d');
+    var provinciasChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Maputo', 'Gaza', 'Sofala', 'Nampula', 'Zambézia', 'Outras'],
+            datasets: [{
+                data: [30, 25, 15, 12, 10, 8],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(201, 203, 207, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

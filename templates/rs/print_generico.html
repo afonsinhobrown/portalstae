@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ tipo.nome }} - Visualização Territorial</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, serif;
+            line-height: 1.5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+        }
+        .folha {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 10mm auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+        @media print {
+            body { background: none; }
+            .folha { 
+                margin: 0; 
+                box-shadow: none; 
+                page-break-after: always;
+            }
+            .no-print { display: none; }
+        }
+        .no-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80pt;
+            color: rgba(0, 0, 0, 0.03);
+            z-index: 0;
+            text-transform: uppercase;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="btn" onclick="window.print()">Imprimir Tudo</button>
+        <button class="btn btn-secondary" onclick="window.close()">Fechar</button>
+    </div>
+
+    {% for p in paginas %}
+    <div class="folha">
+        {# Renderização do Documento Limpo (Sem marcas sistémicas) #}
+        {{ p.conteudo_renderizado|safe }}
+    </div>
+    {% endfor %}
+</body>
+</html>

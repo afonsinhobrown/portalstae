@@ -1,0 +1,174 @@
+<!-- templates/recursoshumanos/comunicacao/lista_usuarios.html -->
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Usuários • Chat RH{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Usuários para Conversa</h5>
+                    <a href="{% url 'recursoshumanos:chat_principal' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Chat
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Barra de pesquisa -->
+                    <div class="mb-4">
+                        <input type="text" class="form-control" id="search-users"
+                               placeholder="Buscar usuários por nome, setor ou email...">
+                    </div>
+
+                    <!-- Lista de usuários -->
+                    <div class="list-group" id="users-list">
+                        {% for usuario in usuarios %}
+                        <div class="list-group-item list-group-item-action user-item"
+                             data-user-id="{{ usuario.id }}"
+                             data-user-name="{{ usuario.nome_completo }}"
+                             data-user-setor="{{ usuario.setor }}">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <!-- Foto -->
+                                    {% if usuario.foto %}
+                                    <img src="{{ usuario.foto }}" alt="{{ usuario.nome_completo }}"
+                                         class="rounded-circle me-3" width="45" height="45">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3"
+                                         style="width: 45px; height: 45px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Informações -->
+                                    <div>
+                                        <h6 class="mb-1">{{ usuario.nome_completo }}</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-building me-1"></i>{{ usuario.setor }}
+                                            {% if usuario.email %}
+                                            <span class="ms-3">
+                                                <i class="fas fa-envelope me-1"></i>{{ usuario.email }}
+                                            </span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Botão de ação -->
+                                <div>
+                                    {% if usuario.tem_conversa %}
+                                    <a href="{% url 'recursoshumanos:canal_chat' usuario.canal_id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-comment me-1"></i>Continuar
+                                    </a>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-primary iniciar-chat-btn"
+                                            data-user-id="{{ usuario.id }}">
+                                        <i class="fas fa-comment me-1"></i>Conversar
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhum usuário disponível para conversa</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar com estatísticas CORRIGIDA -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Estatísticas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Usuários Online</small>
+                        <h4>{{ usuarios|length }}</h4>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Conversas Diretas</small>
+                        <h4>{{ conversas_diretas_count }}</h4>  <!-- ← CORRIGIDO -->
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Canais de Grupo</small>
+                        <h4>{{ canais_grupo_count }}</h4>  <!-- ← CORRIGIDO -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ajuda -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Como usar</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <p><i class="fas fa-comment me-2"></i>Clique em <strong>Conversar</strong> para iniciar uma nova conversa</p>
+                        <p><i class="fas fa-comments me-2"></i>Clique em <strong>Continuar</strong> para voltar a uma conversa existente</p>
+                        <p><i class="fas fa-search me-2"></i>Use a barra de pesquisa para encontrar usuários rapidamente</p>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pesquisa em tempo real
+    document.getElementById('search-users').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const userItems = document.querySelectorAll('.user-item');
+
+        userItems.forEach(item => {
+            const userName = item.getAttribute('data-user-name').toLowerCase();
+            const userSetor = item.getAttribute('data-user-setor').toLowerCase();
+
+            if (userName.includes(searchTerm) || userSetor.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Iniciar conversa
+    document.querySelectorAll('.iniciar-chat-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+
+            fetch('{% url "recursoshumanos:iniciar_conversa_direta" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: 'usuario_id=' + userId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.action === 'created') {
+                        alert('Conversa iniciada! Redirecionando...');
+                    }
+                    // Redirecionar para o canal
+                    window.location.href = '/rh/comunicacao/canal/' + data.canal_id + '/';
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao iniciar conversa');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-graduation-cap me-2 text-primary"></i>Gestão de Formações (DFEC)
+            </h1>
+            <p class="text-muted small mb-0">Emissão de credenciais para Formandos e Formadores</p>
+        </div>
+        <div>
+            <a href="{% url 'credenciais:adicionar_evento' %}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50 me-1"></i>Novo Curso
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards (Opcional) -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Cursos Ativos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ eventos.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Cursos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Cursos e Capacitações</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-0">Curso / Evento</th>
+                            <th class="border-0">Período</th>
+                            <th class="border-0">Localização</th>
+                            <th class="border-0 text-center">Inscritos</th>
+                            <th class="border-0 text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evento in eventos %}
+                        <tr>
+                            <td class="align-middle">
+                                <div class="fw-bold">{{ evento.nome }}</div>
+                                <small class="text-muted">{{ evento.descricao|truncatechars:50 }}</small>
+                            </td>
+                            <td class="align-middle">
+                                {{ evento.data_inicio|date:"d/m/Y" }} a {{ evento.data_fim|date:"d/m/Y" }}
+                            </td>
+                            <td class="align-middle">
+                                {% if evento.provincia %}
+                                    {{ evento.get_provincia_display }}
+                                {% else %}
+                                    {{ evento.abrangencia|title }}
+                                {% endif %}
+                                {% if evento.local %}
+                                    <br><small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ evento.local }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle text-center">
+                                <span class="badge bg-info text-dark rounded-pill px-3">
+                                    {{ evento.pedidocredencial_set.count }}
+                                </span>
+                            </td>
+                            <td class="align-middle text-end">
+                                <a href="{% url 'credenciais:dfec_detalhe_curso' evento.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-users-cog me-1"></i>Gerir Turma
+                                </a>
+                                <a href="{% url 'credenciais:editar_evento' evento.id %}" class="btn btn-sm btn-outline-secondary" title="Editar Detalhes">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-folder-open fa-3x mb-3 text-gray-300"></i>
+                                <p>Nenhuma formação cadastrada com a categoria "Formação/Capacitação".</p>
+                                <a href="{% url 'credenciais:adicionar_evento' %}" class="btn btn-sm btn-primary">Cadastrar Primeira Formação</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

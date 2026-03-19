@@ -1,0 +1,74 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Gestão de Partidos{% endblock %}
+{% block module_name %}PARTIDOS{% endblock %}
+{% block icon %}fas fa-flag{% endblock %}
+{% block dashboard_url %}{% url 'partidos:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'partidos:lista_partidos' %}" class="menu-item"><i class="fas fa-list-ul"></i> <span>Lista de Partidos</span></a>
+<a href="{% url 'partidos:lista_liderancas' %}" class="menu-item"><i class="fas fa-user-tie"></i> <span>Lideranças</span></a>
+<a href="{% url 'partidos:lista_documentos' %}" class="menu-item"><i class="fas fa-file-pdf"></i> <span>Documentação</span></a>
+<a href="#" class="menu-item"><i class="fas fa-history"></i> <span>Histórico</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="card-grid">
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-flag"></i></div>
+        <div class="card-title">Total de Partidos</div>
+        <div class="card-value">{{ total_partidos }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="card-title">Partidos Ativos</div>
+        <div class="card-value">{{ partidos_ativos }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-plus-circle"></i></div>
+        <div class="card-title">Ação Rápida</div>
+        <a href="{% url 'partidos:criar_partido' %}" class="action-btn">Novo Partido</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <h3>Últimos Partidos Registados</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #ddd;">
+                <th style="padding: 10px;">Sigla</th>
+                <th style="padding: 10px;">Nome</th>
+                <th style="padding: 10px;">Presidente</th>
+                <th style="padding: 10px;">Status</th>
+                <th style="padding: 10px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for partido in partidos %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px; font-weight: bold;">{{ partido.sigla }}</td>
+                <td style="padding: 10px;">{{ partido.nome_completo }}</td>
+                <td style="padding: 10px;">{{ partido.presidente }}</td>
+                <td style="padding: 10px;">
+                    {% if partido.ativo %}
+                    <span style="background: #e6fffa; color: #047481; padding: 2px 8px; border-radius: 10px; font-size: 12px;">Ativo</span>
+                    {% else %}
+                    <span style="background: #fff5f5; color: #c05621; padding: 2px 8px; border-radius: 10px; font-size: 12px;">Inativo</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    <a href="{% url 'partidos:detalhe_partido' partido.id %}" style="color: #003366; margin-right: 10px;"><i class="fas fa-eye"></i></a>
+                    <a href="{% url 'partidos:editar_partido' partido.id %}" style="color: #003366;"><i class="fas fa-edit"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 20px; text-align: center; color: #777;">
+                    Nenhum partido registado. <a href="{% url 'partidos:criar_partido' %}">Adicionar o primeiro</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

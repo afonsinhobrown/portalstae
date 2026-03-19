@@ -1,0 +1,141 @@
+{% extends 'dfec/base.html' %}
+
+{% block title %}Nova Turma - {{ formacao.nome }}{% endblock %}
+{% block page_title %}Criar Nova Turma{% endblock %}
+{% block page_subtitle %}{{ formacao.nome }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Dados da Turma e Seleção de Participantes</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="turmaForm">
+                    {% csrf_token %}
+
+                    <!-- Dados Básicos -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_nome" class="form-label">Nome da Turma <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="nome" id="id_nome" required
+                                    placeholder="Ex: Turma A">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_sala" class="form-label">Sala</label>
+                                <input type="text" class="form-control" name="sala" id="id_sala"
+                                    placeholder="Ex: Sala 101">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label for="id_data_inicio" class="form-label">Data Início</label>
+                                    <input type="date" class="form-control" name="data_inicio" id="id_data_inicio"
+                                        value="{{ formacao.data_inicio_real|date:'Y-m-d'|default:formacao.data_inicio_planeada|date:'Y-m-d' }}">
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label for="id_data_fim" class="form-label">Data Fim</label>
+                                    <input type="date" class="form-control" name="data_fim" id="id_data_fim"
+                                        value="{{ formacao.data_fim_real|date:'Y-m-d'|default:formacao.data_fim_planeada|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                            <!-- Formador omitido por simplicidade, ou poderia ser um select box se passarmos os usuários -->
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Seleção de Participantes -->
+                    <h6 class="fw-bold text-secondary mb-3">Selecionar Participantes (Aprovados e Disponíveis)</h6>
+
+                    {% if participantes_disponiveis %}
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="checkAll"
+                                                onchange="toggleAll(this)">
+                                        </div>
+                                    </th>
+                                    <th>Nome</th>
+                                    <th>Gênero</th>
+                                    <th>BI</th>
+                                    <th>Residência</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participante in participantes_disponiveis %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input participante-check" type="checkbox"
+                                                name="participantes" value="{{ participante.id }}"
+                                                id="part_{{ participante.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <label class="form-check-label w-100" for="part_{{ participante.id }}">
+                                            {{ participante.nome_completo }}
+                                        </label>
+                                    </td>
+                                    <td><span
+                                            class="badge bg-{% if participante.genero == 'M' %}primary{% elif participante.genero == 'F' %}danger{% else %}secondary{% endif %}">{{
+                                            participante.genero }}</span></td>
+                                    <td>{{ participante.bilhete_identidade }}</td>
+                                    <td>{{ participante.distrito }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        <span id="selectedCount">0</span> participantes selecionados.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Não há participantes aprovados disponíveis (sem
+                        turma) para selecionar.
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 d-flex justify-content-end gap-2">
+                        <a href="{% url 'dfec:formacao_detalhe' formacao.id %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success" {% if not participantes_disponiveis %}disabled{%
+                            endif %}>
+                            <i class="fas fa-save me-2"></i>Criar Turma
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleAll(source) {
+        checkboxes = document.getElementsByName('participantes');
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = source.checked;
+        }
+        updateCount();
+    }
+
+    const checkboxes = document.querySelectorAll('.participante-check');
+    checkboxes.forEach(chk => {
+        chk.addEventListener('change', updateCount);
+    });
+
+    function updateCount() {
+        const selected = document.querySelectorAll('.participante-check:checked').length;
+        document.getElementById('selectedCount').innerText = selected;
+    }
+</script>
+{% endblock %}

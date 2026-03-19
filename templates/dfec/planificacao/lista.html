@@ -1,0 +1,225 @@
+<!-- templates/dfec/planificacao/lista.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Planos de Atividade - DFEC{% endblock %}
+{% block page_title %}Diretório de Planos{% endblock %}
+{% block page_subtitle %}Gestão estratégica de planos de formação e educação cívica{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dfec:plano_criar' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-2"></i>Novo Plano
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Tabs de Navegação -->
+<ul class="nav nav-tabs mb-4" id="planosTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="lista-tab" data-bs-toggle="tab" data-bs-target="#lista" type="button" role="tab">
+            <i class="fas fa-list me-2"></i>Lista de Planos
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="calendario-tab" data-bs-toggle="tab" data-bs-target="#calendario" type="button" role="tab">
+            <i class="fas fa-calendar-alt me-2"></i>Calendário de Atividades
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="planosTabContent">
+    <!-- ABA LISTA -->
+    <div class="tab-pane fade show active" id="lista" role="tabpanel">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Todos os Planos</h6>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm w-auto">
+                        <option>Status: Todos</option>
+                        <option>Ativos</option>
+                        <option>Inativos</option>
+                        <option>Concluídos</option>
+                    </select>
+                    <input type="text" class="form-control form-control-sm" placeholder="Pesquisar..." style="width: 200px;">
+                </div>
+            </div>
+            <div class="card-body">
+                {% if planos %}
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Título</th>
+                                <th>Período</th>
+                                <th>Responsável</th>
+                                <th>Status</th>
+                                <th>Progresso</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plano in planos %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">{{ plano.codigo }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ plano.nome }}</strong>
+                                    {% if plano.descricao %}
+                                    <br>
+                                    <small class="text-muted">{{ plano.descricao|truncatechars:100 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ plano.data_inicio_planeada|date:"d/m/Y" }}<br>
+                                    <small>até</small><br>
+                                    {{ plano.data_fim_planeada|date:"d/m/Y" }}
+                                </td>
+                                <td>
+                                    {% if plano.responsavel_principal %}
+                                    {{ plano.responsavel_principal.get_full_name|default:plano.responsavel_principal.username }}
+                                    {% else %}
+                                    <span class="text-muted">Não definido</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if plano.ativo %}success{% else %}secondary{% endif %}">
+                                        {% if plano.ativo %}Ativo{% else %}Inativo{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        {% with progresso=plano.progresso|default:0 %}
+                                        <div class="progress-bar {% if progresso >= 80 %}bg-success{% elif progresso >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ progresso }}%;" aria-valuenow="{{ progresso }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ progresso }}%
+                                        </div>
+                                        {% endwith %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'dfec:plano_detalhe' plano.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'dfec:plano_editar' plano.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if plano.ativo %}
+                                        <a href="{% url 'dfec:plano_executar' plano.pk %}" class="btn btn-sm btn-outline-success" title="Executar">
+                                            <i class="fas fa-play"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum plano de atividade criado</h5>
+                    <p class="text-muted">Comece criando seu primeiro plano</p>
+                    <a href="{% url 'dfec:plano_criar' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Criar Primeiro Plano
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Total: {{ planos|length }} planos</small>
+                    <div>
+                        <a href="#" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-download me-1"></i>Exportar
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-print me-1"></i>Imprimir
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABA CALENDÁRIO -->
+    <div class="tab-pane fade" id="calendario" role="tabpanel">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Calendário Geral</h6>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small fw-bold">Filtrar por Plano:</label>
+                    <select class="form-select form-select-sm" id="filtroPlanoCalendario" style="width: 250px;">
+                        <option value="">TODOS OS PLANOS</option>
+                        {% for plano in planos %}
+                        <option value="{{ plano.id }}">{{ plano.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="calendar" style="height: 600px; margin: 20px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar via CDN -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar DataTables
+        $('.datatable').DataTable({
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-PT.json' },
+            pageLength: 25,
+            order: [[0, 'desc']],
+            responsive: true
+        });
+
+        // Inicializar Calendário
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pt',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            events: "{% url 'dfec:api_eventos_calendario' %}", // URL da API
+            eventClick: function (info) {
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                    info.jsEvent.preventDefault();
+                }
+            }
+        });
+
+        // Renderizar o calendário apenas quando a aba for exibida
+        var tabEl = document.querySelector('button[data-bs-target="#calendario"]');
+        tabEl.addEventListener('shown.bs.tab', function (event) {
+            calendar.render();
+        });
+
+        // Filtro de Plano
+        var filtroPlano = document.getElementById('filtroPlanoCalendario');
+        filtroPlano.addEventListener('change', function () {
+            var planoId = this.value;
+            var novaUrl = "{% url 'dfec:api_eventos_calendario' %}";
+            if (planoId) {
+                novaUrl += "?plano_id=" + planoId;
+            }
+            // Remove eventos antigos e busca novos
+            var eventSource = calendar.getEventSources()[0];
+            eventSource.remove();
+            calendar.addEventSource(novaUrl);
+        });
+    });
+</script>
+{% endblock %}

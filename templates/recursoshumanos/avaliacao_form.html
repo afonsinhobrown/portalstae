@@ -1,0 +1,407 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Avaliação de Desempenho • Portal STAE{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Avaliação de Desempenho</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:lista_funcionarios' %}">Funcionários</a></li>
+                <li class="breadcrumb-item active">Avaliar</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-star me-2 text-warning"></i>Avaliar Funcionário
+                </h5>
+                <p class="text-muted mb-0 mt-2">
+                    Avaliação do ano {{ ano_atual }} • Notas: 1 (Insuficiente) a 5 (Excelente)
+                </p>
+            </div>
+            <div class="card-body">
+                <!-- Funcionário -->
+                <div class="mb-4 p-3 bg-light rounded">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2">
+                                {{ funcionario.nome_completo|slice:":1" }}
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h5 class="fw-bold">{{ funcionario.nome_completo }}</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Função</small>
+                                    <p class="fw-bold">{{ funcionario.get_funcao_display }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Setor</small>
+                                    <p class="fw-bold">{{ funcionario.sector.nome }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Categoria</small>
+                                    <p class="fw-bold">{{ funcionario.categoria.get_categoria_display }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if avaliacao_existente %}
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Avaliação Existente</h5>
+                                <p class="mb-0">
+                                    Já existe uma avaliação para este funcionário no ano {{ ano_atual }}.
+                                    Este formulário irá atualizar a avaliação existente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Competências Técnicas -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3 text-primary">
+                            <i class="fas fa-cogs me-2"></i>Competências Técnicas
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Conhecimento Técnico *</label>
+                                <select name="conhecimento_tecnico" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.conhecimento_tecnico.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.conhecimento_tecnico.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.conhecimento_tecnico.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.conhecimento_tecnico.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.conhecimento_tecnico.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Qualidade do Trabalho *</label>
+                                <select name="qualidade_trabalho" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.qualidade_trabalho.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.qualidade_trabalho.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.qualidade_trabalho.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.qualidade_trabalho.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.qualidade_trabalho.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Produtividade *</label>
+                                <select name="produtividade" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.produtividade.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.produtividade.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.produtividade.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.produtividade.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.produtividade.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Iniciativa *</label>
+                                <select name="iniciativa" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.iniciativa.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.iniciativa.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.iniciativa.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.iniciativa.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.iniciativa.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Competências Comportamentais -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3 text-success">
+                            <i class="fas fa-users me-2"></i>Competências Comportamentais
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Assiduidade *</label>
+                                <select name="assiduidade" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.assiduidade.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.assiduidade.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.assiduidade.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.assiduidade.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.assiduidade.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Relacionamento *</label>
+                                <select name="relacionamento" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.relacionamento.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.relacionamento.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.relacionamento.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.relacionamento.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.relacionamento.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Adaptabilidade *</label>
+                                <select name="adaptabilidade" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.adaptabilidade.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.adaptabilidade.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.adaptabilidade.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.adaptabilidade.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.adaptabilidade.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Liderança *</label>
+                                <select name="lideranca" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.lideranca.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.lideranca.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.lideranca.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.lideranca.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.lideranca.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Apresentação Pessoal -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3 text-info">
+                            <i class="fas fa-user-tie me-2"></i>Apresentação Pessoal
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Apresentação Pessoal *</label>
+                                <select name="apresentacao_pessoal" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.apresentacao_pessoal.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.apresentacao_pessoal.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.apresentacao_pessoal.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.apresentacao_pessoal.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.apresentacao_pessoal.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Ética Profissional *</label>
+                                <select name="etica_profissional" class="form-select" required>
+                                    <option value="">Selecione nota...</option>
+                                    <option value="1" {% if form.etica_profissional.value == 1 %}selected{% endif %}>1 - Insuficiente</option>
+                                    <option value="2" {% if form.etica_profissional.value == 2 %}selected{% endif %}>2 - Regular</option>
+                                    <option value="3" {% if form.etica_profissional.value == 3 %}selected{% endif %}>3 - Satisfatório</option>
+                                    <option value="4" {% if form.etica_profissional.value == 4 %}selected{% endif %}>4 - Bom</option>
+                                    <option value="5" {% if form.etica_profissional.value == 5 %}selected{% endif %}>5 - Excelente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comentários -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-comment me-2"></i>Comentários e Desenvolvimento
+                        </h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Comentários Gerais</label>
+                            <textarea name="comentarios" class="form-control" rows="3" 
+                                      placeholder="Comentários sobre o desempenho geral...">{{ form.comentarios.value|default:'' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Pontos Fortes</label>
+                                    <textarea name="pontos_fortes" class="form-control" rows="3" 
+                                              placeholder="Principais competências e qualidades...">{{ form.pontos_fortes.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Pontos a Melhorar</label>
+                                    <textarea name="pontos_melhorar" class="form-control" rows="3" 
+                                              placeholder="Áreas que necessitam de desenvolvimento...">{{ form.pontos_melhorar.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Plano de Desenvolvimento</label>
+                            <textarea name="plano_desenvolvimento" class="form-control" rows="3" 
+                                      placeholder="Ações para desenvolvimento profissional...">{{ form.plano_desenvolvimento.value|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calculator fa-2x me-3"></i>
+                            <div>
+                                <h5 class="fw-bold mb-1">Cálculo Automático</h5>
+                                <p class="mb-0">
+                                    A nota final e classificação serão calculadas automaticamente com base nas notas atribuídas.
+                                    A nota final varia de 1.0 a 5.0.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{% url 'recursoshumanos:lista_funcionarios' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Tem certeza que deseja salvar esta avaliação?')">
+                            <i class="fas fa-save me-2"></i>Salvar Avaliação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Avaliações Anteriores -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-history me-2 text-info"></i>Avaliações Anteriores
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if avaliacoes_anteriores %}
+                <div class="list-group list-group-flush">
+                    {% for avaliacao in avaliacoes_anteriores %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-{% if avaliacao.classificacao_final == 'Excelente' %}success{% elif avaliacao.classificacao_final == 'Bom' %}info{% elif avaliacao.classificacao_final == 'Satisfatório' %}warning{% else %}danger{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                    {{ avaliacao.nota_final_geral|floatformat:1 }}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">{{ avaliacao.ano }}</h6>
+                                <small class="text-muted">{{ avaliacao.classificacao_final }}</small>
+                                <p class="mb-0 text-muted small">Por: {{ avaliacao.avaliado_por.username|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-star fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Sem avaliações anteriores</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Escala de Notas -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-ruler me-2 text-success"></i>Escala de Avaliação
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-success me-2">5</span>
+                        <div>
+                            <h6 class="fw-bold mb-0">Excelente</h6>
+                            <p class="text-muted small mb-0">Desempenho excepcional, supera expectativas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-2">4</span>
+                        <div>
+                            <h6 class="fw-bold mb-0">Bom</h6>
+                            <p class="text-muted small mb-0">Desempenho acima do esperado</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-warning me-2">3</span>
+                        <div>
+                            <h6 class="fw-bold mb-0">Satisfatório</h6>
+                            <p class="text-muted small mb-0">Atende plenamente às expectativas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-danger me-2">2</span>
+                        <div>
+                            <h6 class="fw-bold mb-0">Regular</h6>
+                            <p class="text-muted small mb-0">Atende parcialmente às expectativas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-secondary me-2">1</span>
+                        <div>
+                            <h6 class="fw-bold mb-0">Insuficiente</h6>
+                            <p class="text-muted small mb-0">Não atende às expectativas mínimas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classificações -->
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Classificações Finais
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <span class="badge bg-success">Excelente</span>
+                    <span class="text-muted small ms-2">Nota ≥ 4.5</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-info">Bom</span>
+                    <span class="text-muted small ms-2">Nota ≥ 3.5</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-warning">Satisfatório</span>
+                    <span class="text-muted small ms-2">Nota ≥ 2.5</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-danger">Regular</span>
+                    <span class="text-muted small ms-2">Nota ≥ 1.5</span>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-secondary">Insuficiente</span>
+                    <span class="text-muted small ms-2">Nota < 1.5</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

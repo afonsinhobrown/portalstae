@@ -1,0 +1,209 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Configurar Notificações - STAE RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Cabeçalho -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Configurar Notificações</h5>
+                    <p class="mb-0 text-white-50">Personalize suas preferências de notificação</p>
+                </div>
+            </div>
+
+            <!-- Formulário de Configuração -->
+            <div class="card">
+                <form method="POST" action="{% url 'recursoshumanos:configurar_notificacoes' %}">
+                    {% csrf_token %}
+                    
+                    <div class="card-body">
+                        <h6 class="mb-3 text-primary"><i class="fas fa-bell me-2"></i>Tipos de Notificação</h6>
+                        
+                        <!-- Licenças -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="mostrar_licencas" 
+                                   name="mostrar_licencas" {% if config.mostrar_licencas %}checked{% endif %}>
+                            <label class="form-check-label" for="mostrar_licencas">
+                                <strong><i class="fas fa-calendar-alt text-primary me-2"></i>Licenças e Férias</strong>
+                                <p class="text-muted small mb-0">
+                                    Receber notificações sobre solicitações, aprovações e status de licenças
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <!-- Avaliações -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="mostrar_avaliacoes" 
+                                   name="mostrar_avaliacoes" {% if config.mostrar_avaliacoes %}checked{% endif %}>
+                            <label class="form-check-label" for="mostrar_avaliacoes">
+                                <strong><i class="fas fa-star text-warning me-2"></i>Avaliações de Desempenho</strong>
+                                <p class="text-muted small mb-0">
+                                    Notificações sobre avaliações, feedbacks e relatórios de desempenho
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <!-- Documentos -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="mostrar_documentos" 
+                                   name="mostrar_documentos" {% if config.mostrar_documentos %}checked{% endif %}>
+                            <label class="form-check-label" for="mostrar_documentos">
+                                <strong><i class="fas fa-file-alt text-success me-2"></i>Documentos Institucionais</strong>
+                                <p class="text-muted small mb-0">
+                                    Alertas sobre novos documentos, ofícios, relatórios e comunicações
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <!-- Mensagens -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="mostrar_mensagens" 
+                                   name="mostrar_mensagens" {% if config.mostrar_mensagens %}checked{% endif %}>
+                            <label class="form-check-label" for="mostrar_mensagens">
+                                <strong><i class="fas fa-comment text-info me-2"></i>Mensagens e Chat</strong>
+                                <p class="text-muted small mb-0">
+                                    Notificações de novas mensagens, conversas e canais de comunicação
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <!-- Sistema -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="mostrar_sistema" 
+                                   name="mostrar_sistema" {% if config.mostrar_sistema %}checked{% endif %}>
+                            <label class="form-check-label" for="mostrar_sistema">
+                                <strong><i class="fas fa-cog text-secondary me-2"></i>Notificações do Sistema</strong>
+                                <p class="text-muted small mb-0">
+                                    Alertas do sistema, atualizações, manutenções e informações gerais
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="mb-3 text-primary"><i class="fas fa-volume-up me-2"></i>Preferências de Alerta</h6>
+                        
+                        <!-- Som -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="som_notificacoes" 
+                                   name="som_notificacoes" {% if config.som_notificacoes %}checked{% endif %}>
+                            <label class="form-check-label" for="som_notificacoes">
+                                <strong>Som de notificação</strong>
+                                <p class="text-muted small mb-0">
+                                    Reproduzir som quando novas notificações chegarem
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <!-- Notificações por Email (se implementar depois) -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="email_notificacoes" 
+                                   name="email_notificacoes" disabled>
+                            <label class="form-check-label text-muted" for="email_notificacoes">
+                                <strong>Notificações por Email</strong>
+                                <p class="text-muted small mb-0">
+                                    Receber cópias das notificações por email (em breve)
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <!-- Frequência (se implementar depois) -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Frequência de Resumo</strong></label>
+                            <select class="form-select" disabled>
+                                <option selected>Diário</option>
+                                <option>Semanal</option>
+                                <option>Apenas importantes</option>
+                            </select>
+                            <div class="form-text text-muted">
+                                Em breve: Receber resumos de notificações (em desenvolvimento)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'recursoshumanos:minhas_notificacoes' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Salvar Configurações
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Dicas -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="text-primary"><i class="fas fa-lightbulb me-2"></i>Dicas</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Notificações em tempo real:</strong> As notificações são atualizadas automaticamente a cada 30 segundos
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Marcação em lote:</strong> Você pode marcar todas as notificações como lidas de uma vez
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Histórico completo:</strong> Todas as suas notificações são armazenadas para consulta futura
+                        </li>
+                        <li>
+                            <i class="fas fa-sync-alt text-warning me-2"></i>
+                            <strong>Próximas atualizações:</strong> Em breve teremos notificações por email e push
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-check-input:checked {
+    background-color: #1a4a72;
+    border-color: #1a4a72;
+}
+
+.form-check-input:focus {
+    border-color: #1a4a72;
+    box-shadow: 0 0 0 0.25rem rgba(26, 74, 114, 0.25);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.form-check-label strong {
+    font-weight: 600;
+    color: #333;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Feedback visual ao salvar
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Salvando...';
+        submitBtn.disabled = true;
+        
+        // Simular delay para feedback
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Relatórios • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Relatórios e Estatísticas</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a
+                        href="{% url 'gestaocombustivel:dashboard_combustivel' %}">Combustível</a></li>
+                <li class="breadcrumb-item active">Relatórios</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <select class="form-select" style="width: auto;" onchange="filterRelatorio(this.value, '{{ ano }}')">
+            <option value="1" {% if mes=='1' %}selected{% endif %}>Janeiro</option>
+            <option value="2" {% if mes=='2' %}selected{% endif %}>Fevereiro</option>
+            <option value="3" {% if mes=='3' %}selected{% endif %}>Março</option>
+            <option value="4" {% if mes=='4' %}selected{% endif %}>Abril</option>
+            <option value="5" {% if mes=='5' %}selected{% endif %}>Maio</option>
+            <option value="6" {% if mes=='6' %}selected{% endif %}>Junho</option>
+            <option value="7" {% if mes=='7' %}selected{% endif %}>Julho</option>
+            <option value="8" {% if mes=='8' %}selected{% endif %}>Agosto</option>
+            <option value="9" {% if mes=='9' %}selected{% endif %}>Setembro</option>
+            <option value="10" {% if mes=='10' %}selected{% endif %}>Outubro</option>
+            <option value="11" {% if mes=='11' %}selected{% endif %}>Novembro</option>
+            <option value="12" {% if mes=='12' %}selected{% endif %}>Dezembro</option>
+        </select>
+        <select class="form-select" style="width: auto;" onchange="filterRelatorio('{{ mes }}', this.value)">
+            <option value="2024" {% if ano=='2024' %}selected{% endif %}>2024</option>
+            <option value="2023" {% if ano=='2023' %}selected{% endif %}>2023</option>
+            <option value="2022" {% if ano=='2022' %}selected{% endif %}>2022</option>
+        </select>
+        <button onclick="window.print()" class="btn btn-dark ms-2 shadow-sm">
+            <i class="fas fa-file-pdf me-2"></i>Imprimir / PDF
+        </button>
+    </div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 1cm;
+        }
+
+        body {
+            background-color: white !important;
+            font-size: 12pt;
+        }
+
+        .no-print,
+        nav,
+        .sidebar-wrapper,
+        .navbar,
+        header,
+        .btn {
+            display: none !important;
+        }
+
+        .main-panel {
+            width: 100% !important;
+            float: none !important;
+        }
+
+        .content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .combustivel-stat-card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+            color: black !important;
+        }
+
+        .combustivel-stat-card.text-white {
+            color: black !important;
+        }
+
+        /* Força texto preto para economizar tinta e clareza */
+
+        /* Ajuste para cores de fundo se usuário quiser (print-color-adjust) */
+        .combustivel-stat-card {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .combustivel-card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        h1,
+        h2,
+        h3,
+        h5,
+        p {
+            color: black !important;
+        }
+
+        .row {
+            display: flex !important;
+            flex-wrap: wrap !important;
+        }
+
+        .col-lg-4,
+        .col-lg-8 {
+            width: 100% !important;
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Layout Grid para Impressão */
+        .row.g-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .row.g-4>div {
+            width: auto !important;
+        }
+
+        a {
+            text-decoration: none !important;
+            color: black !important;
+        }
+    }
+</style>
+
+<div class="row g-4">
+    <!-- Resumo do Mês -->
+    <div class="col-lg-4">
+        <div class="combustivel-stat-card text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-gas-pump fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ total_consumo.total_litros|default:0|floatformat:0 }}</h2>
+                <p class="mb-0">Litros Consumidos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="combustivel-stat-card success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ total_consumo.total_custo|default:0|floatformat:2 }}</h2>
+                <p class="mb-0">MT Gastos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="combustivel-stat-card warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-car fa-2x mb-3"></i>
+                <h2 class="fw-bold display-6">{{ pedidos_mes.count }}</h2>
+                <p class="mb-0">Abastecimentos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Consumo por Viatura -->
+    <div class="col-lg-8">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-chart-bar me-2 text-primary"></i>
+                    Consumo por Viatura
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if consumo_por_viatura %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Viatura</th>
+                                <th>Litros</th>
+                                <th>Custo</th>
+                                <th>Média Custo/Litro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for consumo in consumo_por_viatura %}
+                            <tr>
+                                <td>
+                                    <strong>{{ consumo.viatura__matricula }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ consumo.viatura__marca }} {{ consumo.viatura__modelo
+                                        }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ consumo.total_litros|floatformat:0 }}L</strong>
+                                </td>
+                                <td>
+                                    <strong class="text-success">{{ consumo.total_custo|floatformat:2 }} MT</strong>
+                                </td>
+                                <td>
+                                    {% widthratio consumo.total_custo consumo.total_litros 1 as custo_medio %}
+                                    <small>{{ custo_medio|floatformat:2 }} MT/L</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Sem dados para o período selecionado</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="col-lg-4">
+        <div class="combustivel-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    Estatísticas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Viaturas Activas:</span>
+                        <strong>{{ total_viaturas }}</strong>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Média por Viatura:</span>
+                        <strong>
+                            {% if consumo_por_viatura %}
+                            {{ total_consumo.total_custo|default:0|floatformat:2 }} MT
+                            {% else %}
+                            0 MT
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Pedidos Pendentes:</span>
+                        <strong class="text-warning">{{ pedidos_pendentes.count }}</strong>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Em Manutenção:</span>
+                        <strong class="text-danger">{{ manutencoes_activas.count }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterRelatorio(mes, ano) {
+        window.location.href = '?mes=' + mes + '&ano=' + ano;
+    }
+</script>
+{% endblock %}

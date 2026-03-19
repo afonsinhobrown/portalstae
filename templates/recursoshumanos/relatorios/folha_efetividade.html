@@ -1,0 +1,66 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Folha de Efetividade</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Setor (opcional)</label>
+                        <select name="setor" class="form-select">
+                            <option value="">Todos os Setores</option>
+                            {% for sector in sectores %}
+                            <option value="{{ sector.id }}">{{ sector.codigo }} - {{ sector.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Mês</label>
+                            <select name="mes" class="form-select">
+                                {% for i in "123456789101112"|make_list %}
+                                <option value="{{ forloop.counter }}" {% if forloop.counter == now.month %}selected{% endif %}>
+                                    {{ forloop.counter }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Ano</label>
+                            <select name="ano" class="form-select">
+                                {% for year in "2023,2024,2025,2026"|split:"," %}
+                                <option value="{{ year }}" {% if year == now.year|stringformat:"s" %}selected{% endif %}>
+                                    {{ year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-pdf me-2"></i>Gerar Folha em PDF
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <i class="fas fa-info-circle me-2"></i>
+                        A folha será gerada em formato A4 com espaços para assinatura diária.
+                        Dias de licença aparecerão pintados a preto.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

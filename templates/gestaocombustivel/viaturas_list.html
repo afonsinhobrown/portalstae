@@ -1,0 +1,142 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Viaturas • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Gestão de Viaturas</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'gestaocombustivel:dashboard_combustivel' %}">Combustível</a></li>
+                <li class="breadcrumb-item active">Viaturas</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="combustivel-card">
+    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-car me-2 text-primary"></i>
+            Todas as Viaturas
+        </h5>
+        <div class="d-flex gap-2">
+            <select class="form-select" id="tipoFilter" onchange="filterViaturas()">
+                <option value="">Todos os tipos</option>
+                <option value="transporte_diario" {% if tipo_filter == 'transporte_diario' %}selected{% endif %}>Transporte Diário</option>
+                <option value="expediente" {% if tipo_filter == 'expediente' %}selected{% endif %}>Expediente</option>
+                <option value="servico_geral" {% if tipo_filter == 'servico_geral' %}selected{% endif %}>Serviço Geral</option>
+                <option value="director" {% if tipo_filter == 'director' %}selected{% endif %}>Director</option>
+            </select>
+            <select class="form-select" id="estadoFilter" onchange="filterViaturas()">
+                <option value="">Todos os estados</option>
+                <option value="excelente" {% if estado_filter == 'excelente' %}selected{% endif %}>Excelente</option>
+                <option value="bom" {% if estado_filter == 'bom' %}selected{% endif %}>Bom</option>
+                <option value="regular" {% if estado_filter == 'regular' %}selected{% endif %}>Regular</option>
+                <option value="manutencao" {% if estado_filter == 'manutencao' %}selected{% endif %}>Manutenção</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if viaturas %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Viatura</th>
+                        <th>Tipo</th>
+                        <th>Combustível</th>
+                        <th>Kilometragem</th>
+                        <th>Funcionário</th>
+                        <th>Estado</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for viatura in viaturas %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                    <i class="fas fa-car text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ viatura.matricula }}</h6>
+                                    <small class="text-muted">{{ viatura.marca }} {{ viatura.modelo }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ viatura.get_tipo_viatura_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <small>{{ viatura.get_tipo_combustivel_display }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ viatura.kilometragem_actual }}</strong>
+                            <br>
+                            <small class="text-muted">km</small>
+                        </td>
+                        <td>
+                            {% if viatura.funcionario_afecto %}
+                            <small>{{ viatura.funcionario_afecto.nome_completo }}</small>
+                            {% else %}
+                            <span class="text-muted">Não afectada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if viatura.estado == 'excelente' %}
+                            <span class="badge bg-success">Excelente</span>
+                            {% elif viatura.estado == 'bom' %}
+                            <span class="badge bg-primary">Bom</span>
+                            {% elif viatura.estado == 'regular' %}
+                            <span class="badge bg-warning">Regular</span>
+                            {% else %}
+                            <span class="badge bg-danger">Manutenção</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'gestaocombustivel:detalhe_viatura' viatura.id %}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'gestaocombustivel:pedir_combustivel' %}?viatura={{ viatura.id }}" 
+                                   class="btn btn-outline-success">
+                                    <i class="fas fa-gas-pump"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhuma viatura encontrada</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterViaturas() {
+    const tipo = document.getElementById('tipoFilter').value;
+    const estado = document.getElementById('estadoFilter').value;
+    
+    const params = new URLSearchParams();
+    if (tipo) params.set('tipo', tipo);
+    if (estado) params.set('estado', estado);
+    
+    window.location.href = '?' + params.toString();
+}
+</script>
+{% endblock %}

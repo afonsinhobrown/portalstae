@@ -1,0 +1,130 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Círculos Eleitorais{% endblock %}
+{% block module_name %}CÍRCULOS{% endblock %}
+{% block icon %}fas fa-map-marked-alt{% endblock %}
+{% block dashboard_url %}{% url 'circuloseleitorais:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="#" class="menu-item"><i class="fas fa-map-marker-alt"></i> <span>Círculos</span></a>
+<a href="#" class="menu-item"><i class="fas fa-building"></i> <span>Postos de Votação</span></a>
+<a href="#" class="menu-item"><i class="fas fa-chair"></i> <span>Mesas</span></a>
+<a href="#" class="menu-item"><i class="fas fa-chart-pie"></i> <span>Estatísticas</span></a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<style>
+    .dataTables_wrapper .dataTables_filter { margin-bottom: 15px; }
+    .table-responsive { overflow-x: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card-grid">
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <div class="card-title">Círculos Eleitorais</div>
+        <div class="card-value">{{ total_circulos }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-building"></i></div>
+        <div class="card-title">Postos de Votação</div>
+        <div class="card-value">{{ total_postos }}</div>
+    </div>
+    <div class="card">
+        <div class="card-icon"><i class="fas fa-plus-circle"></i></div>
+        <div class="card-title">Ação Rápida</div>
+        <a href="{% url 'circuloseleitorais:criar_circulo' %}" class="action-btn">Novo Círculo</a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>Círculos Eleitorais Registados</h3>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            {% if eleicoes %}
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="configRapida" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-magic me-1"></i> Configuração Rápida
+                </button>
+                <ul class="dropdown-menu shadow" aria-labelledby="configRapida">
+                    <li class="dropdown-header">Gerar por Eleição</li>
+                    {% for eleicao in eleicoes %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'circuloseleitorais:gerar_circulos' eleicao.id %}">
+                            <i class="fas fa-magic me-2 text-muted"></i> Gerar Automaticamente - {{ eleicao.ano }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'circuloseleitorais:criar_circulo' %}?eleicao_id={{ eleicao.id }}">
+                            <i class="fas fa-edit me-2 text-muted"></i> Criar Manualmente - {{ eleicao.ano }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'circuloseleitorais:sincronizar_rs' eleicao.id %}">
+                            <i class="fas fa-sync-alt me-2 text-muted"></i> Sincronizar Dados do RS
+                        </a>
+                    </li>
+                    <li class="dropdown-divider"></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table id="tabelaCirculos" class="table table-hover" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 2px solid #ddd;">
+                    <th style="padding: 10px;">Eleição</th>
+                    <th style="padding: 10px;">Código</th>
+                    <th style="padding: 10px;">Nome</th>
+                    <th style="padding: 10px;">Província</th>
+                    <th style="padding: 10px;">Eleitores</th>
+                    <th style="padding: 10px;">Mandatos</th>
+                    <th style="padding: 10px;">Mesas</th>
+                    <th style="padding: 10px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for circulo in circulos %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px;">
+                        <span class="badge bg-light text-dark border">{{ circulo.eleicao.ano }}</span>
+                        <small class="d-block text-muted">{{ circulo.eleicao.nome }}</small>
+                    </td>
+                    <td style="padding: 10px; font-weight: bold;">{{ circulo.codigo }}</td>
+                    <td style="padding: 10px;">{{ circulo.nome }}</td>
+                    <td style="padding: 10px;">{{ circulo.provincia }}</td>
+                    <td style="padding: 10px;">{{ circulo.num_eleitores }}</td>
+                    <td style="padding: 10px; font-weight: bold; color: #0d6efd;">{{ circulo.num_mandatos }}</td>
+                    <td style="padding: 10px;">{{ circulo.num_mesas }}</td>
+                    <td style="padding: 10px;">
+                        <a href="{% url 'circuloseleitorais:detalhe_circulo' circulo.id %}" class="btn btn-sm btn-light border text-primary me-1"><i class="fas fa-eye"></i></a>
+                        <a href="{% url 'circuloseleitorais:eliminar_circulo' circulo.id %}" class="btn btn-sm btn-light border text-danger" onclick="return confirm('Tem certeza que deseja apagar este círculo? Esta ação removerá também todas as listas e candidatos vinculados!')"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#tabelaCirculos').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-PT.json"
+            },
+            "pageLength": 10,
+            "order": [[ 2, "asc" ]], // Ordenar por Nome por padrão
+            "responsive": true
+        });
+    });
+</script>
+{% endblock %}

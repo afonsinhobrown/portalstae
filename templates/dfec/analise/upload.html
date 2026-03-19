@@ -1,0 +1,100 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Carregar Dados Eleitorais</h1>
+        <a href="{% url 'dfec:dashboard_analise_eleitoral' %}"
+            class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Voltar ao Dashboard
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Upload de Arquivos CSV</h6>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> O sistema aceita arquivos CSV exportados do sistema
+                        eleitoral.
+                        Ele processará automaticamente as variantes de nomes (normalização).
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="dropzone p-5 border-dashed"
+                        style="border: 2px dashed #4e73df; border-radius: 10px; background: #f8f9fc;">
+                        {% csrf_token %}
+
+                        <div class="row mb-4 text-left">
+                            <div class="col-md-6">
+                                <label class="font-weight-bold text-gray-700">Ano da Eleição</label>
+                                <select name="ano" class="form-control" required>
+                                    <option value="2024">2024 (Gerais)</option>
+                                    <option value="2023" selected>2023 (Autárquicas)</option>
+                                    <option value="2019">2019 (Gerais)</option>
+                                    <option value="2018">2018 (Autárquicas)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="font-weight-bold text-gray-700">Tipo de Eleição</label>
+                                <select name="tipo" class="form-control">
+                                    <option value="AUTO" selected>Auto-detectar (Nome do Arquivo)</option>
+                                    <option value="AM">Assembleia Municipal (AM)</option>
+                                    <option value="PCM">Pres. Cons. Municipal (PCM)</option>
+                                    <option value="AP">Assembleia Provincial (AP)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <i class="fas fa-cloud-upload-alt fa-4x text-gray-300 mb-3"></i>
+                            <h4>Arraste os arquivos aqui ou clique para selecionar</h4>
+                            <p class="text-muted">Você pode selecionar múltiplos arquivos (Mesa a Mesa)</p>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <input type="file" name="arquivos_csv" multiple class="form-control-file d-none"
+                                id="fileInput" required accept=".csv">
+                            <button type="button" class="btn btn-primary btn-lg"
+                                onclick="document.getElementById('fileInput').click()">
+                                Selecionar Arquivos no Computador
+                            </button>
+                        </div>
+
+                        <div id="fileList" class="mt-4 text-left"></div>
+
+                        <hr class="my-4">
+
+                        <button type="submit" class="btn btn-success btn-block btn-lg">
+                            <i class="fas fa-check"></i> Iniciar Importação
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+        var list = document.getElementById('fileList');
+        list.innerHTML = '<h6 class="font-weight-bold">Arquivos selecionados:</h6><ul class="list-group">';
+
+        for (var i = 0; i < this.files.length; i++) {
+            list.innerHTML += '<li class="list-group-item py-2"><i class="fas fa-file-csv text-success mr-2"></i> ' + this.files[i].name + '</li>';
+        }
+        list.innerHTML += '</ul>';
+    });
+</script>
+{% endblock %}

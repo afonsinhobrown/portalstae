@@ -1,0 +1,22 @@
+<!-- templates/dfec/partials/footer.html -->
+<footer class="footer mt-auto py-3 bg-light border-top">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <span class="text-muted">
+                    <i class="fas fa-copyright me-1"></i>
+                    {% now "Y" %} DFEC - Sistema de Gestão de Educação Cívica
+                </span>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="text-muted">
+                    <i class="fas fa-server me-1"></i>
+                    v1.0.0
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-user me-1"></i>
+                    {{ user.get_full_name|default:user.username }}
+                </span>
+            </div>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,50 @@
+<!-- templates/dfec/login_dfec.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Acesso DFEC{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white text-center">
+                    <h4><i class="fas fa-book me-2"></i>ACESSO DFEC</h4>
+                    <small>Sistema de Documentação Técnica</small>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'dfec:login' %}">
+                        {% csrf_token %}
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Usuário</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Senha</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-info w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Entrar no DFEC
+                        </button>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        Acesso restrito à equipa DFEC<br>
+                        <a href="{% url 'home' %}" class="text-decoration-none">
+                            <i class="fas fa-home me-1"></i>Voltar para Home
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

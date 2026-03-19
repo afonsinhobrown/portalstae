@@ -1,0 +1,422 @@
+<!-- gestaocombustivel/templates/gestaocombustivel/concluir_manutencao.html -->
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}Portal STAE • Concluir Manutenção #{{ manutencao.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-check-double text-success me-2"></i>
+                Concluir Manutenção
+            </h1>
+            <small class="text-muted">Manutenção #{{ manutencao.id }} - {{ manutencao.viatura.matricula }}</small>
+        </div>
+        <a href="{% url 'gestaocombustivel:lista_manutencoes' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Detalhes da Manutenção -->
+        <div class="col-lg-8">
+            <div class="combustivel-card p-4 mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">
+                    <i class="fas fa-tools me-2"></i>
+                    Detalhes da Manutenção
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Viatura</label>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle bg-primary text-white me-3">
+                                    {{ manutencao.viatura.matricula|slice:":2" }}
+                                </div>
+                                <div>
+                                    <strong>{{ manutencao.viatura.matricula }}</strong><br>
+                                    <small>{{ manutencao.viatura.marca }} {{ manutencao.viatura.modelo }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Manutenção</label>
+                            <div>
+                                <span class="badge bg-primary">
+                                    {{ manutencao.get_tipo_manutencao_display }}
+                                </span>
+                                <br>
+                                <span
+                                    class="badge {% if manutencao.prioridade == 'urgente' %}bg-danger{% elif manutencao.prioridade == 'alta' %}bg-warning{% else %}bg-info{% endif %}">
+                                    {{ manutencao.get_prioridade_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Oficina</label>
+                            <div>
+                                <i class="fas fa-building me-2"></i>
+                                {{ manutencao.oficina_nome }}
+                                {% if manutencao.fornecedor.contacto %}
+                                <br><small>{{ manutencao.fornecedor.contacto }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data Agendada</label>
+                            <div>
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                {{ manutencao.data_agendada|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descrição</label>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            {{ manutencao.descricao|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Quilometragem</label>
+                            <div>
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                {{ manutencao.kilometragem_actual|floatformat:0 }} km
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Custo Estimado</label>
+                            <div>
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if manutencao.custo_previsto %}
+                                {{ manutencao.custo_previsto|floatformat:2 }} MT
+                                {% else %}
+                                <span class="text-muted">Não definido</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status Atual</label>
+                            <div>
+                                {% if manutencao.status == 'em_curso' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-tools me-1"></i> Em Curso
+                                </span>
+                                {% else %}
+                                <span
+                                    class="badge bg-{% if manutencao.status == 'concluida' %}success{% elif manutencao.status == 'cancelada' %}danger{% else %}info{% endif %}">
+                                    {{ manutencao.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if manutencao.observacoes %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Observações</label>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            {{ manutencao.observacoes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if manutencao.solicitante %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Solicitante</label>
+                    <div>
+                        <i class="fas fa-user me-2"></i>
+                        {{ manutencao.solicitante.nome_completo }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Formulário de Conclusão -->
+        <div class="col-lg-4">
+            <div class="combustivel-card p-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    Registrar Conclusão
+                </h5>
+
+                {% if manutencao.status == 'em_curso' %}
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="data_conclusao" class="form-label fw-bold">
+                            Data de Conclusão *
+                        </label>
+                        <input type="date" name="data_conclusao" id="data_conclusao" class="form-control" required
+                            value="{% now 'Y-m-d' %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="custo_real" class="form-label fw-bold">
+                            Custo Real (MT)
+                        </label>
+                        <input type="number" name="custo_real" id="custo_real" class="form-control" step="0.01"
+                            placeholder="0.00" value="{{ manutencao.custo_previsto|stringformat:'.2f'|default:'' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="relatorio_manutencao" class="form-label fw-bold">
+                            Relatório da Manutenção *
+                        </label>
+                        <textarea name="relatorio_manutencao" id="relatorio_manutencao" class="form-control" rows="6"
+                            required
+                            placeholder="Descreva os trabalhos realizados, peças substituídas, testes realizados..."></textarea>
+                        <div class="form-text">Inclua detalhes técnicos importantes</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="garantia_ate" class="form-label fw-bold">
+                            Garantia até
+                        </label>
+                        <input type="date" name="garantia_ate" id="garantia_ate" class="form-control">
+                        <div class="form-text">Data de fim da garantia dos trabalhos</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            Documentos
+                        </label>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="factura_recebida"
+                                            name="factura_recebida">
+                                        <label class="form-check-label" for="factura_recebida">
+                                            Fatura recebida
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="garantia_escrita"
+                                            name="garantia_escrita">
+                                        <label class="form-check-label" for="garantia_escrita">
+                                            Garantia por escrito
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="documentacao_completa"
+                                            name="documentacao_completa">
+                                        <label class="form-check-label" for="documentacao_completa">
+                                            Documentação completa
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Concluir Manutenção
+                        </button>
+
+                        <a href="#" class="btn btn-outline-warning" data-bs-toggle="modal"
+                            data-bs-target="#aguardarPecasModal">
+                            <i class="fas fa-clock me-2"></i>
+                            Aguardar Peças
+                        </a>
+
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                            data-bs-target="#cancelarModal">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Cancelar Manutenção
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h5>Manutenção já concluída</h5>
+                    <p class="text-muted mb-0">
+                        Esta manutenção foi concluída em {{ manutencao.data_conclusao|date:"d/m/Y" }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Status da Viatura -->
+            <div class="combustivel-card p-4 mt-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-car me-2"></i>
+                    Estado da Viatura
+                </h5>
+
+                <div
+                    class="alert {% if manutencao.viatura.estado == 'manutencao' %}alert-warning{% else %}alert-success{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <i
+                            class="fas {% if manutencao.viatura.estado == 'manutencao' %}fa-tools{% else %}fa-check-circle{% endif %} fa-2x me-3"></i>
+                        <div>
+                            <strong>Estado atual:</strong><br>
+                            {{ manutencao.viatura.get_estado_display }}
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        <strong>Quilometragem:</strong> {{ manutencao.viatura.kilometragem_actual|floatformat:0 }} km
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        <strong>Última Manutenção:</strong>
+                        {% if manutencao.viatura.data_ultima_manutencao %}
+                        {{ manutencao.viatura.data_ultima_manutencao|date:"d/m/Y" }}
+                        {% else %}
+                        <span class="text-muted">Nunca</span>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <i class="fas fa-road me-2"></i>
+                        <strong>Próxima Manutenção:</strong> {{ manutencao.viatura.proxima_manutencao_km|floatformat:0
+                        }} km
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Aguardar Peças -->
+<div class="modal fade" id="aguardarPecasModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-clock me-2"></i>
+                    Alterar para Aguardando Peças
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Razão do Atraso</label>
+                        <textarea name="razao_atraso" class="form-control" rows="4"
+                            placeholder="Descreva a razão do atraso (peças em falta, fornecedor, etc.)"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Previsão de Conclusão</label>
+                        <input type="date" name="previsao_conclusao" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="acao" value="aguardar_pecas" class="btn btn-warning">
+                        <i class="fas fa-save me-2"></i>Alterar Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar -->
+<div class="modal fade" id="cancelarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-times-circle me-2"></i>
+                    Cancelar Manutenção
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Atenção: Esta ação não pode ser desfeita.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Motivo do Cancelamento *</label>
+                        <textarea name="motivo_cancelamento" class="form-control" rows="4" required
+                            placeholder="Descreva o motivo do cancelamento..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" name="acao" value="cancelar" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-2"></i>Confirmar Cancelamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Validar data de conclusão
+        const dataConclusao = document.getElementById('data_conclusao');
+        if (dataConclusao) {
+            dataConclusao.addEventListener('change', function () {
+                const hoje = new Date().toISOString().split('T')[0];
+                if (this.value < '{{ manutencao.data_agendada|date:"Y-m-d" }}') {
+                    alert('Data de conclusão não pode ser anterior à data agendada');
+                    this.value = '';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

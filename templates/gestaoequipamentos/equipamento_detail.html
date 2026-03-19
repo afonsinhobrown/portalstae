@@ -1,0 +1,164 @@
+{% extends 'gestaoequipamentos/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">{{ equipamento.tipo.nome }}</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'gestaoequipamentos:dashboard_equipamentos' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'gestaoequipamentos:lista_equipamentos' %}">Equipamentos</a></li>
+                <li class="breadcrumb-item active">Detalhe</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'gestaoequipamentos:movimentar_equipamento' equipamento.id %}" class="btn btn-warning">
+            <i class="fas fa-exchange-alt me-2"></i>Movimentar
+        </a>
+        <a href="{% url 'gestaoequipamentos:editar_equipamento' equipamento.id %}" class="btn btn-secondary">
+            <i class="fas fa-edit me-2"></i>Editar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Informações do Equipamento -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações Gerais</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <strong>Tipo:</strong><br>
+                        {{ equipamento.tipo.nome }}<br>
+                        <small class="text-muted">{{ equipamento.tipo.categoria.nome }}</small>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>Marca/Modelo:</strong><br>
+                        {{ equipamento.marca }} {{ equipamento.modelo }}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <strong>Identificação:</strong><br>
+                        {% if equipamento.numero_serie %}
+                        <code>{{ equipamento.numero_serie }}</code>
+                        {% elif equipamento.matricula %}
+                        <code>{{ equipamento.matricula }}</code>
+                        {% else %}
+                        <span class="text-muted">ID{{ equipamento.id }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>Estado:</strong><br>
+                        {% if equipamento.estado == 'excelente' %}
+                        <span class="badge bg-success">Excelente</span>
+                        {% elif equipamento.estado == 'bom' %}
+                        <span class="badge bg-primary">Bom</span>
+                        {% elif equipamento.estado == 'regular' %}
+                        <span class="badge bg-warning">Regular</span>
+                        {% elif equipamento.estado == 'precisa_manutencao' %}
+                        <span class="badge bg-danger">Precisa Manutenção</span>
+                        {% else %}
+                        <span class="badge bg-dark">Inutilizado</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <strong>Localização:</strong><br>
+                        <span class="badge bg-secondary">{{ equipamento.sector_atual.nome }}</span>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>Responsável:</strong><br>
+                        {% if equipamento.funcionario_responsavel %}
+                        {{ equipamento.funcionario_responsavel.nome_completo }}
+                        {% else %}
+                        <span class="text-muted">Não atribuído</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <strong>Ano de Aquisição:</strong><br>
+                        {{ equipamento.ano_aquisicao }}
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <strong>Fornecedor:</strong><br>
+                        {{ equipamento.fornecedor }}
+                    </div>
+                </div>
+
+                {% if equipamento.atributos_especificos %}
+                <div class="mb-3">
+                    <strong>Atributos Específicos:</strong><br>
+                    <pre class="bg-light p-2 rounded small">{{ equipamento.atributos_especificos|pprint }}</pre>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Movimentações -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico de Movimentações</h5>
+            </div>
+            <div class="card-body">
+                {% if movimentacoes %}
+                <div class="list-group list-group-flush">
+                    {% for mov in movimentacoes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ mov.sector_origem }} → {{ mov.sector_destino }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ mov.data_solicitacao|date:"d/m/Y H:i" }}
+                                    • {{ mov.solicitado_por.username }}
+                                </small>
+                                <br>
+                                {% if mov.motivo %}
+                                <small>{{ mov.motivo|truncatewords:10 }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                {% if mov.status == 'pendente' %}
+                                <span class="badge bg-warning">Pendente</span>
+                                {% elif mov.status == 'aprovada' %}
+                                <span class="badge bg-primary">Aprovada</span>
+                                {% elif mov.status == 'rejeitada' %}
+                                <span class="badge bg-danger">Rejeitada</span>
+                                {% else %}
+                                <span class="badge bg-success">Concluída</span>
+                                {% endif %}
+                                <br>
+                                {% if mov.status == 'aprovada' and user.is_staff %}
+                                <a href="{% url 'gestaoequipamentos:concluir_movimentacao' mov.id %}" 
+                                   class="btn btn-sm btn-success mt-1">
+                                    Concluir
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-exchange-alt fa-2x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Nenhuma movimentação registada</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

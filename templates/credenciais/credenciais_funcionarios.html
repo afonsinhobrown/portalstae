@@ -1,0 +1,115 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Credenciais Funcionários • Credenciais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Credenciais de Funcionários</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'credenciais:dashboard_credenciais' %}">Credenciais</a></li>
+                <li class="breadcrumb-item active">Funcionários</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'credenciais:emitir_credencial_funcionario' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nova Credencial
+        </a>
+    </div>
+</div>
+
+<div class="credenciais-card">
+    <div class="card-header bg-transparent border-0">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-user-tie me-2 text-primary"></i>
+            Credenciais Activas de Funcionários
+        </h5>
+    </div>
+    
+    <div class="card-body">
+        {% if credenciais %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nº Credencial</th>
+                        <th>Funcionário</th>
+                        <th>Tipo</th>
+                        <th>Emissão</th>
+                        <th>Validade</th>
+                        <th>Estado</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for credencial in credenciais %}
+                    <tr>
+                        <td>
+                            <strong>{{ credencial.numero_credencial }}</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                                    <i class="fas fa-user-tie text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ credencial.funcionario.nome_completo }}</h6>
+                                    <small class="text-muted">{{ credencial.funcionario.sector.nome }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ credencial.tipo_credencial.nome }}
+                            </span>
+                        </td>
+                        <td>
+                            <small>{{ credencial.data_emissao|date:"d/m/Y" }}</small>
+                        </td>
+                        <td>
+                            <small class="{% if credencial.data_validade < today %}text-danger{% else %}text-success{% endif %}">
+                                {{ credencial.data_validade|date:"d/m/Y" }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if credencial.activa %}
+                            <span class="badge bg-success">Activa</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-success">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                                {% if credencial.activa %}
+                                <a href="#" class="btn btn-outline-warning">
+                                    <i class="fas fa-pause"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-user-tie fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhuma credencial de funcionário encontrada</h5>
+            <p class="text-muted">Comece emitindo a primeira credencial para um funcionário.</p>
+            <a href="{% url 'credenciais:emitir_credencial_funcionario' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Emitir Credencial
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

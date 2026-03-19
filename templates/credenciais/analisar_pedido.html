@@ -1,0 +1,318 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Analisar Pedido - Credenciais STAE{% endblock %}
+
+{% block page_title %}Análise de Pedido: {{ pedido.numero_pedido }}{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'credenciais:lista_pedidos' %}">Pedidos</a></li>
+<li class="breadcrumb-item active">Analisar Pedido</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-stae">
+            <div class="card-header">
+                <h5 class="mb-0">Análise do Pedido</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Informações Básicas</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Número:</th>
+                                <td>{{ pedido.numero_pedido }}</td>
+                            </tr>
+                            <tr>
+                                <th>Solicitante:</th>
+                                <td>{{ pedido.solicitante.nome_completo }}</td>
+                            </tr>
+                            <tr>
+                                <th>Tipo Credencial:</th>
+                                <td>{{ pedido.tipo_credencial.nome }}</td>
+                            </tr>
+                            <tr>
+                                <th>Evento:</th>
+                                <td>{{ pedido.evento.nome|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Data Evento:</th>
+                                <td>{{ pedido.data_evento|date:"d/m/Y" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Status do Solicitante</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>BI/NUIT:</th>
+                                <td>
+                                    {{ pedido.solicitante.numero_bi|default:"Não informado" }}
+                                    {% if pedido.solicitante.bi_validado %}
+                                    <span class="badge bg-success ms-2">Validado</span>
+                                    {% else %}
+                                    <span class="badge bg-warning ms-2">Por validar</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ pedido.solicitante.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Telefone:</th>
+                                <td>{{ pedido.solicitante.telefone }}</td>
+                            </tr>
+                            <tr>
+                                <th>Nacionalidade:</th>
+                                <td>{{ pedido.solicitante.nacionalidade }}</td>
+                            </tr>
+                            <tr>
+                                <th>Pedidos anteriores:</th>
+                                <td>{{ pedido.solicitante.pedidocredencial_set.count }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Detalhes Adicionais -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted d-block">Abrangência</label>
+                        {{ pedido.get_abrangencia_display }}
+                    </div>
+                    {% if pedido.provicia_abrangencia %}
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted d-block">Província</label>
+                        {{ pedido.get_provicia_abrangencia_display }}
+                    </div>
+                    {% endif %}
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted d-block">Quantidade</label>
+                        {{ pedido.quantidade }}
+                    </div>
+                </div>
+
+                <h6>Justificativa do Pedido</h6>
+                <div class="card bg-light mb-4 shadow-none border">
+                    <div class="card-body">
+                        {{ pedido.motivo|linebreaks }}
+                    </div>
+                </div>
+
+                <!-- Lista de Beneficiários -->
+                {% if pedido.solicitante.tipo != 'singular' %}
+                <h6 class="mt-4"><i class="fas fa-users me-2"></i>Pessoas a Credenciar (Beneficiários)</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Nome Completo</th>
+                                <th>Número BI</th>
+                                <th>Cargo/Função</th>
+                                <th>Foto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in pedido.beneficiarios.all %}
+                            <tr>
+                                <td>{{ b.nome_completo }}</td>
+                                <td>{{ b.numero_bi }}</td>
+                                <td>{{ b.cargo_funcao }}</td>
+                                <td>
+                                    {% if b.foto %}
+                                    <a href="{{ b.foto.url }}" target="_blank" class="btn btn-xs btn-link p-0">Ver
+                                        Foto</a>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3 text-muted">Nenhum beneficiário listado.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                <h6>Documentação Obrigatória</h6>
+                <div class="row mb-4 g-3">
+                    {% if pedido.carta_solicitacao %}
+                    <div class="col-md-6">
+                        <div class="card border-primary bg-light bg-opacity-10 h-100">
+                            <div class="card-body text-center p-3">
+                                <i class="fas fa-file-signature fa-2x text-primary mb-2"></i>
+                                <h6 class="small fw-bold mb-2">Carta de Solicitação</h6>
+                                <a href="{{ pedido.carta_solicitacao.url }}" target="_blank"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye me-1"></i> Visualizar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if pedido.copia_identificacao %}
+                    <div class="col-md-6">
+                        <div class="card border-info bg-light bg-opacity-10 h-100">
+                            <div class="card-body text-center p-3">
+                                <i class="fas fa-id-card fa-2x text-info mb-2"></i>
+                                <h6 class="small fw-bold mb-2">Doc. Identificação</h6>
+                                <a href="{{ pedido.copia_identificacao.url }}" target="_blank"
+                                    class="btn btn-sm btn-info text-white">
+                                    <i class="fas fa-eye me-1"></i> Visualizar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Substitui esta parte do template (a partir de <form method="post">) -->
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <h6>Decisão da Análise</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label">Observações da Análise *</label>
+                        <textarea name="observacoes_analise" class="form-control" rows="4"
+                            placeholder="Digite as observações da análise..." required></textarea>
+                        <small class="text-muted">Forneça justificativa clara, especialmente para reprovações.</small>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <div>
+                            <a href="{% url 'credenciais:lista_pedidos' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+
+                        <div>
+                            <!-- Botão Reprovar -->
+                            <button type="submit" name="acao" value="reprovar" class="btn btn-danger me-2"
+                                onclick="return confirm('Tem certeza que deseja REPROVAR este pedido?')">
+                                <i class="fas fa-times-circle"></i> Reprovar Pedido
+                            </button>
+
+                            <!-- Botão Aprovar -->
+                            <button type="submit" name="acao" value="aprovar" class="btn btn-success"
+                                onclick="return confirm('Tem certeza que deseja APROVAR este pedido?')">
+                                <i class="fas fa-check-circle"></i> Aprovar Pedido
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Informações do Solicitante -->
+        <div class="card card-stae mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Solicitante</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    {% if pedido.solicitante.foto %}
+                    <img src="{{ pedido.solicitante.foto.url }}" alt="Foto" class="img-fluid rounded"
+                        style="max-height: 150px;">
+                    {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
+                        style="width: 150px; height: 150px;">
+                        <i class="fas fa-user fa-4x text-muted"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="text-center">{{ pedido.solicitante.nome_completo }}</h5>
+                <p class="text-center text-muted">{{ pedido.solicitante.get_tipo_display }}</p>
+
+                <table class="table table-sm">
+                    <tr>
+                        <th>BI/NUIT:</th>
+                        <td>
+                            {{ pedido.solicitante.numero_bi|default:"Não informado" }}
+                            {% if pedido.solicitante.bi_validado %}
+                            <span class="badge bg-success">Validado</span>
+                            {% else %}
+                            <span class="badge bg-warning">Por validar</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ pedido.solicitante.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Telefone:</th>
+                        <td>{{ pedido.solicitante.telefone }}</td>
+                    </tr>
+                    <tr>
+                        <th>Registado em:</th>
+                        <td>{{ pedido.solicitante.data_registo|date:"d/m/Y" }}</td>
+                    </tr>
+                </table>
+
+                <div class="text-center">
+                    <!-- Comenta ou substitui por: -->
+                    <a href="#" class="btn btn-secondary">Validar BI (em desenvolvimento)</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico do Solicitante -->
+        <div class="card card-stae">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Histórico de Pedidos</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for pedido_ant in pedido.solicitante.pedidocredencial_set.all|slice:":5" %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small class="text-muted">{{ pedido_ant.numero_pedido }}</small>
+                            <small>{{ pedido_ant.data_pedido|date:"d/m/Y" }}</small>
+                        </div>
+                        <small>
+                            {{ pedido_ant.tipo_credencial.nome }}
+                            <span class="badge badge-{{ pedido_ant.status }} float-end">
+                                {{ pedido_ant.get_status_display }}
+                            </span>
+                        </small>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        Nenhum pedido anterior
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Dicas de Análise -->
+        <div class="card card-stae mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Dicas de Análise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Verifique a documentação anexada</li>
+                    <li>Confirme a validade do BI/NUIT</li>
+                    <li>Avalie a justificativa do pedido</li>
+                    <li>Considere o histórico do solicitante</li>
+                    <li>Registe observações claras</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

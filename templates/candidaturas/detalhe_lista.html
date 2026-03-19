@@ -1,0 +1,225 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Candidatos: {{ lista.circulo.nome }} - {{ lista.inscricao.partido.sigla }}{% endblock %}
+{% block module_name %}CANDIDATURAS - GESTÃO DE LISTA{% endblock %}
+{% block icon %}fas fa-id-card-clip{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho Informativo -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-dark text-white shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1 fw-bold"><i class="fas fa-location-dot me-2 text-primary"></i>Círculo: {{ lista.circulo.nome }}</h3>
+                    <p class="mb-0 opacity-75 fs-5">{{ lista.inscricao.partido.sigla }} | {{ lista.inscricao.partido.nome_completo }}</p>
+                </div>
+                <div class="text-end">
+                    <a href="{% url 'candidaturas:gerar_dossier_lista' lista.id %}" class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-sm me-3">
+                        <i class="fas fa-file-signature me-2"></i> Dossier de Homologação (RS)
+                    </a>
+                    <div class="badge bg-primary fs-6 px-4 py-2 rounded-pill mb-2 shadow-sm">{{ lista.cargo_disputado }}</div>
+                    {% if lista.submetido_por %}
+                        <div class="small opacity-75"><i class="fas fa-user-check me-1"></i>Submetido por: <strong>{{ lista.submetido_por.username }}</strong></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interface por Abas -->
+<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-white p-0 border-0">
+        <ul class="nav nav-tabs nav-justified border-0" id="listaDetailTabs" role="tablist" style="background: #f8f9fa;">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active py-3 fw-bold text-uppercase border-0 rounded-0" id="view-tab" data-bs-toggle="tab" data-bs-target="#view" type="button" role="tab">
+                    <i class="fas fa-users me-2"></i> Visualização de Candidatos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-3 fw-bold text-uppercase border-0 rounded-0" id="add-tab" data-bs-toggle="tab" data-bs-target="#add" type="button" role="tab">
+                    <i class="fas fa-user-plus me-2"></i> Adicionar / Importar Candidatos
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="listaDetailTabsContent">
+        <!-- ABA 1: VISUALIZAÇÃO -->
+        <div class="tab-pane fade show active" id="view" role="tabpanel">
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                    <h5 class="fw-bold text-dark mb-0">Candidatos Inscritos na Lista</h5>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill shadow-sm" onclick="toggleReorderMode()">
+                        <i class="fas fa-arrow-down-up-lock me-2"></i> Ativar Modo Reorganização
+                    </button>
+                </div>
+
+                <form id="reorderForm" method="post" action="{% url 'candidaturas:reorganizar_posicoes' lista.id %}">
+                    {% csrf_token %}
+                    <div class="table-responsive rounded-3 border shadow-sm">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-uppercase small">
+                                    <th class="ps-4" width="80">Posição</th>
+                                    <th>Candidato / Identificação</th>
+                                    <th>Status Registo (RS)</th>
+                                    <th>Tipo</th>
+                                    <th class="text-end pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cand in candidatos %}
+                                <tr class="{% if cand.duplicado %}table-danger-subtle{% endif %}">
+                                    <td class="ps-4">
+                                        <div class="view-mode"><span class="badge bg-dark rounded-pill fs-6">{{ cand.posicao }}º</span></div>
+                                        <div class="reorder-mode d-none" style="width: 80px;">
+                                            <input type="hidden" name="candidato_ids" value="{{ cand.id }}">
+                                            <input type="number" name="posicoes" value="{{ cand.posicao }}" class="form-control form-control-sm border-primary">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-secondary-subtle p-2 rounded-circle me-3"><i class="fas fa-user text-secondary"></i></div>
+                                            <div>
+                                                <div class="fw-bold fs-6">{{ cand.nome_completo }}</div>
+                                                <small class="text-muted font-monospace">BI: {{ cand.bi_numero }} | Eleitor: {{ cand.numero_eleitor|default:"---" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if cand.status_eleitor == 'confirmado' %}
+                                            <span class="badge bg-success-subtle text-success border border-success px-3 py-1 rounded-pill">
+                                                <i class="fas fa-check-double me-1"></i> Confirmado no RS
+                                            </span>
+                                        {% elif cand.status_eleitor == 'irregular' %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-1 rounded-pill">
+                                                <i class="fas fa-triangle-exclamation me-1"></i> Irregular
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-1 rounded-pill">
+                                                <i class="fas fa-clock me-1"></i> Em Verificação
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if cand.tipo == 'efetivo' %}bg-primary{% else %}bg-secondary{% endif %} rounded-pill px-3">
+                                            {{ cand.tipo|title }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a href="{% url 'candidaturas:detalhe_candidato' cand.id %}" class="btn btn-sm btn-outline-primary" title="Ficha do Candidato">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'candidaturas:remover_candidato' cand.id %}" class="btn btn-sm btn-outline-danger" 
+                                               onclick="return confirm('Tem certeza que deseja remover este candidato?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="opacity-25 mb-3"><i class="fas fa-user-slash fa-4x"></i></div>
+                                        <h5 class="text-muted">Nenhum candidato registado nesta lista.</h5>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="reorderControls" class="card-footer bg-warning-subtle border-0 d-none text-center p-3 animate__animated animate__fadeInUp">
+                        <span class="fw-bold text-dark me-4"><i class="fas fa-info-circle me-1"></i> Ajuste os números acima para reordenar a lista nacional.</span>
+                        <button type="submit" class="btn btn-dark px-5 shadow-sm">
+                            <i class="fas fa-save me-1"></i> Gravar Nova Ordem
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ABA 2: ADICIONAR / IMPORTAR -->
+        <div class="tab-pane fade" id="add" role="tabpanel">
+            <div class="p-5">
+                <div class="row">
+                    <!-- Importação Massiva -->
+                    <div class="col-md-6 border-end pe-5">
+                        <div class="card bg-primary text-white border-0 shadow rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h4 class="fw-bold mb-3"><i class="fas fa-file-excel me-2 text-warning"></i>Importação via Excel</h4>
+                                <p>Recomendado para submissões em massa. Use o modelo timbrado para garantir a conformidade dos dados.</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'candidaturas:baixar_modelo_excel' lista.id %}" class="btn btn-light fw-bold">
+                                        <i class="fas fa-download me-2"></i> Descarregar Modelo de Círculo
+                                    </a>
+                                    <a href="{% url 'candidaturas:central_importacao' lista.inscricao.id %}" class="btn btn-outline-light">
+                                        <i class="fas fa-upload me-2"></i> Ir para Central de Importação
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mt-4">
+                            <h6 class="fw-bold"><i class="fas fa-triangle-exclamation me-2"></i>Nota sobre Conformidade</h6>
+                            <small>Cada círculo exige um número exato de candidatos efetivos conforme o mapa de mandatos do STAE. O sistema rejeitará submissões fora do intervalo legal.</small>
+                        </div>
+                    </div>
+
+                    <!-- Registo Manual -->
+                    <div class="col-md-6 ps-5">
+                        <h5 class="fw-bold mb-4"><i class="fas fa-keyboard me-2 text-primary"></i>Registo Manual Individual</h5>
+                        <form method="post" enctype="multipart/form-data" class="bg-light p-4 rounded-4 border">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                {% for field in form %}
+                                <div class="col-12">
+                                    <label class="small fw-bold text-uppercase text-muted">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}<small class="text-muted d-block">{{ field.help_text }}</small>{% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg w-100 mt-4 shadow-sm">
+                                <i class="fas fa-user-plus me-2"></i> Adicionar Candidato à Lista
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'candidaturas:gerenciar_listas' lista.inscricao.id %}" class="btn btn-secondary px-4 rounded-pill">
+        <i class="fas fa-arrow-left me-2"></i> Voltar às Listas do Partido
+    </a>
+</div>
+
+<style>
+    .nav-tabs .nav-link { color: #64748b; }
+    .nav-tabs .nav-link.active { background: white !important; color: var(--primary) !important; border-bottom: 3px solid var(--primary) !important; }
+    .tab-content { background: white; }
+    form select, form input:not([type="checkbox"]), form textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; }
+    form input[type="file"] { border: none; padding: 0; }
+</style>
+
+<script>
+    function toggleReorderMode() {
+        var views = document.getElementsByClassName('view-mode');
+        var reorders = document.getElementsByClassName('reorder-mode');
+        var controls = document.getElementById('reorderControls');
+        
+        for (var i = 0; i < views.length; i++) {
+            views[i].classList.toggle('d-none');
+            reorders[i].classList.toggle('d-none');
+        }
+        controls.classList.toggle('d-none');
+    }
+</script>
+{% endblock %}

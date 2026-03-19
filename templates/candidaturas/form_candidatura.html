@@ -1,0 +1,23 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block module_name %}CANDIDATURAS{% endblock %}
+{% block icon %}fas fa-users-viewfinder{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">{{ form.partido.label_tag }}{{ form.partido }}</div>
+            <div class="form-group">{{ form.nome_candidato.label_tag }}{{ form.nome_candidato }}</div>
+            <div class="form-group">{{ form.cargo.label_tag }}{{ form.cargo }}</div>
+            <div class="form-group">{{ form.tipo.label_tag }}{{ form.tipo }}</div>
+            <div class="form-group">{{ form.numero_ordem.label_tag }}{{ form.numero_ordem }}</div>
+        </div>
+        <button type="submit" class="action-btn" style="margin-top:20px;">Salvar</button>
+    </form>
+</div>
+<style>.form-control{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;margin-top:5px;}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}</style>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}Formadores do Plano - {{ plano.nome }}{% endblock %}
+{% block page_title %}Formadores do Plano{% endblock %}
+{% block page_subtitle %}{{ plano.nome }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'dfec:plano_detalhe' plano.pk %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-2"></i>Voltar ao Plano
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Lista de Formadores Atuais -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Pool de Formadores do Plano</h6>
+                <span class="badge bg-primary">{{ formadores.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if formadores %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Usuário (BI)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in formadores %}
+                            <tr>
+                                <td>{{ f.get_full_name|default:f.username }}</td>
+                                <td><span class="badge bg-secondary">{{ f.username }}</span></td>
+                                <td>
+                                    <form method="post"
+                                        onsubmit="return confirm('Remover {{ f.username }} deste plano?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="remover" value="1">
+                                        <input type="hidden" name="user_id" value="{{ f.pk }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-users-slash fa-2x mb-3"></i>
+                    <p>Nenhum formador associado a este plano ainda.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Adicionar Formadores -->
+    <div class="col-md-5 mb-4">
+
+        <!-- OPÇÃO 1: Buscar do Sistema -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-success">Adicionar Existente</h6>
+            </div>
+            <div class="card-body">
+                <form method="get" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Buscar por Nome ou BI..."
+                            value="{{ q|default:'' }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                {% if q %}
+                {% if candidatos %}
+                <div class="list-group">
+                    {% for c in candidatos %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ c.get_full_name }}</h6>
+                            <small class="text-muted">{{ c.username }}</small>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="adicionar_existente" value="1">
+                            <input type="hidden" name="user_id" value="{{ c.pk }}">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-muted small text-center">Nenhum usuário encontrado fora do plano.</div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- OPÇÃO 2: Criar Novo -->
+        <div class="card shadow border-left-primary">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Criar Nova Conta & Adicionar</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="criar_novo" value="1">
+
+                    <div class="alert alert-info py-2 small">
+                        <i class="fas fa-info-circle"></i> Cria um usuário global e associa ao plano.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome Completo *</label>
+                        <input type="text" name="nome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Número de BI *</label>
+                        <input type="text" name="bi" class="form-control" required placeholder="Será o username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Criar e Adicionar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

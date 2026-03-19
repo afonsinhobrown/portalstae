@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Credencial - STAE</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --stae-primary: #0056b3;
+            --stae-secondary: #6c757d;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .header-stae {
+            background: linear-gradient(135deg, var(--stae-primary) 0%, #003d82 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .card-stae {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-control:focus {
+            border-color: var(--stae-primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
+        }
+
+        .btn-stae {
+            background-color: var(--stae-primary);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 5px;
+        }
+
+        .btn-stae:hover {
+            background-color: #004494;
+            color: white;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #dee2e6;
+            z-index: 1;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            background-color: #dee2e6;
+            color: #6c757d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+
+        .step.active .step-circle {
+            background-color: var(--stae-primary);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .step.active .step-label {
+            color: var(--stae-primary);
+            font-weight: bold;
+        }
+
+        .section-title {
+            color: var(--stae-primary);
+            border-bottom: 2px solid var(--stae-primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header-stae">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-2">
+                    <div class="text-center">
+                        <i class="fas fa-id-card fa-3x"></i>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <h1 class="text-center mb-0">Secretariado Técnico de Administração Eleitoral</h1>
+                    <p class="text-center mb-0">Sistema de Solicitação de Credenciais</p>
+                </div>
+                <div class="col-md-2">
+                    <div class="text-center">
+                        <img src="https://via.placeholder.com/80x80/0056b3/ffffff?text=STAE" alt="Logo STAE" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active">
+                <div class="step-circle">1</div>
+                <div class="step-label">Dados Pessoais</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">2</div>
+                <div class="step-label">Pedido</div>
+            </div>
+            <div class="step">
+                <div class="step-circle">3</div>
+                <div class="step-label">Confirmação</div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card card-stae">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="fas fa-user-plus"></i> Solicitação de Credencial Online</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle"></i> Instruções</h5>
+                            <p>Preencha o formulário abaixo para solicitar uma credencial de acesso a eventos eleitorais.
+                            Após submissão, o pedido será analisado pela equipa do STAE e você será contactado.</p>
+                        </div>
+
+                        {% if messages %}
+                        <div class="messages">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <h4 class="section-title">Dados Pessoais</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nome Completo *</label>
+                                    {{ form.nome_completo }}
+                                    {% if form.nome_completo.errors %}
+                                    <div class="text-danger">{{ form.nome_completo.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nacionalidade *</label>
+                                    {{ form.nacionalidade }}
+                                    {% if form.nacionalidade.errors %}
+                                    <div class="text-danger">{{ form.nacionalidade.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Número de BI</label>
+                                    {{ form.numero_bi }}
+                                    {% if form.numero_bi.errors %}
+                                    <div class="text-danger">{{ form.numero_bi.errors }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">Formato: 1234567A0 1234567 LA 0 00M</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Telefone *</label>
+                                    {{ form.telefone }}
+                                    {% if form.telefone.errors %}
+                                    <div class="text-danger">{{ form.telefone.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email *</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Fotografia</label>
+                                    {{ form.foto_pedido }}
+                                    {% if form.foto_pedido.errors %}
+                                    <div class="text-danger">{{ form.foto_pedido.errors }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">Foto recente tipo passe (opcional)</small>
+                                </div>
+                            </div>
+
+                            <h4 class="section-title mt-4">Detalhes do Pedido</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tipo de Credencial *</label>
+                                    {{ form.tipo_credencial }}
+                                    {% if form.tipo_credencial.errors %}
+                                    <div class="text-danger">{{ form.tipo_credencial.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Evento</label>
+                                    {{ form.evento }}
+                                    {% if form.evento.errors %}
+                                    <div class="text-danger">{{ form.evento.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Data do Evento *</label>
+                                    {{ form.data_evento }}
+                                    {% if form.data_evento.errors %}
+                                    <div class="text-danger">{{ form.data_evento.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Área de Atuação/Função</label>
+                                    {{ form.area_atuacao }}
+                                    {% if form.area_atuacao.errors %}
+                                    <div class="text-danger">{{ form.area_atuacao.errors }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">Ex: Observador, Jornalista, etc.</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Justificativa *</label>
+                                {{ form.justificativa }}
+                                {% if form.justificativa.errors %}
+                                <div class="text-danger">{{ form.justificativa.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Descreva a necessidade da credencial</small>
+                            </div>
+
+                            <h4 class="section-title mt-4">Documentação</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Carta de Solicitação</label>
+                                    {{ form.carta_solicitacao }}
+                                    {% if form.carta_solicitacao.errors %}
+                                    <div class="text-danger">{{ form.carta_solicitacao.errors }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">Documento formal (PDF, Word ou imagem)</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Outros Documentos</label>
+                                    {{ form.outros_documentos }}
+                                    {% if form.outros_documentos.errors %}
+                                    <div class="text-danger">{{ form.outros_documentos.errors }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">Documentos complementares (opcional)</small>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning mt-4">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Declaração</h6>
+                                <p>Ao submeter este formulário, declaro que todas as informações fornecidas são verdadeiras e aceito os termos de uso do sistema.</p>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="declaracao" required>
+                                    <label class="form-check-label" for="declaracao">
+                                        Confirmo que li e aceito os termos
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="reset" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i> Limpar Formulário
+                                </button>
+                                <button type="submit" class="btn btn-stae">
+                                    <i class="fas fa-paper-plane"></i> Submeter Pedido
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card card-stae mt-4">
+                    <div class="card-body text-center">
+                        <h5><i class="fas fa-headset"></i> Precisa de Ajuda?</h5>
+                        <p>Contacte a equipa do STAE:</p>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <i class="fas fa-phone fa-2x text-primary mb-2"></i>
+                                <p>+258 84 123 4567</p>
+                            </div>
+                            <div class="col-md-4">
+                                <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                                <p>credenciais@stae.gov.mz</p>
+                            </div>
+                            <div class="col-md-4">
+                                <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                                <p>Seg-Sex: 8h-17h</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>STAE - Secretariado Técnico de Administração Eleitoral</h5>
+                    <p>Sistema de Gestão de Credenciais para Eventos Eleitorais</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>&copy; {% now "Y" %} STAE. Todos os direitos reservados.</p>
+                    <p>Versão 2.0</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Formatação automática do BI
+        document.getElementById('id_numero_bi').addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                let formatted = '';
+                if (value.length > 7) {
+                    formatted = value.substr(0, 7);
+                    if (value.length > 8) {
+                        formatted += String.fromCharCode(65 + parseInt(value[7] || 0) % 26);
+                        formatted += value.substr(8, 1) || '0';
+                        formatted += ' ';
+                        if (value.length > 16) {
+                            formatted += value.substr(9, 7) + ' LA ' + (value[16] || '0') + ' 00M';
+                        }
+                    }
+                } else {
+                    formatted = value;
+                }
+                this.value = formatted;
+            }
+        });
+
+        // Formatação de telefone
+        document.getElementById('id_telefone').addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 9) {
+                    this.value = value.replace(/(\d{3})(\d{3})(\d{3})/, '+258 $1 $2 $3');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+{% extends 'recursoshumanos/base.html' %}
+
+{% block title %}Calendário de Férias • Portal STAE{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-primary mb-1">Calendário de Férias</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recursoshumanos:dashboard_rh' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Calendário de Férias</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="btn-group">
+            <a href="?ano={{ ano_anterior }}&mes={{ mes_anterior }}" class="btn btn-outline-primary">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <button class="btn btn-primary" disabled>
+                {{ mes_nome }} {{ ano }}
+            </button>
+            <a href="?ano={{ ano_proximo }}&mes={{ mes_proximo }}" class="btn btn-outline-primary">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+        <a href="?ano={{ hoje.year }}&mes={{ hoje.month }}" class="btn btn-success">
+            <i class="fas fa-calendar-day me-2"></i>Hoje
+        </a>
+    </div>
+</div>
+
+<!-- Filtros Rápidos -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex gap-3 align-items-center flex-wrap">
+                            <span class="fw-bold">Filtros:</span>
+                            <div class="btn-group" role="group">
+                                <a href="?ano={{ ano }}&mes={{ mes }}"
+                                   class="btn {% if not setor_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                    Todos Setores
+                                </a>
+                                {% for sector in sectores_disponiveis %}
+                                <a href="?ano={{ ano }}&mes={{ mes }}&setor={{ sector.id }}"
+                                   class="btn {% if setor_filter == sector.id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                    {{ sector.codigo }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <select class="form-select" id="jumpToMonth">
+                                <option value="">Ir para mês...</option>
+                                {% for month_num, month_name in meses %}
+                                <option value="?ano={{ ano }}&mes={{ month_num }}"
+                                        {% if month_num == mes %}selected{% endif %}>
+                                    {{ month_name }} {{ ano }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" onclick="pularParaMes()">
+                                <i class="fas fa-forward"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendário -->
+<div class="row">
+    <div class="col-12">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-calendar-alt me-2 text-primary"></i>Calendário - {{ mes_nome }} {{ ano }}
+                </h5>
+                <div>
+                    <span class="badge bg-success me-2">{{ ferias_do_mes }} férias este mês</span>
+                    <span class="text-muted">{{ funcionarios_ferias|length }} funcionários</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Cabeçalho dos Dias -->
+                <div class="calendar-header mb-3">
+                    <div class="row text-center fw-bold">
+                        <div class="col calendar-day-header">Dom</div>
+                        <div class="col calendar-day-header">Seg</div>
+                        <div class="col calendar-day-header">Ter</div>
+                        <div class="col calendar-day-header">Qua</div>
+                        <div class="col calendar-day-header">Qui</div>
+                        <div class="col calendar-day-header">Sex</div>
+                        <div class="col calendar-day-header">Sáb</div>
+                    </div>
+                </div>
+
+                <!-- Semanas -->
+                <div class="calendar-body">
+                    {% for week in calendario %}
+                    <div class="row calendar-week mb-2">
+                        {% for day in week %}
+                        <div class="col calendar-day
+                            {% if day == 0 %}calendar-day-empty{% endif %}
+                            {% if day == hoje.day and mes == hoje.month and ano == hoje.year %}calendar-day-today{% endif %}">
+
+                            {% if day != 0 %}
+                            <div class="calendar-day-number">
+                                {{ day }}
+                            </div>
+
+                            <!-- Férias neste dia -->
+                            <div class="calendar-events">
+                                {% for ferias in ferias %}
+                                {% if ferias.data_inicio.day <= day and ferias.data_fim.day >= day and ferias.data_inicio.month == mes and ferias.data_inicio.year == ano %}
+                                <div class="calendar-event
+                                    {% if ferias.funcionario.sector.id == setor_filter or not setor_filter %}
+                                    calendar-event-visible
+                                    {% else %}
+                                    calendar-event-hidden
+                                    {% endif %}"
+                                    data-bs-toggle="tooltip"
+                                    title="{{ ferias.funcionario.nome_completo }} - {{ ferias.funcionario.sector.codigo }}">
+
+                                    <div class="d-flex align-items-center">
+                                        <div class="calendar-event-dot
+                                            {% if ferias.funcionario.sector.tipo == 'geral' %}bg-danger
+                                            {% elif ferias.funcionario.sector.tipo == 'nacional' %}bg-warning
+                                            {% elif ferias.funcionario.sector.tipo == 'provincial' %}bg-info
+                                            {% else %}bg-success{% endif %}">
+                                        </div>
+                                        <div class="calendar-event-text">
+                                            <small>{{ ferias.funcionario.nome_completo|truncatechars:10 }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Legenda -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-list me-2 text-success"></i>Férias em {{ mes_nome }} {{ ano }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if ferias %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Setor</th>
+                                <th>Período</th>
+                                <th>Dias</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ferias_item in ferias %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            {{ ferias_item.funcionario.nome_completo|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">{{ ferias_item.funcionario.nome_completo }}</h6>
+                                            <small class="text-muted">{{ ferias_item.funcionario.funcao }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if ferias_item.funcionario.sector.tipo == 'geral' %}bg-danger
+                                        {% elif ferias_item.funcionario.sector.tipo == 'nacional' %}bg-warning
+                                        {% elif ferias_item.funcionario.sector.tipo == 'provincial' %}bg-info
+                                        {% else %}bg-success{% endif %}">
+                                        {{ ferias_item.funcionario.sector.codigo }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ ferias_item.data_inicio|date:"d/m/Y" }} - {{ ferias_item.data_fim|date:"d/m/Y" }}
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ ferias_item.dias_solicitados }} dias</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">Aprovado</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'admin:recursoshumanos_pedidoferias_change' ferias_item.id %}"
+                                           class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'recursoshumanos:historico_funcionario' ferias_item.funcionario.id %}"
+                                           class="btn btn-sm btn-outline-secondary" title="Histórico">
+                                            <i class="fas fa-history"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-umbrella-beach fa-3x text-muted mb-3"></i>
+                    <h4 class="fw-bold mb-3">Nenhuma férias neste mês</h4>
+                    <p class="text-muted mb-0">
+                        Não existem férias aprovadas para {{ mes_nome }} {{ ano }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Legenda -->
+        <div class="rh-card mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-key me-2 text-warning"></i>Legenda
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold mb-2">Cores por Setor:</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="calendar-event-dot bg-danger me-2"></div>
+                        <span>Direção Geral</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="calendar-event-dot bg-warning me-2"></div>
+                        <span>Direção Nacional</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="calendar-event-dot bg-info me-2"></div>
+                        <span>Direção Provincial</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="calendar-event-dot bg-success me-2"></div>
+                        <span>Departamentos/Repartições</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold mb-2">Estatísticas:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-users me-2 text-primary"></i>
+                            <strong>{{ funcionarios_ferias|length }}</strong> funcionários de férias
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-alt me-2 text-success"></i>
+                            <strong>{{ ferias_do_mes }}</strong> períodos de férias
+                        </li>
+                        <li>
+                            <i class="fas fa-building me-2 text-info"></i>
+                            <strong>{{ setores_com_ferias|length }}</strong> setores diferentes
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximas Férias -->
+        <div class="rh-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-clock me-2 text-info"></i>Próximas Férias
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if proximas_ferias %}
+                <div class="list-group list-group-flush">
+                    {% for ferias_item in proximas_ferias|slice:":5" %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                    {{ ferias_item.funcionario.nome_completo|slice:":1" }}
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-0">{{ ferias_item.funcionario.nome_completo|truncatechars:20 }}</h6>
+                                <small class="text-muted">
+                                    {{ ferias_item.data_inicio|date:"d/m/Y" }} - {{ ferias_item.data_fim|date:"d/m/Y" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-umbrella-beach fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Sem próximas férias</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .calendar-day-header {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        margin: 2px;
+    }
+
+    .calendar-day {
+        min-height: 120px;
+        border: 1px solid #e9ecef;
+        padding: 8px;
+        border-radius: 5px;
+        margin: 2px;
+        background-color: white;
+    }
+
+    .calendar-day-empty {
+        background-color: #f8f9fa;
+        border: none;
+    }
+
+    .calendar-day-today {
+        background-color: #e3f2fd;
+        border-color: #2196f3;
+    }
+
+    .calendar-day-number {
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .calendar-event {
+        font-size: 0.8em;
+        padding: 2px 5px;
+        margin-bottom: 2px;
+        border-radius: 3px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .calendar-event-visible {
+        display: block;
+    }
+
+    .calendar-event-hidden {
+        display: none;
+    }
+
+    .calendar-event-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    .calendar-event-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .calendar-week {
+        min-height: 120px;
+    }
+</style>
+
+<script>
+    function pularParaMes() {
+        const select = document.getElementById('jumpToMonth');
+        if (select.value) {
+            window.location.href = select.value;
+        }
+    }
+
+    // Inicializar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(tooltip => {
+            new bootstrap.Tooltip(tooltip);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+<!-- templates/dfec/formacoes/modals/import_participantes.html -->
+{% load static %}
+
+<div class="modal fade" id="importParticipantesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Importar Participantes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'dfec:carregar_participantes' formacao.id %}"
+                    enctype="multipart/form-data" id="importForm">
+                    {% csrf_token %}
+
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Instruções
+                        </h6>
+                        <p class="mb-2">O arquivo CSV deve conter estas colunas:</p>
+                        <code class="d-block bg-light p-2 rounded">
+                            nome_completo,genero,data_nascimento,bilhete_identidade,telefone,email,provincia,distrito,posto_administrativo,localidade,endereco
+                        </code>
+                        <small class="text-muted">Colunas em <strong>negrito</strong> são obrigatórias</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Arquivo CSV</label>
+                        <input type="file" class="form-control" name="arquivo" accept=".csv" required>
+                        <div class="form-text">
+                            <a href="{% static 'dfec/templates/template_participantes.csv' %}"
+                                class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="fas fa-download me-1"></i>Baixar Template
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="validar_bi" id="validarBI" checked>
+                            <label class="form-check-label" for="validarBI">
+                                Validar duplicação de BI
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="enviar_email" id="enviarEmail">
+                            <label class="form-check-label" for="enviarEmail">
+                                Enviar email de confirmação
+                            </label>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="previewImport" style="display: none;">
+                    <hr>
+                    <h6>Pré-visualização</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead id="previewHeaders"></thead>
+                            <tbody id="previewRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="importForm" class="btn btn-primary">
+                    <i class="fas fa-upload me-1"></i>Importar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

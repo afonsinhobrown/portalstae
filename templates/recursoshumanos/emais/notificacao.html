@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #1a4a72; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f8f9fa; padding: 30px; border: 1px solid #dee2e6; }
+        .button {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Portal STAE</h1>
+            <p>Sistema de Recursos Humanos</p>
+        </div>
+
+        <div class="content">
+            <h2>Olá, {{ usuario.get_full_name|default:usuario.username }}!</h2>
+
+            <h3>{{ notificacao.titulo }}</h3>
+
+            <p>{{ notificacao.mensagem }}</p>
+
+            {% if notificacao.link_url %}
+            <p>
+                <a href="{{ site_url }}{{ notificacao.link_url }}" class="button">
+                    {{ notificacao.link_texto|default:"Acessar" }}
+                </a>
+            </p>
+            {% endif %}
+
+            <p>
+                <small>
+                    Esta notificação foi gerada automaticamente pelo sistema.<br>
+                    Data: {{ notificacao.data_criacao|date:"d/m/Y H:i" }}
+                </small>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>{{ site_name }}</strong><br>
+                Este é um email automático, por favor não responda.<br>
+                Para alterar suas configurações de notificação, acesse seu perfil no sistema.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

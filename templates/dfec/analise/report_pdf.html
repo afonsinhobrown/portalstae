@@ -1,0 +1,249 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório STAE</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @frame header_frame {
+                -pdf-frame-content: headerContent;
+                top: 1cm; left: 2cm; width: 17cm; height: 3cm;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm; left: 2cm; width: 17cm; height: 1cm;
+            }
+        }
+        
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #333; }
+        
+        /* Cabeçalhos */
+        h1 { font-size: 24pt; color: #003366; margin: 0; }
+        h2 { font-size: 16pt; color: #003366; border-bottom: 2px solid #003366; margin-top: 20px; padding-bottom: 5px; }
+        
+        /* Tabelas Robustas (xhtml2pdf friendly) */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th { background-color: #003366; color: white; padding: 6px; font-size: 9pt; text-align: left; }
+        td { padding: 5px; border-bottom: 0.5pt solid #ccc; font-size: 9pt; vertical-align: middle; }
+        
+        /* Classes Utilitárias */
+        .page-break { page-break-before: always; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+        .color-primary { color: #003366; }
+        .color-danger { color: #cc0000; }
+        
+        /* Barras de Dados via Tabela */
+        .bar-table { width: 100px; border: none; margin: 0; }
+        .bar-table td { padding: 0; border: none; height: 10px; }
+        
+        /* Capa */
+        .cover-box { margin-top: 150px; text-align: center; }
+        .cover-line { background-color: #cc0000; width: 100px; height: 5px; margin: 20px auto; }
+        
+        /* Recomendações */
+        .rec-box { border: 1px solid #ddd; background-color: #f9f9f9; padding: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- FRAME: Header -->
+    <div id="headerContent">
+        <table style="border: none;">
+            <tr>
+                <td style="border: none; width: 70%;">
+                    <div class="bold color-primary" style="font-size: 14pt;">STAE</div>
+                    <div style="font-size: 8pt; color: #555;">Secretariado Técnico de Administração Eleitoral</div>
+                </td>
+                <td style="border: none; width: 30%; text-align: right;">
+                    <div style="font-size: 8pt;">RELATÓRIO #{{ ano_selecionado }}</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border-bottom: 2px solid #003366; height: 2px; padding: 0;"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FRAME: Footer -->
+    <div id="footerContent">
+        <div class="text-center" style="font-size: 8pt; color: #888; border-top: 1px solid #ccc; padding-top: 5px;">
+            Página <pdf:pagenumber> | Gerado em {% now "d/m/Y H:i" %}
+        </div>
+    </div>
+
+    <!-- PÁGINA 1: CAPA -->
+    <div class="cover-box">
+        <h1 style="font-size: 30pt;">RELATÓRIO DE<br>INTELIGÊNCIA ELEITORAL</h1>
+        <div style="font-size: 14pt; color: #666; margin-top: 10px;">Eleições {{ ano_selecionado }}</div>
+        
+        <div class="cover-line"></div>
+        
+        <div style="margin-top: 50px; font-size: 11pt;">
+            <p><strong>Nível de Análise:</strong> {{ nivel_selecionado|upper }}</p>
+            {% if filtro_provincia_nome %}
+            <p><strong>Geografia Foco:</strong> {{ filtro_provincia_nome }}</p>
+            {% endif %}
+            <p><strong>Departamento:</strong> Formação e Educação Cívica</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- PÁGINA 2: SUMÁRIO -->
+    <h2>1. Sumário Executivo</h2>
+    <p>Consolidação estatística dos dados processados.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Inscritos</th>
+                <th>Votantes</th>
+                <th>Abstenção</th>
+                <th>Votos Nulos</th>
+                <th>Votos Brancos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-center bold">{{ kpi.inscritos }}</td>
+                <td class="text-center bold">{{ kpi.votantes }}</td>
+                <td class="text-center bold color-danger">{{ kpi.abstencao_perc }}%</td>
+                <td class="text-center bold color-danger">{{ kpi.nulos_perc }}%</td>
+                <td class="text-center">{{ kpi.brancos_perc }}%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; border: 1px solid #ddd; padding: 10px;">
+        <strong>Visualização de Participação:</strong>
+        <br><br>
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="border: none; padding: 0;">
+                    <div style="width: 100%; height: 15px; background-color: #e0e0e0; border: 1px solid #ccc;">
+                        <div style="width: {{ kpi.participacao_perc|stringformat:'.1f' }}%; height: 100%; background-color: #28a745;"></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <div style="font-size: 8pt; margin-top: 5px;">
+            <span style="color: #28a745;">■ Votantes</span> &nbsp; <span style="color: #999;">■ Abstenção ({{ kpi.abstencao_perc }}%)</span>
+        </div>
+    </div>
+
+    <!-- SEÇÃO GRÁFICA (Layout em Blocos - Sem Tabela) -->
+    <div style="margin-top: 20px; text-align: center;">
+        <h3>Análise Gráfica Visual</h3>
+        
+        <!-- Gráfico 1 -->
+        <div style="display: inline-block; width: 45%; vertical-align: top; margin-right: 2%;">
+            <div style="font-weight: bold; color: #36b9cc; margin-bottom: 5px;">Distribuição da Abstenção</div>
+            {% if chart_abstencao %}
+            <img src="data:image/png;base64,{{ chart_abstencao }}" width="240" height="150">
+            {% else %}
+            <p style="color: #999;">Indisponível</p>
+            {% endif %}
+        </div>
+
+        <!-- Gráfico 2 -->
+        <div style="display: inline-block; width: 45%; vertical-align: top;">
+            <div style="font-weight: bold; color: #1cc88a; margin-bottom: 5px;">Comparativo de Nulos</div>
+            {% if chart_nulos %}
+            <img src="data:image/png;base64,{{ chart_nulos }}" width="260" height="150">
+            {% else %}
+            <p style="color: #999;">Indisponível</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SEÇÃO DE DADOS (Mantida Tabela Simples) -->
+    <h2>2. Análise Territorial e Risco (Top 100)</h2>
+    <p>Listagem das unidades territoriais com maiores índices de risco.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="40%">Local</th>
+                <th width="20%">Abstenção</th>
+                <th width="20%">Nulos</th>
+                <th width="20%">Risco</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in ranking_tabela_full %}
+            <tr>
+                <td>
+                    <div class="bold color-primary">{{ item.unidade }}</div>
+                    <div style="font-size: 8pt; color: #666;">{{ item.subtitulo }}</div>
+                </td>
+                <td class="text-center">
+                    <span style="font-size: 10pt; font-weight: bold;">{{ item.taxa_abstencao }}%</span>
+                </td>
+                <td class="text-center">
+                    <span style="font-size: 10pt; font-weight: bold;">{{ item.taxa_nulos }}%</span>
+                </td>
+                <td class="text-center">
+                    {{ item.risco }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <!-- RECOMENDAÇÕES STAE (OPERACIONAIS) -->
+    
+    <div style="background-color: #ffc107; color: #333; padding: 8px; font-size: 14pt; font-weight: bold; margin-bottom: 15px; border: 1px solid #e0a800;">
+        4. Recomendações Operacionais (STAE)
+    </div>
+
+    {% for rec in pdf_rec_stae %}
+    <div style="border: 1px solid #ccc; background-color: #fff; padding: 12px; margin-bottom: 15px; page-break-inside: avoid;">
+        <!-- Linha 1: LOCAL + PRIORIDADE GERAL -->
+        <div style="margin-bottom: 10px; border-bottom: 2px solid {% if rec.prioridade_geral == 'alta' %}#dc3545{% elif rec.prioridade_geral == 'media' %}#ffc107{% else %}#28a745{% endif %}; padding-bottom: 5px;">
+             <table style="width: 100%; border: none;">
+                <tr>
+                    <td style="border: none;">
+                        <span style="font-size: 8pt; color: #999; text-transform: uppercase;">Plano de Ação Integrado:</span><br>
+                        <span style="color: #333; font-size: 14pt; font-weight: bold;">{{ rec.local }}</span>
+                    </td>
+                    <td style="border: none; text-align: right; vertical-align: bottom;">
+                         <span style="color: #ffffff; background-color: {% if rec.prioridade_geral == 'alta' %}#dc3545{% elif rec.prioridade_geral == 'media' %}#ffc107{% else %}#28a745{% endif %};
+                                     padding: 4px 10px; font-size: 9pt; font-weight: bold; border-radius: 3px;">
+                            {{ rec.titulo }}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Linha 2: LISTA DE AÇÕES (LOOP) -->
+        {% for acao in rec.acoes %}
+        <div style="margin-bottom: 8px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid {% if acao.status == 'CRÍTICO' %}#dc3545{% elif acao.status == 'ALERTA' %}#fd7e14{% elif acao.status == 'ATENÇÃO' %}#ffc107{% else %}#28a745{% endif %};">
+            <div style="font-weight: bold; font-size: 10pt; color: #333; margin-bottom: 2px;">
+                {{ acao.tema }} <span style="font-size: 8pt; font-weight: normal; color: #666;">({{ acao.status }})</span>
+            </div>
+            <div style="font-size: 10pt; color: #555;">
+                {{ acao.texto }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: #777; margin-bottom: 20px;">Nenhuma unidade encontrada.</p>
+    {% endfor %}
+
+    {% if not recomendacoes %}
+    <p style="text-align: center; color: #777; margin-top: 20px;">Nenhuma recomendação crítica.</p>
+    {% endif %}
+
+</body>
+</html>

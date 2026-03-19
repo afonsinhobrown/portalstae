@@ -1,0 +1,178 @@
+{% extends 'gestaocombustivel/base.html' %}
+
+{% block title %}{% if object %}Editar Contrato{% else %}Novo Contrato{% endif %} • Gestão Combustível{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate__animated animate__fadeIn">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-white border-0 py-3">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'gestaocombustivel:lista_contratos' %}"
+                        class="btn btn-light btn-sm me-3 rounded-circle">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h4 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-file-signature me-2"></i>
+                        {% if object %}Editar Contrato{% else %}Novo Contrato de Fornecimento{% endif %}
+                    </h4>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <!-- Fornecedor -->
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Fornecedor *</label>
+                            <select name="fornecedor" class="form-select form-select-lg" required {% if object %}disabled{% endif %}>
+                                <option value="">Selecione o Fornecedor...</option>
+                                {% for f in fornecedores %}
+                                <option value="{{ f.id }}" {% if object and object.fornecedor.id == f.id %}selected{% endif %}>
+                                    {{ f.nome }} ({{ f.nuit }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if object %}
+                            <input type="hidden" name="fornecedor" value="{{ object.fornecedor.id }}">
+                            <div class="form-text">O fornecedor não pode ser alterado após criação.</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Número -->
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Número do Contrato *</label>
+                            <input type="text" name="numero_contrato" class="form-control"
+                                value="{{ object.numero_contrato|default:'' }}" required placeholder="Ex: CTR-2024/001">
+                        </div>
+
+                        <!-- Valores Financeiros e Quantidade -->
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <h6 class="text-muted text-uppercase small ls-1">Tabela de Preços</h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Preço Gasolina (MT/Litro) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">MT</span>
+                                <input type="number" name="preco_unitario" id="preco_gasolina"
+                                    class="form-control fw-bold"
+                                    value="{{ object.preco_unitario|stringformat:'.2f'|default:'' }}" step="0.01"
+                                    min="0" required oninput="calcularLitros()">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Preço Diesel (MT/Litro) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">MT</span>
+                                <input type="number" name="preco_diesel" id="preco_diesel" class="form-control fw-bold"
+                                    value="{{ object.preco_diesel|stringformat:'.2f'|default:'' }}" step="0.01" min="0"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-2">
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Valor Total do Contrato (Teto Financeiro) *</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light">MT</span>
+                                <input type="number" name="valor_total_contrato" id="valor_total"
+                                    class="form-control fw-bold fs-4 text-primary"
+                                    value="{{ object.valor_total_contrato|stringformat:'.2f'|default:'' }}" step="0.01"
+                                    min="0" required oninput="calcularLitros()">
+                            </div>
+                            <div class="form-text">Valor total monetário disponível neste contrato para todos os
+                                combustíveis.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-calculator me-2"></i>Estimativa de Litros (Base Gasolina):</span>
+                                <span class="fw-bold fs-5">
+                                    <input type="number" name="litros_contratados" id="litros"
+                                        class="form-control-plaintext text-end fw-bold d-inline-block w-auto"
+                                        style="color: var(--bs-info);"
+                                        value="{{ object.litros_contratados|stringformat:'.2f'|default:'0' }}" readonly>
+                                    L
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Datas -->
+                        <div class="col-12">
+                            <hr class="my-2">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data Início *</label>
+                            <input type="date" name="data_inicio" class="form-control"
+                                value="{{ object.data_inicio|date:'Y-m-d'|default:'' }}" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data Fim *</label>
+                            <input type="date" name="data_fim" class="form-control"
+                                value="{{ object.data_fim|date:'Y-m-d'|default:'' }}" required>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Observações</label>
+                            <textarea name="observacoes" class="form-control"
+                                rows="3">{{ object.observacoes|default:'' }}</textarea>
+                        </div>
+
+                        {% if object %}
+                        <div class="col-12">
+                            <div class="form-check form-switch p-3 bg-light rounded">
+                                <input class="form-check-input" type="checkbox" name="activo" id="activoCheck" {% if object.activo %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="activoCheck">Contrato Ativo</label>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fas fa-save me-2"></i>Salvar Contrato
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calcularLitros() {
+        const preco = parseFloat(document.getElementById('preco_gasolina').value) || 0;
+        const total = parseFloat(document.getElementById('valor_total').value) || 0;
+
+        if (preco > 0) {
+            const litros = total / preco;
+            document.getElementById('litros').value = litros.toFixed(2);
+        } else {
+            document.getElementById('litros').value = 0;
+        }
+    }
+
+    // Calcular ao carregar se for edição
+    window.addEventListener('DOMContentLoaded', calcularLitros);
+</script>
+{% endblock %}

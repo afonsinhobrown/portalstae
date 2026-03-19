@@ -1,0 +1,137 @@
+{% extends 'dfec/base.html' %}
+
+{% block title %}
+{% if editar %}Editar Atividade - {{ atividade.nome }}{% else %}Nova Atividade{% endif %}
+{% endblock %}
+
+{% block page_title %}
+{% if editar %}Editar Atividade{% else %}Nova Atividade{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+{% if editar %}Atualizando dados da atividade{% else %}Adicionando nova atividade ao plano {{ plano.codigo }}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Dados da Atividade</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_nome" class="form-label">Título da Atividade <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nome" id="id_nome"
+                            value="{{ atividade.nome|default:'' }}" required placeholder="Ex: Formação de Brigadistas">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_descricao" class="form-label">Descrição / Tarefas</label>
+                        <textarea class="form-control" name="descricao" id="id_descricao" rows="4"
+                            placeholder="Detanhes e tarefas desta atividade...">{{ atividade.descricao|default:'' }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_objetivo" class="form-label">Objetivo Institucional</label>
+                            <select class="form-select" name="objetivo" id="id_objetivo">
+                                <option value="">Selecione...</option>
+                                {% for obj in objetivos %}
+                                <option value="{{ obj.id }}" {% if atividade.objetivo_institucional_id==obj.id
+                                    %}selected{% endif %}>
+                                    {{ obj.nome }} ({{ obj.ano }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_referencia" class="form-label">Referência Nacional (Sub-atividade)</label>
+                            <select class="form-select" name="referencia" id="id_referencia">
+                                <option value="">Selecione...</option>
+                                {% for ref in referencias %}
+                                <option value="{{ ref.id }}" {% if atividade.referencia_nacional_id==ref.id %}selected{%
+                                    endif %}>
+                                    {{ ref.nome }} ({{ ref.plano.codigo }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_data_inicio" class="form-label">Data Início <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="data_inicio" id="id_data_inicio"
+                                value="{{ atividade.data_inicio|date:'Y-m-d' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_data_fim" class="form-label">Data Fim <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="data_fim" id="id_data_fim"
+                                value="{{ atividade.data_fim|date:'Y-m-d' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_orcamento" class="form-label">Orçamento Estimado</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="orcamento" id="id_orcamento"
+                                    value="{{ atividade.orcamento_estimado|default:'0' }}" step="0.01">
+                                <span class="input-group-text">MT</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_responsavel" class="form-label">Responsável pela Execução</label>
+                            <select class="form-select" name="responsavel" id="id_responsavel">
+                                <option value="">Selecione...</option>
+                                {% if request.user.is_authenticated %}
+                                <option value="{{ request.user.id }}" selected>{{ request.user.get_full_name }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+
+                    {% if editar %}
+                    <div class="mb-3">
+                        <label for="id_status" class="form-label">Status</label>
+                        <select class="form-select" name="status" id="id_status">
+                            <option value="NAO_INICIADO" {% if atividade.status=='NAO_INICIADO' %}selected{% endif %}>
+                                Não Iniciado</option>
+                            <option value="EM_ANDAMENTO" {% if atividade.status=='EM_ANDAMENTO' %}selected{% endif %}>Em
+                                Andamento</option>
+                            <option value="CONCLUIDO" {% if atividade.status=='CONCLUIDO' %}selected{% endif %}>
+                                Concluído</option>
+                            <option value="ATRASADO" {% if atividade.status=='ATRASADO' %}selected{% endif %}>Atrasado
+                            </option>
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-footer bg-transparent border-top-0 d-flex justify-content-end gap-2 px-0">
+                        <a href="{% url 'dfec:plano_detalhe' plano.id %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Salvar Atividade
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer bg-light">
+                <div class="small text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    A data da atividade deve estar compreendida no período do plano:
+                    <strong>{{ plano.data_inicio_planeada|date:"d/m/Y" }} a {{ plano.data_fim_planeada|date:"d/m/Y"
+                        }}</strong>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

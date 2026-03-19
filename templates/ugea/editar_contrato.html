@@ -1,0 +1,329 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Editar Contrato • UGEA{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        border: var(--glass-border);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        backdrop-filter: blur(4px);
+        border-radius: 16px;
+        transition: transform 0.2s ease;
+    }
+
+    .header-gradient {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 16px 16px 0 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header-gradient::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.1));
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem 1rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+    }
+
+    .service-row {
+        background: white;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.2s;
+    }
+
+    .service-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border-color: #cbd5e1;
+    }
+
+    .btn-save-floating {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 50px;
+        padding: 12px 30px;
+        background: var(--primary-gradient);
+        border: none;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <form method="post" enctype="multipart/form-data" id="editForm">
+        {% csrf_token %}
+        
+        <div class="row g-4">
+            <!-- HEADER -->
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-0">Gestão do Contrato</h4>
+                        <p class="text-muted small">Edição e Configuração de Serviços</p>
+                    </div>
+                    <a href="{% url 'ugea:detalhe_contrato' contrato.id %}" class="btn btn-light rounded-pill px-4 border">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+
+            <!-- COLUNA ESQUERDA: METADADOS -->
+            <div class="col-lg-4">
+                <div class="glass-card h-100">
+                    <div class="p-4">
+                        <h6 class="text-uppercase fw-bold text-muted small mb-4">
+                            <i class="fas fa-info-circle me-2"></i>Dados Gerais
+                        </h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Número Contrato</label>
+                            {{ form.numero_contrato }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Fornecedor / Sector</label>
+                            {{ form.sector }}
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold small">Início</label>
+                                {{ form.data_inicio }}
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold small">Fim</label>
+                                {{ form.data_fim }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-success">Valor Global (Teto)</label>
+                            <div class="input-group">
+                                {{ form.valor_total }}
+                                <span class="input-group-text">MT</span>
+                            </div>
+                            <div class="form-text small">Limite máximo do contrato</div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded mt-4 border">
+                            <div class="form-check form-switch">
+                                {{ form.ativo }}
+                                <label class="form-check-label fw-bold" for="{{ form.ativo.id_for_label }}">
+                                    Contrato Ativo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: ITENS -->
+            <div class="col-lg-8">
+                <div class="glass-card h-100">
+                    <div class="header-gradient d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-white">Serviços e Itens</h5>
+                            <small class="text-white-50">Defina os produtos e preços unitários</small>
+                        </div>
+                        <button type="button" id="add-item" class="btn btn-white btn-sm fw-bold rounded-pill px-3 shadow-sm" style="background: white; color: #764ba2;">
+                            <i class="fas fa-plus me-1"></i> Adicionar Item
+                        </button>
+                    </div>
+                    
+                    <div class="p-4">
+                        {% if formset.errors %}
+                        <div class="alert alert-danger shadow-sm border-0 small mb-4">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Existem erros nos itens abaixo. Verifique se preencheu Descrição e Preço corretamente.
+                        </div>
+                        {% endif %}
+
+                        {{ formset.management_form }}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle" id="items-table">
+                                <thead class="text-uppercase small text-muted border-bottom">
+                                    <tr>
+                                        <th style="width: 55%;">Descrição do Item / Serviço</th>
+                                        <th style="width: 30%;">Preço Unitário</th>
+                                        <th class="text-center" style="width: 15%;">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="formset-tbody">
+                                    {% for item_form in formset %}
+                                    <tr class="item-form-row">
+                                        <td colspan="3" class="p-0">
+                                            <div class="service-row p-2 d-flex align-items-center mb-2">
+                                                {% for hidden in item_form.hidden_fields %}
+                                                    {{ hidden }}
+                                                {% endfor %}
+
+                                                <!-- Descrição -->
+                                                <div class="flex-grow-1 me-3">
+                                                    {{ item_form.descricao }}
+                                                    {% if item_form.descricao.errors %}
+                                                    <div class="text-danger x-small animate__animated animate__shakeX">{{ item_form.descricao.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+
+                                                <!-- Preço -->
+                                                <div class="me-3" style="width: 180px;">
+                                                    <div class="input-group input-group-sm">
+                                                        {{ item_form.preco_unitario }}
+                                                        <span class="input-group-text bg-white">MT</span>
+                                                    </div>
+                                                    {% if item_form.preco_unitario.errors %}
+                                                    <div class="text-danger x-small animate__animated animate__shakeX">{{ item_form.preco_unitario.errors.0 }}</div>
+                                                    {% endif %}
+                                                </div>
+
+                                                <!-- Delete -->
+                                                <div class="text-center" style="width: 60px;">
+                                                    {% if item_form.instance.pk %}
+                                                        <div class="form-check d-flex justify-content-center">
+                                                            {{ item_form.DELETE }}
+                                                        </div>
+                                                        <small class="text-danger" style="font-size: 10px;">Apagar</small>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-link text-danger p-0 delete-row" title="Remover">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Template Invisível para o JS -->
+                        <div id="empty-item-template" class="d-none">
+                            <table class="table">
+                                <tbody>
+                                    <tr class="item-form-row newItem">
+                                        <td colspan="3" class="p-0">
+                                            <div class="service-row p-2 d-flex align-items-center border-primary border-opacity-25 mb-2" style="background: #f8f9ff;">
+                                                <!-- Descrição -->
+                                                <div class="flex-grow-1 me-3">
+                                                    {{ formset.empty_form.descricao }}
+                                                </div>
+                                                <!-- Preço -->
+                                                <div class="me-3" style="width: 180px;">
+                                                    <div class="input-group input-group-sm">
+                                                        {{ formset.empty_form.preco_unitario }}
+                                                        <span class="input-group-text bg-white">MT</span>
+                                                    </div>
+                                                </div>
+                                                <!-- Delete -->
+                                                <div class="text-center" style="width: 60px;">
+                                                    <button type="button" class="btn btn-link text-danger p-0 delete-row" title="Remover">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-3 bg-light rounded mt-3 text-center text-muted small border-dashed" style="border: 2px dashed #e2e8f0;">
+                            <i class="fas fa-magic me-1"></i>
+                            Adicione serviços clicando em "Adicionar Item" acima.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-save-floating text-white shadow-lg fw-bold">
+            <i class="fas fa-save me-2"></i>FINALIZAR E SALVAR SERVIÇOS
+        </button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addButton = document.getElementById('add-item');
+        const formsetContainer = document.getElementById('formset-tbody');
+        const totalForms = document.getElementById('id_itens-TOTAL_FORMS');
+        const emptyTemplate = document.querySelector('#empty-item-template tr').cloneNode(true);
+
+        addButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const formIndex = parseInt(totalForms.value);
+            const newForm = emptyTemplate.cloneNode(true);
+            
+            // Substituir o prefixo __prefix__ pelo índice atual
+            newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formIndex);
+            
+            // Adicionar ao container
+            formsetContainer.appendChild(newForm);
+            
+            // Incrementar TOTAL_FORMS
+            totalForms.value = formIndex + 1;
+            
+            console.log("Item adicionado. Novo TOTAL_FORMS:", totalForms.value);
+        });
+
+        // Delegação de evento para deletar linhas novas
+        formsetContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-row')) {
+                const row = e.target.closest('.item-form-row');
+                if (!row.querySelector('input[name$="-DELETE"]')) { // SÓ para linhas NOVAS (sem o campo DELETE do django)
+                    row.remove();
+                    // OpcIONAL: decrementar totalForms. Mas o Django é resiliente se houver furos no índice,
+                    // contanto que TOTAL_FORMS cubra o maior índice enviado.
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    .x-small { font-size: 0.7rem; font-weight: bold; }
+    .border-dashed { border-style: dashed !important; }
+    .newItem { animation: fadeInUp 0.5s ease; }
+    
+    .service-row input.form-control {
+        border: 1px solid #e2e8f0;
+        background: white;
+        font-weight: 500;
+        width: 100%;
+        padding: 0.5rem;
+    }
+    .service-row input.form-control:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 0 2px rgba(118, 75, 162, 0.1);
+        background: white;
+    }
+</style>
+{% endblock %}

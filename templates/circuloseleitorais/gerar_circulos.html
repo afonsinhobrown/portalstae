@@ -1,0 +1,73 @@
+{% extends 'base_apps.html' %}
+{% block title %}Gerar Círculos - {{ eleicao.nome }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">🏛️ Configuração Rápida de Círculos: {{ eleicao.nome }}</h4>
+                    <span class="badge bg-light text-primary">Modo: {{ eleicao.get_tipo_display }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Baseado no tipo de eleição (<strong>{{ eleicao.get_tipo_display }}</strong>), o sistema sugere os seguintes círculos eleitorais. Selecione os pretendidos:
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40"><input type="checkbox" id="select-all" checked></th>
+                                        <th>Círculo Sugerido</th>
+                                        <th>Província Administrativa</th>
+                                        <th>Código</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in itens %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="itens_selecionados" value="{{ item.codigo }}" class="item-check" checked>
+                                        </td>
+                                        <td><strong>{{ item.nome }}</strong></td>
+                                        <td>{{ item.provincia }}</td>
+                                        <td><code>{{ item.codigo }}</code></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Verificação:</strong> Reveja a lista acima para garantir que todos os círculos selecionados estão em conformidade com o mapa eleitoral oficial para esta eleição.
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="{% url 'circuloseleitorais:dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-1"></i> Criar Círculos para {{ eleicao.nome }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.getElementsByClassName('item-check');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+{% endblock %}

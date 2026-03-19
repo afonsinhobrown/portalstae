@@ -1,0 +1,145 @@
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{{ manual.titulo }} - DFEC{% endblock %}
+
+{% block page_title %}{{ manual.titulo }}{% endblock %}
+{% block page_subtitle %}{{ manual.codigo }} (v{{ manual.versao }}){% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar / Sumário -->
+    <div class="col-lg-3 order-lg-2 mb-4">
+        <div class="card shadow-sm sticky-top" style="top: 20px; z-index: 100;">
+            <div class="card-header bg-light">
+                <h6 class="mb-0 fw-bold">Detalhes & Ações</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span
+                        class="badge manual-status w-100 py-2 fs-6 mb-2 {% if manual.status == 'publicado' %}bg-success{% elif manual.status == 'rascunho' %}bg-warning text-dark{% elif manual.status == 'revisao' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                        {{ manual.get_status_display }}
+                    </span>
+                    <small class="text-muted d-block text-center">
+                        Atualizado em {{ manual.data_atualizacao|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    {% if perms.dfec.change_manual %}
+                    <a href="{% url 'dfec:manual_editar' manual.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Editar Manual
+                    </a>
+                    {% endif %}
+
+                    {% if perms.dfec.add_manual %}
+                    <a href="{% url 'dfec:capitulo_criar' manual.pk %}" class="btn btn-outline-success">
+                        <i class="fas fa-plus me-2"></i>Novo Capítulo
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'dfec:gerar_pdf' manual.pk %}" class="btn btn-outline-danger" target="_blank">
+                        <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                    </a>
+
+                    <button class="btn btn-outline-primary" disabled title="Em breve">
+                        <i class="fas fa-file-word me-2"></i>Exportar Word
+                    </button>
+                </div>
+
+                <hr>
+
+                <div>
+                    <h6 class="fw-bold mb-2">Informações</h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-1">
+                            <i class="fas fa-layer-group me-2 text-muted"></i>
+                            <strong>Tipo:</strong> {{ manual.get_tipo_display }}
+                        </li>
+                        <li class="mb-1">
+                            <i class="fas fa-user me-2 text-muted"></i>
+                            <strong>Autor:</strong> {{
+                            manual.criado_por.get_full_name|default:manual.criado_por.username }}
+                        </li>
+                        {% if manual.revisado_por %}
+                        <li class="mb-1">
+                            <i class="fas fa-check-double me-2 text-muted"></i>
+                            <strong>Revisor:</strong> {{ manual.revisado_por.get_full_name }}
+                        </li>
+                        {% endif %}
+                        <li class="mb-1">
+                            <i class="fas fa-eye me-2 text-muted"></i>
+                            <strong>Views:</strong> {{ manual.visualizacoes }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="col-lg-9 order-lg-1">
+        <!-- Descrição / Introdução -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                {% if manual.descricao %}
+                <div class="lead mb-0">
+                    {{ manual.descricao|linebreaks }}
+                </div>
+                {% else %}
+                <p class="text-muted fst-italic mb-0">Sem descrição disponível.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Capítulos -->
+        <h4 class="mb-3 border-bottom pb-2">
+            <i class="fas fa-list-ol me-2"></i>Capítulos
+        </h4>
+
+        {% if capitulos %}
+        <div class="accordion" id="accordionCapitulos">
+            {% for cap in capitulos %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading{{ cap.id }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse{{ cap.id }}" aria-expanded="false"
+                        aria-controls="collapse{{ cap.id }}">
+                        <span class="fw-bold me-2">{{ cap.numero }}.</span> {{ cap.titulo }}
+                    </button>
+                </h2>
+                <div id="collapse{{ cap.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                    aria-labelledby="heading{{ cap.id }}" data-bs-parent="#accordionCapitulos">
+                    <div class="accordion-body">
+                        <div class="d-flex justify-content-end mb-2">
+                            {% if perms.dfec.change_manual %}
+                            <a href="{% url 'dfec:capitulo_editar' cap.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="manual-content border p-3 rounded bg-light">
+                            <strong>Conteúdo:</strong><br>
+                            {{ cap.conteudo|safe|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info py-4 text-center">
+            <i class="fas fa-info-circle fs-4 mb-2 d-block"></i>
+            <h5>Este manual ainda não possui capítulos.</h5>
+            <p class="mb-0">Adicione capítulos para estruturar o conteúdo deste manual.</p>
+            {% if perms.dfec.add_manual %}
+            <a href="{% url 'dfec:capitulo_criar' manual.pk %}" class="btn btn-success mt-3">
+                <i class="fas fa-plus me-2"></i>Criar Primeiro Capítulo
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

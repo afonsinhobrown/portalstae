@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Editor de Design</h2>
+        <span class="badge bg-info text-dark">{{ projeto.nome }}</span>
+    </div>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-1"></i>
+        Este texto servirá de base. Use <code>{{ nome }}</code> onde quiser que apareça o nome do beneficiário.
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Conteúdo</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Entidade Emissora (Cabeçalho)</label>
+                            <select name="entidade_emissora" class="form-select">
+                                <option value="stae" {% if projeto.entidade_emissora == 'stae' %}selected{% endif %}>Secretariado Técnico de Administração Eleitoral (STAE)</option>
+                                <option value="cne" {% if projeto.entidade_emissora == 'cne' %}selected{% endif %}>Comissão Nacional de Eleições (CNE)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Título Principal</label>
+                            <input type="text" name="titulo" class="form-control form-control-lg text-center font-weight-bold" 
+                                   value="{{ projeto.titulo }}" placeholder="CERTIFICADO / DIPLOMA">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Corpo do Texto</label>
+                            <textarea name="texto_corpo" class="form-control" rows="6">{{ projeto.texto_corpo }}</textarea>
+                            <small class="text-muted">Variáveis disponíveis: <code>{{ nome }}</code>, <code>{{ detalhe }}</code>, <code>{{ projeto.nome }}</code></small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Data por Extenso</label>
+                            <input type="text" name="data_extenso" class="form-control" 
+                                   value="{{ projeto.data_extenso }}" placeholder="Deixe em branco para usar data automática">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Assinaturas</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 border-end">
+                                <h6 class="text-center mb-3">Esquerda</h6>
+                                <div class="mb-2">
+                                    <label>Nome</label>
+                                    <input type="text" name="assinatura1" class="form-control" value="{{ projeto.nome_assinatura_1 }}">
+                                </div>
+                                <div class="mb-2">
+                                    <label>Cargo</label>
+                                    <input type="text" name="cargo1" class="form-control" value="{{ projeto.cargo_assinatura_1 }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-center mb-3">Direita</h6>
+                                <div class="mb-2">
+                                    <label>Nome</label>
+                                    <input type="text" name="assinatura2" class="form-control" value="{{ projeto.nome_assinatura_2 }}">
+                                </div>
+                                <div class="mb-2">
+                                    <label>Cargo</label>
+                                    <input type="text" name="cargo2" class="form-control" value="{{ projeto.cargo_assinatura_2 }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Fundo e Visual</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if projeto.fundo_personalizado %}
+                            <p>Fundo Personalizado Atual:</p>
+                            <img src="{{ projeto.fundo_personalizado.url }}" class="img-fluid border mb-3">
+                        {% elif projeto.modelo.fundo_padrao %}
+                             <p>Fundo Padrão:</p>
+                             <img src="{{ projeto.modelo.fundo_padrao.url }}" class="img-fluid border mb-3">
+                        {% else %}
+                            <div class="alert alert-warning">Sem fundo definido.</div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Alterar Imagem de Fundo</label>
+                            <input type="file" name="fundo" class="form-control" accept="image/*">
+                            <div class="form-text">Envie uma imagem JPG/PNG de alta resolução (A4 Paisagem).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save me-2"></i>Salvar e Continuar
+                    </button>
+                    <a href="{% url 'credenciais:cert_dashboard' %}" class="btn btn-outline-secondary">Voltar</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

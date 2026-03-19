@@ -1,0 +1,201 @@
+{% extends 'base_apps.html' %}
+{% load candidaturas_extras %}
+
+{% block title %}Mapa Global A3: {{ eleicao.nome }}{% endblock %}
+{% block module_name %}AUDITORIA - MAPA NACIONAL A3{% endblock %}
+{% block icon %}fas fa-earth-africa{% endblock %}
+{% block dashboard_url %}{% url 'candidaturas:dashboard' %}{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        @page { size: A3 landscape; margin: 0.5cm; }
+        .no-print { display: none !important; }
+        .main-content { padding: 0 !important; margin: 0 !important; }
+        .card { border: 1px solid #000 !important; box-shadow: none !important; }
+        .table-a3 th.rotate-header div { transform: rotate(-90deg) translate(-10px, 0); width: 25px; }
+    }
+
+    /* Estilo para Tabela Dença (30+ Partidos) */
+    .table-container { 
+        position: relative; 
+        max-height: 75vh; 
+        overflow: auto; 
+        border-radius: 12px;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .table-a3 { 
+        font-size: 0.7rem; 
+        border-collapse: separate; 
+        border-spacing: 0;
+        width: 100%; 
+    }
+
+    .table-a3 th, .table-a3 td { 
+        border: 0.1px solid #e2e8f0; 
+        padding: 4px 2px; 
+    }
+
+    /* Cabeçalhos Fixos e Rotacionados */
+    .table-a3 thead th { 
+        background: #0f172a; 
+        color: white; 
+        position: sticky; 
+        top: 0; 
+        z-index: 20; 
+        height: 120px;
+        vertical-align: bottom;
+    }
+
+    .rotate-header { 
+        width: 30px; 
+        min-width: 30px; 
+        max-width: 30px;
+        position: relative;
+    }
+
+    .rotate-header div {
+        transform: rotate(-90deg);
+        transform-origin: bottom left;
+        white-space: nowrap;
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        width: 100px;
+        text-align: left;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .sticky-col { 
+        position: sticky; 
+        left: 0; 
+        background: #f8fafc !important; 
+        z-index: 30; 
+        border-right: 2px solid #1e293b !important; 
+        text-align: left !important;
+        padding-left: 8px !important;
+        width: 130px;
+        min-width: 130px;
+        max-width: 130px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .prov-divider { 
+        background: #1e293b !important; 
+        color: #f1f5f9; 
+        font-weight: bold; 
+        font-size: 0.75rem;
+    }
+
+    .highlight-row:hover { background-color: #f1f5f9 !important; }
+    
+    /* Indicadores de Presença Compactos */
+    .status-dot { 
+        width: 12px; 
+        height: 12px; 
+        border-radius: 2px; 
+        display: inline-block; 
+    }
+    .status-ok { background-color: #22c55e; border: 1px solid #16a34a; }
+    .status-none { background-color: #f1f5f9; border: 1px solid #cbd5e1; opacity: 0.3; }
+
+    /* Barra de ferramentas de auditoria */
+    .audit-toolbar {
+        background: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+</style>
+
+<div class="audit-toolbar d-flex justify-content-between align-items-center no-print">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-microscope me-2 text-primary"></i>Sala de Situação: Cruzamento Nacional</h4>
+        <p class="text-muted small mb-0">Interface otimizada para <strong>{{ partidos|length }} Forças Políticas</strong> e 11 Províncias.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <input type="text" id="partySearch" class="form-control form-control-sm" placeholder="🔍 Destacar Partido (Sigla)..." style="width: 200px;" onkeyup="highlightParty()">
+        <button class="btn btn-sm btn-dark" onclick="window.print()"><i class="fas fa-print me-1"></i> Imprimir A3</button>
+        <a href="{% url 'candidaturas:relatorios_eleicao' eleicao.id %}" class="btn btn-sm btn-outline-secondary">Painel Provincial</a>
+    </div>
+</div>
+
+<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="table-container">
+        <table class="table-a3 text-center" id="globalTable">
+            <thead>
+                <tr>
+                    <th class="sticky-col" style="z-index: 40; height: 120px; vertical-align: middle;">TERRITÓRIO</th>
+                    {% for p in partidos %}
+                        <th class="rotate-header party-col" data-sigla="{{ p.sigla }}">
+                            <div>{{ p.sigla }}</div>
+                        </th>
+                    {% endfor %}
+                    <th class="bg-primary text-white" style="vertical-align: middle;">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% regroup matriz by circulo.provincia as prov_list %}
+                {% for prov in prov_list %}
+                    <tr class="prov-divider">
+                        <td class="sticky-col prov-divider text-white">{{ prov.grouper }}</td>
+                        <td colspan="{{ partidos|length|add:1 }}" class="text-start ps-3 py-1 small">
+                            {{ prov.grouper }} - {{ prov.list|length }} Círculos Eleitorais
+                        </td>
+                    </tr>
+                    {% for item in prov.list %}
+                    <tr class="highlight-row">
+                        <td class="sticky-col fw-bold bg-light">
+                            {{ item.circulo.nome }}
+                            <span class="text-muted fw-normal" style="font-size: 0.6rem;">({{ item.circulo.num_mandatos }}M)</span>
+                        </td>
+                        {% for p_stat in item.presencas %}
+                            <td class="party-cell" data-sigla="{{ p_stat.partido.sigla }}">
+                                {% if p_stat.existe %}
+                                    <div class="status-dot status-ok" title="{{ p_stat.partido.sigla }} em {{ item.circulo.nome }}"></div>
+                                {% else %}
+                                    <div class="status-dot status-none"></div>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                        <td class="fw-bold bg-primary-subtle text-primary border-start">{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function highlightParty() {
+        let input = document.getElementById('partySearch').value.toUpperCase();
+        let cells = document.querySelectorAll('.party-cell');
+        let headers = document.querySelectorAll('.party-col');
+
+        cells.forEach(cell => {
+            if (input && cell.getAttribute('data-sigla').includes(input)) {
+                cell.style.backgroundColor = '#fef08a'; // Amarelo destaque
+                cell.style.opacity = '1';
+            } else {
+                cell.style.backgroundColor = '';
+                cell.style.opacity = input ? '0.3' : '1';
+            }
+        });
+
+        headers.forEach(header => {
+            if (input && header.getAttribute('data-sigla').includes(input)) {
+                header.style.backgroundColor = '#fbbf24';
+            } else {
+                header.style.backgroundColor = '';
+            }
+        });
+    }
+</script>
+{% endblock %}

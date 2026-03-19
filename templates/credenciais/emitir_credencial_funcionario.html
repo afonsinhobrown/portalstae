@@ -1,0 +1,126 @@
+{% extends 'credenciais/base.html' %}
+
+{% block title %}Emitir Credencial Funcionário • Credenciais{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="credenciais-card">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="fw-bold mb-0">
+                    <i class="fas fa-id-card me-2 text-primary"></i>
+                    Emitir Credencial para Funcionário
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Funcionário *</label>
+                            {{ form.funcionario }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tipo de Credencial *</label>
+                            {{ form.tipo_credencial }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Modelo *</label>
+                            {{ form.modelo }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Data de Validade *</label>
+                            {{ form.data_validade }}
+                            <small class="form-text text-muted">Data até quando a credencial será válida.</small>
+                        </div>
+                        
+                        <!-- Pré-visualização do Funcionário -->
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">Informações do Funcionário</h6>
+                            <div id="funcionarioInfo" class="alert alert-info">
+                                <div class="text-center">
+                                    <i class="fas fa-user-tie fa-2x text-primary mb-3"></i>
+                                    <p class="mb-0">Selecione um funcionário para visualizar as informações</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'credenciais:credenciais_funcionarios' %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-print me-2"></i>
+                                    Emitir Credencial
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const funcionarioSelect = document.getElementById('{{ form.funcionario.id_for_label }}');
+    const funcionarioInfo = document.getElementById('funcionarioInfo');
+    
+    // Dados dos funcionários (em produção viria de uma API)
+    const funcionariosData = {
+        {% for funcionario in form.funcionario.field.queryset %}
+        {{ funcionario.id }}: {
+            nome: "{{ funcionario.nome_completo }}",
+            sector: "{{ funcionario.sector.nome }}",
+            funcao: "{{ funcionario.get_funcao_display }}",
+            email: "{{ funcionario.email|default:'Não disponível' }}",
+            telefone: "{{ funcionario.telefone|default:'Não disponível' }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+    
+    function updateFuncionarioInfo() {
+        const funcionarioId = funcionarioSelect.value;
+        const info = funcionariosData[funcionarioId];
+        
+        if (info) {
+            funcionarioInfo.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Nome:</strong> ${info.nome}</p>
+                        <p class="mb-1"><strong>Sector:</strong> ${info.sector}</p>
+                        <p class="mb-1"><strong>Função:</strong> ${info.funcao}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Email:</strong> ${info.email}</p>
+                        <p class="mb-1"><strong>Telefone:</strong> ${info.telefone}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            funcionarioInfo.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-user-tie fa-2x text-primary mb-3"></i>
+                    <p class="mb-0">Selecione um funcionário para visualizar as informações</p>
+                </div>
+            `;
+        }
+    }
+    
+    funcionarioSelect.addEventListener('change', updateFuncionarioInfo);
+    updateFuncionarioInfo(); // Executar na carga inicial
+});
+</script>
+{% endblock %}

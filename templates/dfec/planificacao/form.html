@@ -1,0 +1,686 @@
+<!-- templates/dfec/planificacao/form.html -->
+{% extends 'dfec/base.html' %}
+{% load static %}
+
+{% block title %}{{ form.instance.pk|yesno:"Editar,Criar" }} Plano de Atividade - DFEC{% endblock %}
+{% block page_title %}{{ form.instance.pk|yesno:"Editar,Criar" }} Plano de Atividade{% endblock %}
+{% block page_subtitle %}Defina os objetivos e cronograma do plano de atividades eleitorais{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'dfec:planos_lista' %}" class="btn btn-outline-secondary"> <i class="fas fa-arrow-left me-1"></i>
+        Voltar
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">Dados do Plano</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="atividadeForm" data-autosave="true">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        <p class="mb-0">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <!-- Nome e Objetivo -->
+                        <div class="col-md-8">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">
+                                {{ form.nome.label }} *
+                            </label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.nome.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.objetivo_institucional.id_for_label }}" class="form-label">
+                                Objetivo Institucional *
+                            </label>
+                            {{ form.objetivo_institucional }}
+                        </div>
+
+                        <!-- Nível e Província -->
+                        <div class="col-md-4">
+                            <label for="{{ form.nivel.id_for_label }}" class="form-label">Nível</label>
+                            {{ form.nivel }}
+                        </div>
+
+                        <div class="col-md-4" id="div_provincia" style="display: none;">
+                            <label for="{{ form.provincia.id_for_label }}" class="form-label">Província</label>
+                            {{ form.provincia }}
+                        </div>
+
+                        <div class="col-md-4" id="div_plano_pai" style="display: none;">
+                            <label for="{{ form.plano_pai.id_for_label }}" class="form-label">Plano Nacional de
+                                Referência</label>
+                            {{ form.plano_pai }}
+                        </div>
+
+                        <!-- Tipo e Descrição -->
+                        <div class="col-md-6">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                                {{ form.tipo.label }} *
+                            </label>
+                            {{ form.tipo }}
+                            {% if form.tipo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.tipo.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 text-warning">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Descrição e Objetivos Específicos -->
+                        <div class="col-md-12">
+                            <label for="{{ form.descricao.id_for_label }}" class="form-label">
+                                {{ form.descricao.label }} *
+                            </label>
+                            {{ form.descricao }}
+                            <small class="text-muted">Resumo geral do plano.</small>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="{{ form.objetivos_especificos.id_for_label }}" class="form-label">
+                                Objetivos Específicos
+                            </label>
+                            {{ form.objetivos_especificos }}
+                            <small class="text-muted">Descreva os resultados esperados para este plano em
+                                particular.</small>
+                        </div>
+
+                        <!-- Datas -->
+                        <div class="col-md-6">
+                            <label for="{{ form.data_inicio_planeada.id_for_label }}" class="form-label">
+                                Data de Início Planeada *
+                            </label>
+                            <div class="input-group">
+                                {{ form.data_inicio_planeada }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-calendar"></i>
+                                </span>
+                            </div>
+                            {% if form.data_inicio_planeada.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.data_inicio_planeada.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.data_fim_planeada.id_for_label }}" class="form-label">
+                                Data de Fim Planeada *
+                            </label>
+                            <div class="input-group">
+                                {{ form.data_fim_planeada }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-calendar"></i>
+                                </span>
+                            </div>
+                            {% if form.data_fim_planeada.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.data_fim_planeada.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Orçamento -->
+                        <div class="col-md-6">
+                            <label for="{{ form.orcamento_planeado.id_for_label }}" class="form-label">
+                                {{ form.orcamento_planeado.label }} *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">MT</span>
+                                {{ form.orcamento_planeado }}
+                            </div>
+                            {% if form.orcamento_planeado.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.orcamento_planeado.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Orçamento total estimado para a execução deste plano</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.responsavel_principal.id_for_label }}" class="form-label">Responsável
+                                Principal</label>
+                            <div class="input-group">
+                                {{ form.responsavel_principal }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                            {% if form.responsavel_principal.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.responsavel_principal.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-muted">Selecione o gestor responsável por este plano</small>
+                        </div>
+
+                        <!-- Extensão Possível -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.extensao_possivel }}
+                                <label class="form-check-label" for="{{ form.extensao_possivel.id_for_label }}">
+                                    {{ form.extensao_possivel.label }}
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                Marque se as atividades deste plano podem ser estendidas além do prazo previsto
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Se for Formação, mostrar campos adicionais -->
+                    <div id="formacaoFields" class="mt-4" style="display: none;">
+                        <hr>
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="fas fa-users me-2"></i>Dados Específicos da Formação
+                        </h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Formação *</label>
+                                <select name="tipo_formacao" class="form-select" id="id_tipo_formacao">
+                                    <option value="">Selecione o tipo</option>
+                                    <option value="BRIGADISTAS">Formação de Brigadistas</option>
+                                    <option value="MMV">Formação de Membros da Mesa de Voto</option>
+                                    <option value="AGENTES_EC">Formação de Agentes de Educação Cívica</option>
+                                    <option value="OUTRA">Outra Formação</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Local de Realização *</label>
+                                <input type="text" class="form-control" name="local_realizacao"
+                                    id="id_local_realizacao">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Carga Horária (horas) *</label>
+                                <input type="number" class="form-control" name="carga_horaria" id="id_carga_horaria"
+                                    min="1">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Vagas Planeadas *</label>
+                                <input type="number" class="form-control" name="vagas_planeadas" id="id_vagas_planeadas"
+                                    min="1">
+                            </div>
+
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="balancear_genero"
+                                                id="id_balancear_genero" checked>
+                                            <label class="form-check-label" for="id_balancear_genero">
+                                                Balancear por Gênero
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="balancear_idade"
+                                                id="id_balancear_idade" checked>
+                                            <label class="form-check-label" for="id_balancear_idade">
+                                                Balancear por Idade
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {{ form.instance.pk|yesno:"Atualizar,Salvar" }} Plano
+                        </button>
+                        <a href="{% url 'dfec:planos_lista' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+
+                        {% if form.instance.pk %}
+                        <button type="button" class="btn btn-outline-danger float-end" onclick="confirmDelete()">
+                            <i class="fas fa-trash me-1"></i> Excluir Plano
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Card de Ajuda -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-question-circle me-2"></i>Orientações
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>Tipos de Plano
+                    </h6>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Educação Cívica:</strong> Planos de sensibilização e campanhas</li>
+                        <li><strong>Formação:</strong> Planos de capacitação de agentes eleitorais</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Importante
+                    </h6>
+                    <ul class="mb-0 ps-3">
+                        <li>Datas devem ser realistas</li>
+                        <li>Orçamento deve incluir todos os custos</li>
+                        <li>Descrição detalhada facilita aprovação</li>
+                        <li>Após criação, atribua responsáveis secundários</li>
+                    </ul>
+                </div>
+
+                <!-- Pré-visualização -->
+                <div class="preview-card mt-4">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-eye me-2"></i>Resumo do Plano
+                    </h6>
+                    <div class="border rounded p-3 bg-light">
+                        <h6 id="previewNome" class="fw-bold mb-2">Título do Plano</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted" id="previewTipo">Tipo de Plano</small>
+                            <small class="text-muted" id="previewDatas">Datas</small>
+                        </div>
+                        <p class="small mb-2" id="previewDescricao">Descrição...</p>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">
+                                Orçamento: <span id="previewOrcamento">0.00</span> MT
+                            </small>
+                            <span class="badge bg-secondary" id="previewStatus">Planeado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Progresso -->
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">
+                    <i class="fas fa-tasks me-2"></i>Progresso do Formulário
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                        aria-valuemin="0" aria-valuemax="100">
+                        0%
+                    </div>
+                </div>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2" id="checkNome" style="display: none;"></i>
+                        <i class="far fa-circle text-muted me-2" id="circleNome"></i>
+                        Título do plano
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2" id="checkTipo" style="display: none;"></i>
+                        <i class="far fa-circle text-muted me-2" id="circleTipo"></i>
+                        Tipo selecionado
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2" id="checkDescricao" style="display: none;"></i>
+                        <i class="far fa-circle text-muted me-2" id="circleDescricao"></i>
+                        Descrição preenchida
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2" id="checkDatas" style="display: none;"></i>
+                        <i class="far fa-circle text-muted me-2" id="circleDatas"></i>
+                        Datas definidas
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2" id="checkOrcamento" style="display: none;"></i>
+                        <i class="far fa-circle text-muted me-2" id="circleOrcamento"></i>
+                        Orçamento informado
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este plano de atividades?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Esta ação não pode ser desfeita. Todos os dados relacionados serão perdidos.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" id="deleteForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Mostrar/ocultar campos específicos de formação
+        $('#id_tipo').change(function () {
+            if ($(this).val() === 'FORMACAO') {
+                $('#formacaoFields').slideDown();
+                // Marcar campos de formação como obrigatórios
+                $('#id_tipo_formacao, #id_local_realizacao, #id_carga_horaria, #id_vagas_planeadas')
+                    .attr('required', true);
+            } else {
+                $('#formacaoFields').slideUp();
+                // Remover obrigatoriedade
+                $('#id_tipo_formacao, #id_local_realizacao, #id_carga_horaria, #id_vagas_planeadas')
+                    .removeAttr('required');
+            }
+            updatePreview();
+            updateProgress();
+        });
+
+        // Atualizar pré-visualização
+        function updatePreview() {
+            $('#previewNome').text($('#id_nome').val() || 'Título do Plano');
+            $('#previewTipo').text($('#id_tipo option:selected').text() || 'Tipo de Plano');
+            $('#previewDescricao').text($('#id_descricao').val() || 'Resumo do escopo...');
+            $('#previewOrcamento').text($('#id_orcamento_planeado').val() || '0.00');
+
+            const inicio = $('#id_data_inicio_planeada').val();
+            const fim = $('#id_data_fim_planeada').val();
+            if (inicio && fim) {
+                $('#previewDatas').text(`${formatDate(inicio)} - ${formatDate(fim)}`);
+            }
+
+            // Se for formação, mostrar badge adicional
+            if ($('#id_tipo').val() === 'FORMACAO') {
+                $('#previewTipo').append(' <span class="badge bg-info">Formação</span>');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // Atualizar progresso
+        function updateProgress() {
+            let completed = 0;
+            const totalFields = 5;
+
+            // Verificar cada campo
+            if ($('#id_nome').val().trim()) {
+                completed++;
+                $('#checkNome').show();
+                $('#circleNome').hide();
+            } else {
+                $('#checkNome').hide();
+                $('#circleNome').show();
+            }
+
+            if ($('#id_tipo').val()) {
+                completed++;
+                $('#checkTipo').show();
+                $('#circleTipo').hide();
+            } else {
+                $('#checkTipo').hide();
+                $('#circleTipo').show();
+            }
+
+            if ($('#id_descricao').val().trim()) {
+                completed++;
+                $('#checkDescricao').show();
+                $('#circleDescricao').hide();
+            } else {
+                $('#checkDescricao').hide();
+                $('#circleDescricao').show();
+            }
+
+            if ($('#id_data_inicio_planeada').val() && $('#id_data_fim_planeada').val()) {
+                completed++;
+                $('#checkDatas').show();
+                $('#circleDatas').hide();
+            } else {
+                $('#checkDatas').hide();
+                $('#circleDatas').show();
+            }
+
+            if ($('#id_orcamento_planeado').val()) {
+                completed++;
+                $('#checkOrcamento').show();
+                $('#circleOrcamento').hide();
+            } else {
+                $('#checkOrcamento').hide();
+                $('#circleOrcamento').show();
+            }
+
+            const percentage = (completed / totalFields) * 100;
+            $('#progressBar').css('width', percentage + '%')
+                .text(Math.round(percentage) + '%')
+                .attr('aria-valuenow', percentage);
+        }
+
+        // Lógica de Nível (Central vs Provincial)
+        function handleNivelChange() {
+            const nivel = $('#id_nivel').val();
+            if (nivel === 'PROVINCIAL') {
+                $('#div_provincia').fadeIn();
+                $('#div_plano_pai').fadeIn();
+            } else {
+                $('#div_provincia').fadeOut();
+                $('#div_plano_pai').fadeOut();
+                $('#id_provincia').val('CENTRAL');
+                $('#id_plano_pai').val('');
+            }
+        }
+
+        $('#id_nivel').change(handleNivelChange);
+        handleNivelChange();
+
+        // Atualizar em tempo real
+        $('#id_nome, #id_descricao, #id_orcamento_planeado').on('input', function () {
+            updatePreview();
+            updateProgress();
+        });
+
+        $('#id_tipo, #id_data_inicio_planeada, #id_data_fim_planeada').change(function () {
+            updatePreview();
+            updateProgress();
+        });
+
+        // Inicializar
+        updatePreview();
+        updateProgress();
+
+        // Se estiver editando e for formação, mostrar campos
+        var isFormacaoEdit = "{{ form.instance.tipo }}" === "FORMACAO" && "{{ form.instance.pk }}" !== "None" && "{{ form.instance.pk }}" !== "";
+        if (isFormacaoEdit) {
+            $('#formacaoFields').show();
+            $('#id_tipo_formacao').val('{{ form.instance.formacao.tipo_formacao|escapejs }}');
+            $('#id_local_realizacao').val('{{ form.instance.formacao.local_realizacao|escapejs }}');
+            $('#id_carga_horaria').val('{{ form.instance.formacao.carga_horaria }}');
+            $('#id_vagas_planeadas').val('{{ form.instance.formacao.vagas_planeadas }}');
+            $('#id_balancear_genero').prop('checked', '{{ form.instance.formacao.balancear_genero|yesno:"true,false" }}' === 'true');
+            $('#id_balancear_idade').prop('checked', '{{ form.instance.formacao.balancear_idade|yesno:"true,false" }}' === 'true');
+        }
+    });
+
+    // Confirmar exclusão
+    function confirmDelete() {
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+
+    // Validação do formulário
+    document.getElementById('atividadeForm').addEventListener('submit', function (e) {
+        const nome = document.getElementById('id_nome').value.trim();
+        const tipo = document.getElementById('id_tipo').value;
+        const descricao = document.getElementById('id_descricao').value.trim();
+        const dataInicio = document.getElementById('id_data_inicio_planeada').value;
+        const dataFim = document.getElementById('id_data_fim_planeada').value;
+        const orcamento = document.getElementById('id_orcamento_planeado').value;
+
+        let isValid = true;
+
+        if (!nome) {
+            showError('id_nome', 'O título do plano é obrigatório');
+            isValid = false;
+        }
+
+        if (!tipo) {
+            showError('id_tipo', 'Selecione o tipo de plano');
+            isValid = false;
+        }
+
+        if (!descricao) {
+            showError('id_descricao', 'A descrição é obrigatória');
+            isValid = false;
+        }
+
+        if (!dataInicio || !dataFim) {
+            showError('id_data_inicio_planeada', 'Ambas as datas são obrigatórias');
+            isValid = false;
+        } else if (new Date(dataInicio) > new Date(dataFim)) {
+            showError('id_data_inicio_planeada', 'A data de início deve ser anterior à data de fim');
+            isValid = false;
+        }
+
+        if (!orcamento || parseFloat(orcamento) <= 0) {
+            showError('id_orcamento_planeado', 'Informe um orçamento válido');
+            isValid = false;
+        }
+
+        // Validação específica para formações
+        if (tipo === 'FORMACAO') {
+            const tipoFormacao = document.getElementById('id_tipo_formacao').value;
+            const local = document.getElementById('id_local_realizacao').value.trim();
+            const cargaHoraria = document.getElementById('id_carga_horaria').value;
+            const vagas = document.getElementById('id_vagas_planeadas').value;
+
+            if (!tipoFormacao) {
+                showError('id_tipo_formacao', 'Selecione o tipo de formação');
+                isValid = false;
+            }
+
+            if (!local) {
+                showError('id_local_realizacao', 'Informe o local de realização');
+                isValid = false;
+            }
+
+            if (!cargaHoraria || parseInt(cargaHoraria) <= 0) {
+                showError('id_carga_horaria', 'Informe uma carga horária válida');
+                isValid = false;
+            }
+
+            if (!vagas || parseInt(vagas) <= 0) {
+                showError('id_vagas_planeadas', 'Informe o número de vagas');
+                isValid = false;
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            showToast('Por favor, corrija os erros no formulário', 'danger');
+        }
+    });
+
+    function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        field.classList.add('is-invalid');
+
+        let feedback = field.nextElementSibling;
+        if (!feedback || !feedback.classList.contains('invalid-feedback')) {
+            feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            field.parentNode.appendChild(feedback);
+        }
+        feedback.textContent = message;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+        const container = document.getElementById('toastContainer') || createToastContainer();
+        container.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(container);
+        return container;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base_apps.html' %}
+{% block title %}Aprovações - UGEA{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-check-double{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+{% block page_title %}Pedidos Pendentes de Aprovação{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <h3><i class="fas fa-hand-holding-usd"></i> Pedidos de Consumo (Contratos)</h3>
+        <span class="badge" style="background:var(--primary); color:white;">{{ pedidos.count }} Pendentes</span>
+    </div>
+
+    <!-- TABELA DE PENDENTES -->
+    {% if pedidos %}
+    <table style="width:100%; border-collapse: collapse; margin-bottom:30px;">
+        <thead>
+            <tr style="border-bottom:2px solid #ddd; text-align:left; background:#fff3cd; color:#856404;">
+                <th style="padding:15px;">Data/ID</th>
+                <th style="padding:15px;">Solicitante</th>
+                <th style="padding:15px;">Descrição</th>
+                <th style="padding:15px;">Qtd / Valor</th>
+                <th style="padding:15px;">Contrato Afetado</th>
+                <th style="padding:15px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pedidos %}
+            <tr style="border-bottom:1px solid #eee; background:white;">
+                <td style="padding:10px;">
+                    <b>#{{ p.id }}</b><br>
+                    <small>{{ p.data_pedido|date:"d/m/Y H:i" }}</small>
+                </td>
+                <td style="padding:10px;">{{ p.solicitante }}</td>
+                <td style="padding:10px;">{{ p.descricao }}</td>
+                <td style="padding:10px;">
+                    <b>{{ p.quantidade }}</b> ({{ p.valor_estimado }} MT)
+                </td>
+                <td style="padding:10px;">
+                    <a href="#">{{ p.contrato.numero_contrato }}</a><br>
+                    <small>Saldo Disp: {{ p.contrato.saldo_disponivel }} MT</small>
+                </td>
+                <td style="padding:10px;">
+                    <a href="{% url 'ugea:avaliar_pedido' p.id %}" class="action-btn small" style="background:#007bff; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;" title="Analisar Detalhes">
+                        <i class="fas fa-search"></i> Analisar
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:50px; color:#999; background:#f9f9f9; border-radius:8px;">
+        <i class="fas fa-check-circle" style="font-size:40px; margin-bottom:20px; color:#28a745;"></i><br>
+        Tudo limpo! Não há pedidos pendentes.
+    </div>
+    {% endif %}
+
+    <!-- HISTORICO RECENTE -->
+    <h4 style="margin-top:40px; border-bottom:1px solid #ddd; padding-bottom:10px; color:#666;">Histórico Recente</h4>
+    <table style="width:100%; border-collapse: collapse; color:#888;">
+        <thead>
+            <tr style="text-align:left; font-size:12px;">
+                <th style="padding:10px;">ID</th>
+                <th style="padding:10px;">Solicitante</th>
+                <th style="padding:10px;">Descrição</th>
+                <th style="padding:10px;">Valor</th>
+                <th style="padding:10px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in historico %}
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:8px;">#{{ h.id }}</td>
+                <td style="padding:8px;">{{ h.solicitante }}</td>
+                <td style="padding:8px;">{{ h.descricao }}</td>
+                <td style="padding:8px;">{{ h.valor_estimado }} MT</td>
+                <td style="padding:8px;">
+                    {% if h.status == 'aprovado' %}
+                        <span style="color:#28a745;"><i class="fas fa-check"></i> Aprovado</span>
+                    {% else %}
+                        <span style="color:#dc3545;"><i class="fas fa-times"></i> Rejeitado</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

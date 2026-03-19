@@ -1,0 +1,35 @@
+{% extends 'base_apps.html' %}
+{% block title %}{{ titulo }} - UGEA{% endblock %}
+{% block module_name %}UGEA{% endblock %}
+{% block icon %}fas fa-edit{% endblock %}
+{% block dashboard_url %}{% url 'ugea:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h3 style="border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;">
+        {{ titulo }}
+    </h3>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="{{ field.id_for_label }}" style="display:block; font-weight:bold; margin-bottom:5px; color:#555;">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+                <small style="color:#888;">{{ field.help_text }}</small>
+            {% endif %}
+            {% if field.errors %}
+                <div style="color:red; font-size:12px;">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button type="button" onclick="window.history.back()" class="action-btn secondary" style="background:#ccc; color:#333; margin-right:10px;">Cancelar</button>
+            <button type="submit" class="action-btn"><i class="fas fa-save"></i> Salvar Registo</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
