@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-sua-chave-secreta-aqui-mude-em-producao'
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.localhost', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.localhost', '0.0.0.0', '.onrender.com', '*']
 
 INSTALLED_APPS = [
     'daphne',  # REQUIRED for ASGI/Channels (must be at top)
@@ -139,7 +139,7 @@ APP_LOGIN_URLS = {
     'recursoshumanos': '/recursoshumanos/login/',
 }
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000', 'https://*.onrender.com', 'https://portalstae.onrender.com']
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Lax'
