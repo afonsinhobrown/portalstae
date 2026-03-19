@@ -572,19 +572,39 @@
         ]
     };
 
-    // Incluir SheetJS dinamicamente se não estiver presente
-    if(!window.XLSX) {
-        let sc = document.createElement('script');
-        sc.src = "https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js";
-        document.head.appendChild(sc);
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+        // Incluir SheetJS dinamicamente se não estiver presente
+        if(!window.XLSX) {
+            let sc = document.createElement('script');
+            sc.src = "https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js";
+            document.head.appendChild(sc);
+        }
 
-    document.getElementById('download-xlsx').addEventListener('click', function() {
-        if(table) {
-            table.download("xlsx", `STAE_${currentTab}_${currentResource}_${new Date().toISOString().slice(0,10)}.xlsx`, {
-                sheetName: "Relatório STAE"
+        const downloadBtn = document.getElementById('download-xlsx');
+        if(downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                if(table) {
+                    table.download("xlsx", `STAE_${currentTab}_${currentResource}_${new Date().toISOString().slice(0,10)}.xlsx`, {
+                        sheetName: "Relatório STAE"
+                    });
+                }
             });
         }
+
+        const subSelect = document.getElementById('sub-resource-select');
+        if(subSelect) {
+            subSelect.addEventListener('change', function(e) {
+                currentResource = e.target.value;
+                const opt = subMenuOptions[currentTab].find(o => o.id === currentResource);
+                const kpi = document.getElementById('kpi-summary');
+                if(kpi) kpi.innerText = opt.kpi;
+                initGrid(currentTab, currentResource);
+            });
+        }
+
+        // Inicialização Global
+        updateSubMenu('rh');
+        initGrid('rh', 'default');
     });
 
     function updateSubMenu(tabName) {
