@@ -43,7 +43,7 @@ draw.text((WIDTH//2, 60), "Secretariado Técnico de Administração Eleitoral", 
 
 # FOTO (23mm x 30mm = 272px x 354px @ 300dpi)
 y_current = header_height + 25
-silhouette_path = r'c:\Users\Acer\Documents\tecnologias\portalstae\static\img\silhouette_placeholder.png'
+silhouette_path = os.path.join('static', 'img', 'silhouette_placeholder.png')
 if os.path.exists(silhouette_path):
     foto = Image.open(silhouette_path).resize((272, 354))
     img.paste(foto, (25, y_current))

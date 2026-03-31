@@ -1,11 +1,12 @@
 import os
+import dj_database_url
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-sua-chave-secreta-aqui-mude-em-producao'
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.localhost', '0.0.0.0', '.onrender.com', '*']
 
 INSTALLED_APPS = [
@@ -44,7 +45,7 @@ INSTALLED_APPS = [
 # ========== MIDDLEWARE SEM CSRF ==========
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+#    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     # NÃO TEM CSRF MIDDLEWARE AQUI - REMOVIDO
@@ -83,18 +84,10 @@ CHANNEL_LAYERS = {
 }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'portalstae',
-        'USER': 'neondb_owner',
-        'PASSWORD': 'npg_xP2dwTc1kLqn',
-        'HOST': 'ep-long-king-agnipa9p-pooler.c-2.eu-central-1.aws.neon.tech',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'require',
-            'client_encoding': 'UTF8',
-        }
-    }
+    'default': dj_database_url.config(
+        default="postgresql://neondb_owner:npg_xP2dwTc1kLqn@ep-long-king-agnipa9p-pooler.c-2.eu-central-1.aws.neon.tech/portalstae?sslmode=require&channel_binding=require",
+        conn_max_age=600,
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -120,7 +113,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

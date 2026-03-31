@@ -1,7 +1,8 @@
 # fix_models.py
 import sys
 
-path = r'c:\Users\Acer\Documents\tecnologias\portalstae\dfec\models\completo.py'
+import os
+path = os.path.join('dfec', 'models', 'completo.py')
 with open(path, 'r', encoding='utf-8') as f:
     content = f.read()
 

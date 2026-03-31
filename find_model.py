@@ -1,7 +1,7 @@
 import pypdf
 import os
 
-pdf_path = r"c:\Users\Acer\Documents\tecnologias\portalstae\meus docs\Manual-de-procedimentos-do-EGFAE.pdf"
+pdf_path = os.path.join("meus docs", "Manual-de-procedimentos-do-EGFAE.pdf")
 output_file = "extracted_model.txt"
 
 if not os.path.exists(pdf_path):

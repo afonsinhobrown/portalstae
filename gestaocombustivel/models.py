@@ -10780,7 +10780,7 @@ class ReservaViatura(models.Model):
 
 
 
-    data_solicitacao = models.DateTimeField(auto_now_add=True)
+    data_solicitacao = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
 
@@ -10798,7 +10798,7 @@ class ReservaViatura(models.Model):
 
 
 
-    data_inicio = models.DateTimeField()
+    data_inicio = models.DateTimeField(null=True, blank=True)
 
 
 
@@ -10816,7 +10816,7 @@ class ReservaViatura(models.Model):
 
 
 
-    data_fim = models.DateTimeField()
+    data_fim = models.DateTimeField(null=True, blank=True)
 
 
 
