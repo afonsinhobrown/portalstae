@@ -4,5 +4,8 @@ register = template.Library()
 
 @register.filter
 def dict_key(d, key):
-    """Retorna o valor de uma chave num dicionário, ou None se não existir"""
-    return d.get(key)
+    """Retorna o valor de uma chave num dicionário, ou None se não existir ou se d não for dicionário"""
+    try:
+        return d.get(key)
+    except (AttributeError, TypeError):
+        return None

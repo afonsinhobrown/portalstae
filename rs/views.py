@@ -378,8 +378,8 @@ def gerar_pdf_plano(request, plano_id):
     
     template = get_template('rs/relatorio_pdf_plano.html')
     html = template.render(context)
-    print("DEBUG HTML START")
-    print(html[:1000]) # Mostrar cabeçalho nos logs
+    print("DEBUG HEADER BODY")
+    print(html[html.find('<div id="header_content">'):html.find('<div id="header_content">')+1000])
     print("DEBUG HTML END")
     result = BytesIO()
     
@@ -465,28 +465,61 @@ def distribuir_material(request, material_id):
     material = get_object_or_404(MaterialEleitoral, id=material_id)
     unidades = AlocacaoLogistica.DIRECOES_STAE
     
+    # Dicionário de estatísticas conforme mapa fornecido
+    STATS_PROVINCIAS = {
+        'MAPUTO_C': {'distritos': 7, 'mesas': 1224},
+        'MAPUTO_P': {'distritos': 5, 'mesas': 2225},
+        'GAZA': {'distritos': 6, 'mesas': 449},
+        'INHAMBANE': {'distritos': 6, 'mesas': 474},
+        'SOFALA': {'distritos': 6, 'mesas': 1074},
+        'MANICA': {'distritos': 6, 'mesas': 799},
+        'TETE': {'distritos': 5, 'mesas': 667},
+        'ZAMBEZIA': {'distritos': 7, 'mesas': 883},
+        'NAMPULA': {'distritos': 8, 'mesas': 1269},
+        'CABO_D': {'distritos': 7, 'mesas': 863},
+        'NIASSA': {'distritos': 6, 'mesas': 304},
+        'CENTRAL': {'distritos': 0, 'mesas': 0}
+    }
+    
     if request.method == 'POST':
         for code, name in unidades:
             qtd_nec = request.POST.get(f'qtd_nec_{code}', 0)
             qtd_ext = request.POST.get(f'qtd_ext_{code}', 0)
+            n_dist = request.POST.get(f'n_dist_{code}', 0)
+            n_mesas = request.POST.get(f'n_mesas_{code}', 0)
             
-            if qtd_nec or qtd_ext: # Só cria se houver valores
+            if qtd_nec or qtd_ext or n_dist or n_mesas:
                 AlocacaoLogistica.objects.update_or_create(
                     material_nacional=material,
                     unidade=code,
                     defaults={
                         'quantidade_necessaria': int(qtd_nec or 0),
-                        'quantidade_existente': int(qtd_ext or 0)
+                        'quantidade_existente': int(qtd_ext or 0),
+                        'num_distritos': int(n_dist or 0),
+                        'num_mesas': int(n_mesas or 0)
                     }
                 )
-        messages.success(request, f"Distribuição de '{material.item}' atualizada com sucesso!")
+        messages.success(request, f"Distribuição e Geografia de '{material.item}' atualizadas!")
         return redirect('rs:detalhes_plano', plano_id=material.plano.id)
 
-    alocacoes_dict = {a.unidade: a for a in material.alocacoes.all()}
+    alocacoes_qs = material.alocacoes.all()
+    alocacoes_dict = {a.unidade: a for a in alocacoes_qs}
+    
+    # Garantir que novos registos tenham o default geográfico
+    for code, name in unidades:
+        if code not in alocacoes_dict:
+            stats_p = STATS_PROVINCIAS.get(code, {'distritos': 0, 'mesas': 0})
+            alocacoes_dict[code] = AlocacaoLogistica(
+                unidade=code, 
+                num_distritos=stats_p['distritos'], 
+                num_mesas=stats_p['mesas']
+            )
+
     return render(request, 'rs/distribuir_material.html', {
         'material': material,
         'unidades': unidades,
-        'alocacoes': alocacoes_dict
+        'alocacoes': alocacoes_dict,
+        'stats': STATS_PROVINCIAS
     })
 
 from .forms import PlanoLogisticoForm, TipoDocumentoForm

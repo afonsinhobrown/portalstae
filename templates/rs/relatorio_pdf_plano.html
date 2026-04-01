@@ -9,14 +9,14 @@
             margin: 1cm;
             @frame header_frame {
                 -pdf-frame-content: header_content;
-                left: 1cm; right: 1cm; top: 1cm; height: 3cm;
+                left: 1cm; right: 1cm; top: 1cm; height: 5cm;
             }
             @frame content_frame {
-                left: 1cm; right: 1cm; top: 4cm; bottom: 2cm;
+                left: 1cm; right: 1cm; top: 6cm; bottom: 2.5cm;
             }
             @frame footer_frame {
                 -pdf-frame-content: footer_content;
-                left: 1cm; right: 1cm; bottom: 0.5cm; height: 1.5cm;
+                left: 1cm; right: 1cm; bottom: 0.5cm; height: 1.8cm;
             }
         }
         body {
@@ -84,17 +84,17 @@
 <body>
     <!-- Cabeçalho Fixo -->
     <div id="header_content">
-        <div class="header-title">
-            <img src="{{ logo_path }}" style="height: 50px; margin-bottom: 5px;">
-            <h1>SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</h1>
-            <h2 style="font-size: 11pt;">DIRECÇÃO NACIONAL DE ORGANIZAÇÃO E OPERAÇÕES ELEITORAIS</h2>
-            <h2 style="font-size: 10pt; font-weight: normal; margin-top: 5px;">{{ plano.nome|upper }}</h2>
-            <h1 style="font-size: 12pt; border-top: 1pt solid #000; padding-top: 5px; margin-top: 5px;">
+        <div style="text-align: center; border-bottom: 1pt solid #000; padding-bottom: 3px;">
+            <img src="{{ logo_path }}" style="height: 45px; margin-bottom: 2px;">
+            <div style="font-size: 13pt; font-weight: bold; text-transform: uppercase;">SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</div>
+            <div style="font-size: 11pt; font-weight: bold; margin-top: 2px;">DIRECÇÃO NACIONAL DE ORGANIZAÇÃO E OPERAÇÕES ELEITORAIS</div>
+            <div style="font-size: 10pt; font-weight: normal; margin-top: 2px;">{{ plano.nome|upper }}</div>
+            <div style="font-size: 11pt; font-weight: bold; border-top: 0.5pt solid #000; margin-top: 3px; padding-top: 3px;">
                 PREVISÃO DE MATERIAL ELEITORAL - {{ plano.eleicao.nome|upper }}
-            </h1>
+            </div>
         </div>
-        <div style="margin-top: 5px; font-size: 8pt; text-align: right;">
-            <strong>Emissão:</strong> {{ data_emissao|date:"d/m/Y H:i" }}
+        <div style="margin-top: 3px; font-size: 7pt; text-align: right;">
+            <strong>Emissão:</strong> {{ data_emissao|date:"d/m/Y H:i" }} | <strong>POR:</strong> {{ request.user.username|upper }}
         </div>
     </div>
 
@@ -147,12 +147,12 @@
                 <td style="border: none; text-align: left; color: #000; font-weight: bold; font-style: italic; vertical-align: bottom;">
                     PORTAL STAE CONCEBIDO PELO DDGEI- STAE CENTRAL
                 </td>
-                <td style="border: none; text-align: right; width: 150px; vertical-align: middle;">
+                <td style="border: none; text-align: right; width: 170px; vertical-align: middle;">
                     {% if qr_code %}
-                    <img src="data:image/png;base64,{{ qr_code }}" style="width: 60px; height: 60px;">
+                    <img src="data:image/png;base64,{{ qr_code }}" style="width: 65px; height: 65px;">
                     {% endif %}
                     <br>
-                    <span style="font-size: 8pt; font-weight: bold;">Página <pdf:pagenumber> de <pdf:pagecount></span>
+                    <span style="font-size: 9pt; font-weight: bold;">Página <pdf:pagenumber> de <pdf:pagecount></span>
                 </td>
             </tr>
         </table>

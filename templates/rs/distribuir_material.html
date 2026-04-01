@@ -34,8 +34,24 @@
                     <thead class="bg-dark text-white">
                         <tr>
                             <th class="ps-4 py-3" style="width: 300px;">Direção Provincial / Unidade</th>
-                            <th class="py-3 text-center">Stock Existente (Local)</th>
-                            <th class="py-3 text-center">Necessidade Local (Total)</th>
+                            <th class="py-3 text-center">
+                                Stock Existente (Local)
+                                <span onclick="aplicarATodos('qtd_ext_')" class="text-warning ms-2" style="cursor: pointer;" title="Aplicar o primeiro valor a todas as províncias">
+                                    <i class="fas fa-bolt"></i>
+                                </span>
+                            </th>
+                            <th class="py-3 text-center">
+                                Necessidade Local (Total)
+                                <span onclick="aplicarATodos('qtd_nec_')" class="text-warning ms-1" style="cursor: pointer;" title="Aplicar o primeiro a todos">
+                                    <i class="fas fa-bolt"></i>
+                                </span>
+                                <span onclick="calcularPorDistrito()" class="text-info ms-1" style="cursor: pointer;" title="Multiplicar por nº de Distritos">
+                                    <i class="fas fa-map"></i>
+                                </span>
+                                <span onclick="calcularPorMesa()" class="text-success ms-1" style="cursor: pointer;" title="Multiplicar por nº de Mesas">
+                                    <i class="fas fa-check-to-slot"></i>
+                                </span>
+                            </th>
                             <th class="py-3 text-center pe-4">Reforço a Enviar</th>
                         </tr>
                     </thead>
@@ -45,7 +61,19 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="fw-bold">{{ name }}</div>
-                                <small class="text-muted text-uppercase smaller">{{ code }}</small>
+                                <div class="d-flex gap-2 mt-1">
+                                    <small class="text-muted text-uppercase smaller me-2">{{ code }}</small>
+                                    <div class="input-group input-group-sm" style="width: 130px;">
+                                        <span class="input-group-text bg-light border-0 smaller py-0"><i class="fas fa-map me-1"></i></span>
+                                        <input type="number" name="n_dist_{{ code }}" class="form-control form-control-sm border-0 bg-light smaller fw-bold py-0" 
+                                               value="{{ aloc.num_distritos|default:0 }}" title="Modificar número de Distritos">
+                                    </div>
+                                    <div class="input-group input-group-sm" style="width: 140px;">
+                                        <span class="input-group-text bg-light border-0 smaller py-0"><i class="fas fa-check-to-slot me-1"></i></span>
+                                        <input type="number" name="n_mesas_{{ code }}" class="form-control form-control-sm border-0 bg-light smaller text-primary fw-bold py-0" 
+                                               value="{{ aloc.num_mesas|default:0 }}" title="Modificar número de Mesas">
+                                    </div>
+                                </div>
                             </td>
                             <td class="text-center px-4">
                                 <input type="number" name="qtd_ext_{{ code }}" class="form-control form-control-sm text-center border-dashed rounded-3" 
@@ -68,7 +96,7 @@
                 <div class="d-flex gap-3 justify-content-end">
                     <a href="{% url 'rs:detalhes_plano' material.plano.id %}" class="btn btn-light rounded-pill px-4">Cancelar</a>
                     <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm">
-                        <i class="fas fa-save me-2"></i>Gravar Distribuição
+                        <i class="fas fa-save me-2"></i>Gravar Distribuição e Geografia
                     </button>
                 </div>
             </div>
@@ -80,5 +108,48 @@
     .border-dashed { border-style: dashed !important; border-width: 2px !important; }
     .table input:focus { border-style: solid !important; border-color: #0d6efd !important; background-color: #fff !important; }
     .smaller { font-size: 0.7rem; letter-spacing: 1px; }
+    .input-group-text { font-size: 0.65rem; }
 </style>
+
+<script>
+    function aplicarATodos(prefixo) {
+        const inputs = document.querySelectorAll(`input[name^="${prefixo}"]`);
+        if (inputs.length > 0) {
+            const primeiroValor = inputs[0].value;
+            inputs.forEach(input => {
+                input.value = primeiroValor;
+            });
+        }
+    }
+
+    function calcularPorDistrito() {
+        const inputs = document.querySelectorAll(`input[name^="qtd_nec_"]`);
+        if (inputs.length > 0) {
+            const valorUnitario = inputs[0].value;
+            inputs.forEach(input => {
+                const code = input.name.replace('qtd_nec_', '');
+                const nDistInput = document.querySelector(`input[name="n_dist_${code}"]`);
+                if (nDistInput) {
+                    const nDist = parseInt(nDistInput.value) || 0;
+                    input.value = valorUnitario * nDist;
+                }
+            });
+        }
+    }
+
+    function calcularPorMesa() {
+        const inputs = document.querySelectorAll(`input[name^="qtd_nec_"]`);
+        if (inputs.length > 0) {
+            const valorUnitario = inputs[0].value;
+            inputs.forEach(input => {
+                const code = input.name.replace('qtd_nec_', '');
+                const nMesasInput = document.querySelector(`input[name="n_mesas_${code}"]`);
+                if (nMesasInput) {
+                    const nMesas = parseInt(nMesasInput.value) || 0;
+                    input.value = valorUnitario * nMesas;
+                }
+            });
+        }
+    }
+</script>
 {% endblock %}

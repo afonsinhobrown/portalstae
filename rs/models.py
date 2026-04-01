@@ -78,7 +78,7 @@ class MaterialEleitoral(models.Model):
         ('VOTACAO', 'Material de Votação'),
     ]
     plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='materiais', null=True, blank=True)
-    eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.CASCADE, related_name='materiais_logistica', verbose_name="Eleição")
+    eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.CASCADE, related_name='materiais_logistica', verbose_name="Eleição", null=True, blank=True)
     
     tipo_operacao = models.CharField(max_length=20, choices=TIPO_OPERACAO, default='VOTACAO', verbose_name="Tipo de Operação")
     item = models.CharField(max_length=100, verbose_name="Item / Material Nacional")
@@ -149,6 +149,10 @@ class AlocacaoLogistica(models.Model):
     unidade = models.CharField(max_length=50, choices=DIRECOES_STAE)
     quantidade_necessaria = models.IntegerField(default=0)
     quantidade_existente = models.IntegerField(default=0)
+    
+    # Metadados Geográficos Editáveis
+    num_distritos = models.IntegerField(default=0, verbose_name="Nº de Distritos")
+    num_mesas = models.IntegerField(default=0, verbose_name="Nº de Mesas")
 
     class Meta:
         verbose_name = "Alocação Provincial"
