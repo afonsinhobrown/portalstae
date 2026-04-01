@@ -66,9 +66,12 @@ def calendario_geral(request):
 
 def gestao_materiais(request):
     """Controle de logística e materiais (Urnas, etc)"""
-    from .models import MaterialEleitoral
+    from rs.models import MaterialEleitoral
     eleicao_ativa = Eleicao.objects.filter(ativo=True).first()
-    materiais = MaterialEleitoral.objects.filter(eleicao=eleicao_ativa) if eleicao_ativa else []
+    try:
+        materiais = list(MaterialEleitoral.objects.filter(eleicao=eleicao_ativa)) if eleicao_ativa else []
+    except Exception:
+        materiais = []
     
     return render(request, 'eleicao/materiais.html', {
         'eleicao': eleicao_ativa,

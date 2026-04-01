@@ -1,0 +1,91 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Gestão de Ciclos Eleitorais{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-vote-yea{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item active"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <h6 class="text-muted text-uppercase smaller fw-bold mb-1">Contexto Geral</h6>
+        <h2 class="fw-bold mb-0">Ciclos Eleitorais <span class="badge bg-soft-primary text-primary h6 mb-0">{{ eleicoes.count }}</span></h2>
+    </div>
+    <div class="col-auto">
+        <a href="{% url 'rs:criar_eleicao' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i>Novo Ciclo Eleitoral
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row g-4">
+    {% for e in eleicoes %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 hover-elevate">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="icon-shape bg-soft-primary text-primary rounded-3">
+                        <i class="fas fa-calendar-check fa-lg"></i>
+                    </div>
+                    {% if e.ativo %}
+                    <span class="badge bg-success-subtle text-success border border-success px-3 rounded-pill text-uppercase smaller fw-bold">Ativo</span>
+                    {% else %}
+                    <span class="badge bg-light text-muted border px-3 rounded-pill text-uppercase smaller fw-bold">Inativo</span>
+                    {% endif %}
+                </div>
+                <h5 class="fw-bold text-dark mb-1">{{ e.nome }}</h5>
+                <p class="text-muted smaller mb-4"><i class="far fa-clock me-1"></i> Data da Votação: {{ e.data_votacao|date:"d M Y" }}</p>
+                
+                <div class="d-flex gap-2">
+                    <div class="flex-grow-1 bg-light p-2 rounded-3 text-center">
+                        <div class="smaller text-muted text-uppercase fw-bold">Ano</div>
+                        <div class="fw-bold text-dark">{{ e.ano }}</div>
+                    </div>
+                    <div class="flex-grow-1 bg-light p-2 rounded-3 text-center">
+                        <div class="smaller text-muted text-uppercase fw-bold">Tipo</div>
+                        <div class="fw-bold text-dark">{{ e.get_tipo_display }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-light p-3 border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Apoio Logístico Nacional</small>
+                    <a href="{% url 'rs:lista_planos' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ver Planos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-vote-yea fa-4x mb-3 text-muted opacity-25"></i>
+        <h5 class="text-muted">Desculpe, não encontramos nenhum ciclo eleitoral.</h5>
+        <a href="{% url 'rs:criar_eleicao' %}" class="btn btn-primary rounded-pill mt-3 px-4">Criar o Primeiro Ciclo</a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
+    .icon-shape { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+    .hover-elevate { transition: transform 0.2s ease; cursor: pointer; }
+    .hover-elevate:hover { transform: translateY(-5px); }
+    .smaller { font-size: 0.7rem; }
+</style>
+{% endblock %}

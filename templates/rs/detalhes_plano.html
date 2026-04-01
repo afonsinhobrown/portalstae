@@ -1,0 +1,193 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Detalhes do Plano Logístico{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-truck-ramp-box{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item active"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
+<a href="{% url 'rs:gestao_tipos' %}" class="menu-item"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header do Plano -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-md-8 p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="badge bg-primary-subtle text-primary border border-primary px-3 rounded-pill text-uppercase small fw-bold">
+                                <i class="fas fa-flag me-1"></i> {{ plano.get_tipo_operacao_display }}
+                            </div>
+                            <div class="text-muted small">
+                                <i class="far fa-calendar-alt me-1"></i> {{ plano.data_inicio }} até {{ plano.data_fim }}
+                            </div>
+                        </div>
+                        <a href="{% url 'rs:editar_plano' plano.id %}" class="btn btn-sm btn-outline-dark rounded-pill">
+                            <i class="fas fa-cog me-1"></i> Definições do Plano
+                        </a>
+                    </div>
+                    <h2 class="fw-bold text-dark mb-2">{{ plano.nome }}</h2>
+                    <p class="text-muted">{{ plano.descricao|default:"Sem descrição adicional." }}</p>
+                    
+                    <div class="d-flex gap-2 mt-4 flex-wrap">
+                        <a href="{% url 'rs:adicionar_material' plano.id %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                            <i class="fas fa-plus-circle me-2"></i>Adicionar Material
+                        </a>
+                        <a href="{% url 'rs:adicionar_atividade' plano.id %}" class="btn btn-outline-primary rounded-pill px-4">
+                            <i class="fas fa-tasks me-2"></i>Registar Atividade
+                        </a>
+                        <a href="{% url 'rs:selecao_relatorio' plano.id %}" class="btn btn-dark rounded-pill px-4">
+                            <i class="fas fa-print me-2"></i>Mapa de Distribuição PDF
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4 bg-light border-start p-4 d-flex flex-column justify-content-center">
+                    <div class="mb-4">
+                        <small class="text-uppercase text-muted fw-bold smaller d-block mb-1">Execução Orçamental</small>
+                        <h3 class="fw-bold text-primary mb-1">MZN {{ custo_total_estimado|floatformat:2 }}</h3>
+                        <small class="text-muted">De um teto de MZN {{ plano.orcamento_total|floatformat:2 }}</small>
+                        
+                        <div class="progress mt-3" style="height: 10px; border-radius: 5px;">
+                            <div class="progress-bar {% if percent_orcamento > 90 %}bg-danger{% elif percent_orcamento > 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                 role="progressbar" style="width: {{ percent_orcamento }}%"></div>
+                        </div>
+                        <div class="text-end mt-1 small fw-bold text-muted">{{ percent_orcamento|floatformat:1 }}% utilizado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Tabela de Materiais -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3 border-light d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recursos e Materiais</h5>
+                    <span class="badge bg-dark rounded-pill">{{ materiais.count }} itens</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small fw-bold text-uppercase">
+                                <tr>
+                                    <th class="ps-4">Material (Nacional)</th>
+                                    <th>Meta Nacional</th>
+                                    <th>Distribuído</th>
+                                    <th>Saldo a Alocar</th>
+                                    <th class="text-end pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in materiais %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">{{ m.item }}</div>
+                                        <div class="smaller text-muted">{{ m.tipo_dinamico.nome|default:"Equipamento" }}</div>
+                                    </td>
+                                    <td class="fw-bold">{{ m.quantidade_planeada }}</td>
+                                    <td>
+                                        <span class="text-muted">{{ m.total_distribuido|default:0 }}</span>
+                                    </td>
+                                    <td>
+                                        {% if m.saldo_a_distribuir > 0 %}
+                                            <span class="badge bg-warning text-dark">{{ m.saldo_a_distribuir }} em falta</span>
+                                        {% else %}
+                                            <span class="badge bg-success"><i class="fas fa-check me-1"></i> Alocado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a href="{% url 'rs:distribuir_material' m.id %}" class="btn btn-sm btn-outline-primary" title="Distribuir por Direção">
+                                                <i class="fas fa-expand-arrows-alt"></i>
+                                            </a>
+                                            <a href="{% url 'rs:editar_material' m.id %}" class="btn btn-sm btn-outline-dark" title="Editar Nome/Valores">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </a>
+                                            <a href="{% url 'rs:eliminar_material' m.id %}" class="btn btn-sm btn-outline-danger" 
+                                               onclick="return confirm('Tem certeza que deseja remover este material do plano?')" title="Eliminar">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center p-5 text-muted">
+                                        <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                                        <p>Nenhum material associado a este plano.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if materiais %}
+                            <tfoot class="bg-light bg-opacity-50">
+                                <tr>
+                                    <td colspan="3" class="ps-4 fw-bold text-dark">Subtotal Materiais</td>
+                                    <td class="text-end pe-4 fw-bold text-dark">MZN {{ total_materiais|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Atividades -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white py-3 border-light d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Cronograma de Atividades</h5>
+                    <span class="badge bg-primary rounded-pill">{{ atividades.count }} oper.</span>
+                </div>
+                <div class="card-body p-3">
+                    {% for a in atividades %}
+                    <div class="bg-light rounded-3 p-3 mb-3 border-start border-4 border-primary shadow-sm hover-elevate">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0 text-dark">{{ a.nome }}</h6>
+                            <span class="badge bg-primary-subtle text-primary smaller">{{ a.get_tipo_activity_display }}</span>
+                        </div>
+                        <p class="smaller text-muted mb-2">{{ a.descricao|truncatewords:20 }}</p>
+                        <div class="row g-2 small">
+                            <div class="col-6">
+                                <i class="fas fa-user-tie me-1 text-muted"></i> Resp: {{ a.responsaveis }}
+                            </div>
+                            <div class="col-6 text-end">
+                                <i class="fas fa-coins me-1 text-muted"></i> MZN {{ a.custo_estimado|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center p-5 text-muted">
+                        <i class="fas fa-list-check fa-3x mb-3 opacity-25"></i>
+                        <p>Nenhuma atividade registada.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if atividades %}
+                <div class="card-footer bg-light py-3 text-end px-4">
+                    <small class="text-muted pe-3">Subtotal Atividades:</small>
+                    <span class="fw-bold">MZN {{ total_atividades|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .smaller { font-size: 0.75rem; }
+    .hover-elevate { transition: transform 0.2s ease; cursor: pointer; }
+    .hover-elevate:hover { transform: translateY(-3px); }
+</style>
+{% endblock %}

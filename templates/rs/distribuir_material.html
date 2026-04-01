@@ -1,0 +1,84 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+{% load rs_extras %}
+
+{% block title %}Distribuição Provincial: {{ material.item }}{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-truck-ramp-box{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header de Contexto -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Distribuição de Materiais por Direção</h4>
+                    <p class="text-muted mb-0">Material: <strong class="text-primary">{{ material.item }}</strong> | Meta Nacional: <strong>{{ material.quantidade_planeada }} unidades</strong></p>
+                </div>
+                <div class="text-end">
+                    <span class="badge {% if material.saldo_a_distribuir > 0 %}bg-warning text-dark{% else %}bg-success{% endif %} p-2 px-3 rounded-pill">
+                        Saldo a distribuir: {{ material.saldo_a_distribuir }} unidades
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th class="ps-4 py-3" style="width: 300px;">Direção Provincial / Unidade</th>
+                            <th class="py-3 text-center">Stock Existente (Local)</th>
+                            <th class="py-3 text-center">Necessidade Local (Total)</th>
+                            <th class="py-3 text-center pe-4">Reforço a Enviar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for code, name in unidades %}
+                        {% with aloc=alocacoes|dict_key:code %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">{{ name }}</div>
+                                <small class="text-muted text-uppercase smaller">{{ code }}</small>
+                            </td>
+                            <td class="text-center px-4">
+                                <input type="number" name="qtd_ext_{{ code }}" class="form-control form-control-sm text-center border-dashed rounded-3" 
+                                       value="{{ aloc.quantidade_existente|default:0 }}" placeholder="0">
+                            </td>
+                            <td class="text-center px-4">
+                                <input type="number" name="qtd_nec_{{ code }}" class="form-control form-control-sm text-center fw-bold border-dashed rounded-3" 
+                                       value="{{ aloc.quantidade_necessaria|default:0 }}" placeholder="0">
+                            </td>
+                            <td class="text-center pe-4">
+                                <span class="badge bg-light text-dark border p-2 w-75">{{ aloc.reforco|default:0 }}</span>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white p-4 border-top">
+                <div class="d-flex gap-3 justify-content-end">
+                    <a href="{% url 'rs:detalhes_plano' material.plano.id %}" class="btn btn-light rounded-pill px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm">
+                        <i class="fas fa-save me-2"></i>Gravar Distribuição
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+    .table input:focus { border-style: solid !important; border-color: #0d6efd !important; background-color: #fff !important; }
+    .smaller { font-size: 0.7rem; letter-spacing: 1px; }
+</style>
+{% endblock %}

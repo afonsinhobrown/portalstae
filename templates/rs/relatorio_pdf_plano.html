@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa DNOOE - STAE</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 1cm; right: 1cm; top: 1cm; height: 3cm;
+            }
+            @frame content_frame {
+                left: 1cm; right: 1cm; top: 4cm; bottom: 2cm;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 1cm; right: 1cm; bottom: 0.5cm; height: 1.5cm;
+            }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8pt;
+            color: #000;
+        }
+        .header-title {
+            text-align: center;
+            border-bottom: 1.5pt solid #000;
+            padding-bottom: 5px;
+        }
+        .header-title h1 {
+            font-size: 13pt;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .header-title h2 {
+            font-size: 10pt;
+            margin: 3px 0;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 0.5pt solid #000;
+            padding: 3px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 7pt;
+        }
+        .provincia-cell {
+            text-align: left;
+            font-weight: bold;
+            width: 150px;
+        }
+        .totals-row {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .signature-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .signature-box {
+            display: inline-block;
+            width: 350px;
+            text-align: center;
+            border-top: 1pt solid #000;
+            padding-top: 5px;
+            margin-top: 40px;
+        }
+        #footer_content {
+            font-size: 7pt;
+            border-top: 0.5pt solid #ccc;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho Fixo -->
+    <div id="header_content">
+        <div class="header-title">
+            <img src="{{ logo_path }}" style="height: 50px; margin-bottom: 5px;">
+            <h1>SECRETARIADO TÉCNICO DE ADMINISTRAÇÃO ELEITORAL</h1>
+            <h2 style="font-size: 11pt;">DIRECÇÃO NACIONAL DE ORGANIZAÇÃO E OPERAÇÕES ELEITORAIS</h2>
+            <h2 style="font-size: 10pt; font-weight: normal; margin-top: 5px;">{{ plano.nome|upper }}</h2>
+            <h1 style="font-size: 12pt; border-top: 1pt solid #000; padding-top: 5px; margin-top: 5px;">
+                PREVISÃO DE MATERIAL ELEITORAL - {{ plano.eleicao.nome|upper }}
+            </h1>
+        </div>
+        <div style="margin-top: 5px; font-size: 8pt; text-align: right;">
+            <strong>Emissão:</strong> {{ data_emissao|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+
+    <!-- Conteúdo Variável -->
+    <div id="main_content">
+        <table>
+            <thead>
+                <tr>
+                    <th class="provincia-cell">UNIDADE / PROVÍNCIA</th>
+                    {% for mat in materiais %}
+                    <th>{{ mat.item|upper }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in mapa %}
+                <tr>
+                    <td class="provincia-cell">{{ linha.provincia }}</td>
+                    {% for qtd in linha.quantidades %}
+                    <td>{{ qtd }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="totals-row">
+                    <td class="provincia-cell">TOTAL NACIONAL (DNOOE)</td>
+                    {% for total in totais_colunas %}
+                    <td>{{ total }}</td>
+                    {% endfor %}
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                O Director Nacional de Organização e Operações Eleitorais
+                <br><br><br>
+                _________________________________________________________
+                <br>
+                (Nome e Assinatura)
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé Fixo -->
+    <div id="footer_content">
+        <table style="width: 100%; border: none;">
+            <tr style="border: none;">
+                <td style="border: none; text-align: left; color: #000; font-weight: bold; font-style: italic; vertical-align: bottom;">
+                    PORTAL STAE CONCEBIDO PELO DDGEI- STAE CENTRAL
+                </td>
+                <td style="border: none; text-align: right; width: 150px; vertical-align: middle;">
+                    {% if qr_code %}
+                    <img src="data:image/png;base64,{{ qr_code }}" style="width: 60px; height: 60px;">
+                    {% endif %}
+                    <br>
+                    <span style="font-size: 8pt; font-weight: bold;">Página <pdf:pagenumber> de <pdf:pagecount></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

@@ -12,7 +12,7 @@ class Eleicao(models.Model):
     nome = models.CharField(max_length=200)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     ano = models.IntegerField()
-    data_votacao = models.DateField()
+    data_votacao = models.DateField(null=True, blank=True)
     descricao = models.TextField(blank=True)
     ativo = models.BooleanField(default=True)
     

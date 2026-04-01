@@ -1,18 +1,29 @@
 from django.db import models
+from django.utils.timezone import now
 
 class PlanoLogistico(models.Model):
-    nome = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=20)  # recenseamento/votacao
-    descricao = models.TextField()
-    data_inicio = models.DateField()
-    data_fim = models.DateField()
-    orcamento_total = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    """Centraliza a planificação logística para um evento eleitoral"""
+    TIPO_OPERACAO = [
+        ('RECENSEAMENTO', 'Operação de Recenseamento'),
+        ('VOTACAO', 'Operação de Votação'),
+    ]
+    nome = models.CharField(max_length=200, verbose_name="Nome do Plano")
+    tipo_operacao = models.CharField(max_length=20, choices=TIPO_OPERACAO, default='VOTACAO', verbose_name="Tipo de Operação")
+    eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Eleição Associada")
     
+    data_inicio = models.DateField(default=now)
+    data_fim = models.DateField(null=True, blank=True)
+    
+    orcamento_total = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    responsavel = models.CharField(max_length=100, blank=True)
+    descricao = models.TextField(blank=True)
+    esta_ativo = models.BooleanField(default=True)
+
     class Meta:
         verbose_name_plural = "Planos Logísticos"
-    
+
     def __str__(self):
-        return self.nome
+        return f"{self.get_tipo_operacao_display()}: {self.nome}"
 
 class TipoDocumento(models.Model):
     nome = models.CharField(max_length=100) # Cartão Eleitor, Boletim Voto
@@ -32,67 +43,148 @@ class DocumentoGerado(models.Model):
     def __str__(self):
         return f"{self.tipo.nome} - {self.titulo}"
 
-class MaterialEleitoral(models.Model):
-    """Definição de necessidades e requisitos de materiais no módulo RS (Logística)"""
-    TIPO_CHOICES = [
-        ('urna_v', 'Urnas de Votação (Standard)'),
-        ('urna_a', 'Urnas de Apuramento (Grandes)'),
-        ('cabine', 'Cabines de Votação (Privacidade)'),
-        ('boletim', 'Boletins de Voto Oficiais'),
-        ('acta_v', 'Cadernos de Actas de Votação'),
-        ('acta_a', 'Cadernos de Actas de Apuramento'),
-        ('edital', 'Editais de Resultados (A3/A2)'),
-        ('mapa', 'Mapas de Apuramento Distrital'),
-        ('tinta_f', 'Tinta Indelével (Frascos 15ml)'),
-        ('tinta_a', 'Almofadas de Tinta Indelével'),
-        ('carimbo_v', 'Carimbos "VOTOU"'),
-        ('carimbo_s', 'Carimbos Oficiais STAE'),
-        ('almofada', 'Almofadas de Tinta (Azul/Preta)'),
-        ('envelope_s', 'Envelopes de Segurança (Invioláveis)'),
-        ('envelope_o', 'Envelopes Oficiais (A/B/C)'),
-        ('saco_u', 'Sacos de Plástico p/ Urnas'),
-        ('fita_l', 'Fita Adesiva Logotipada'),
-        ('selo_p', 'Selos de Urna (Plástico Numerado)'),
-        ('selo_g', 'Selos de Urna (Papel Engomado)'),
-        ('caneta', 'Canetas Esferográficas'),
-        ('lapis', 'Lápis de Carvão e Borrachas'),
-        ('regua', 'Réguas Graduadas (30cm)'),
-        ('agrafador', 'Agrafadores e Agrafos'),
-        ('lanterna', 'Lanternas LED e Pilhas (AA/AAA)'),
-        ('petromax', 'Candeeiros/Iluminação de Emergência'),
-        ('megafone', 'Megafones p/ Gestão de Filas'),
-        ('calculadora', 'Calculadoras Solares de Mesa'),
-        ('tesoura', 'Tesouras e Colas de Bastão'),
-        ('colete_m', 'Coletes Oficiais MMV (Azul)'),
-        ('colete_p', 'Coletes de Polícia (Refletor)'),
-        ('credencial', 'Credenciais e Crachás Oficiais'),
-        ('distico', 'Dísticos de Sinalética e Numeração'),
-        ('senha', 'Blocos de Senhas de Fila'),
-        ('quadro', 'Quadros e Tripés p/ Editais'),
-        ('corda', 'Corda de Balizamento (Metros)'),
-        ('maleta', 'Maletas de Transporte de Kit'),
-        ('infra', 'Mobiliário de Campanha (Mesas/Cadeiras)'),
-    ]
-    eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.CASCADE, related_name='materiais_logistica')
-    item = models.CharField(max_length=100, verbose_name="Item Necessário")
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    quantidade_planeada = models.IntegerField(default=0, help_text="Quantidade estimada/necessária para a eleição")
-    
-    # Campo para ligar ao inventário real gerido na App Equipamentos
-    equipamentos_vinculados = models.ManyToManyField('gestaoequipamentos.Equipamento', blank=True, related_name='necessidades_rs', help_text="Equipamentos reais alocados para esta necessidade")
-    
-    localizacao_destino = models.CharField(max_length=100, default="Armazém Central")
-    
+class CategoriaMaterial(models.Model):
+    """Categorias para organização de materiais (ex: Logística, Tecnologia, Papelaria)"""
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField(blank=True)
+
     class Meta:
-        verbose_name = "Requisito de Material Eleitoral"
-        verbose_name_plural = "Requisitos de Materiais Eleitorais"
+        verbose_name = "Categoria de Material"
+        verbose_name_plural = "Categorias de Materiais"
+        ordering = ['nome']
 
     def __str__(self):
-        return f"Necessidade: {self.item} - {self.eleicao}"
+        return self.nome
+
+class TipoMaterial(models.Model):
+    """Tipos específicos de materiais definidos pelo usuário (ex: Urna Média, Boletim A4)"""
+    categoria = models.ForeignKey(CategoriaMaterial, on_delete=models.CASCADE, related_name='tipos')
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField(blank=True)
+    icone = models.CharField(max_length=50, default='fas fa-cube', help_text="Classe FontAwesome (ex: fas fa-box)")
+
+    class Meta:
+        verbose_name = "Tipo de Material"
+        verbose_name_plural = "Tipos de Materiais"
+        ordering = ['categoria', 'nome']
+
+    def __str__(self):
+        return f"{self.categoria.nome} - {self.nome}"
+
+class MaterialEleitoral(models.Model):
+    """Previsão de Novo Material (Nivel Nacional)"""
+    TIPO_OPERACAO = [
+        ('RECENSEAMENTO', 'Material de Recenseamento'),
+        ('VOTACAO', 'Material de Votação'),
+    ]
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='materiais', null=True, blank=True)
+    eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.CASCADE, related_name='materiais_logistica', verbose_name="Eleição")
+    
+    tipo_operacao = models.CharField(max_length=20, choices=TIPO_OPERACAO, default='VOTACAO', verbose_name="Tipo de Operação")
+    item = models.CharField(max_length=100, verbose_name="Item / Material Nacional")
+    tipo_dinamico = models.ForeignKey(TipoMaterial, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tipo de Catálogo")
+    
+    ano_referencia = models.IntegerField(null=True, blank=True, verbose_name="Ano de Referência")
+    quantidade_adquirida_referencia = models.IntegerField(default=0, verbose_name="Qtd. Adquirida Ref.")
+    preco_unitario_referencia = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Preço Unit. Ref.")
+    
+    quantidade_existente = models.IntegerField(default=0, verbose_name="Stock Existente")
+    quantidade_planeada = models.IntegerField(default=0, verbose_name="Previsão Necessária")
+    
+    preco_unitario = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Preço Unit. Estimado")
+    descricao = models.TextField(blank=True, null=True, verbose_name="Notas")
+    
+    class Meta:
+        verbose_name = "Previsão de Material"
+        verbose_name_plural = "Previsões de Materiais"
+
+    def __str__(self):
+        return f"Previsão: {self.item}"
     
     @property
-    def quantidade_alocada(self):
-        return self.equipamentos_vinculados.count()
+    def margem_seguranca_qtd(self):
+        return int(self.quantidade_adquirida_referencia * 0.3)
+
+    @property
+    def margem_seguranca_preco(self):
+        return float(self.preco_unitario_referencia) * 0.3
+
+    @property
+    def previsao_sugerida(self):
+        return self.quantidade_adquirida_referencia + self.margem_seguranca_qtd
+
+    @property
+    def reforco_nacional(self):
+        return max(0, self.quantidade_planeada - self.quantidade_existente)
+
+    @property
+    def total_distribuido(self):
+        return sum(a.quantidade_necessaria for a in self.alocacoes.all())
+
+    @property
+    def saldo_a_distribuir(self):
+        return max(0, self.quantidade_planeada - self.total_distribuido)
+
+    @property
+    def custo_total(self):
+        return self.reforco_nacional * self.preco_unitario
+
+class AlocacaoLogistica(models.Model):
+    """Distribuição Regional/Provincial do Material Nivel 0 (Nacional)"""
+    DIRECOES_STAE = [
+        ('CENTRAL', 'STAE Central'),
+        ('MAPUTO_C', 'DPP Maputo Cidade'),
+        ('MAPUTO_P', 'DPP Maputo Província'),
+        ('GAZA', 'DPP Gaza'),
+        ('INHAMBANE', 'DPP Inhambane'),
+        ('SOFALA', 'DPP Sofala'),
+        ('MANICA', 'DPP Manica'),
+        ('TETE', 'DPP Tete'),
+        ('ZAMBEZIA', 'DPP Zambézia'),
+        ('NAMPULA', 'DPP Nampula'),
+        ('NIASSA', 'DPP Niassa'),
+        ('CABO_D', 'DPP Cabo Delgado'),
+    ]
+    material_nacional = models.ForeignKey(MaterialEleitoral, on_delete=models.CASCADE, related_name='alocacoes')
+    unidade = models.CharField(max_length=50, choices=DIRECOES_STAE)
+    quantidade_necessaria = models.IntegerField(default=0)
+    quantidade_existente = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Alocação Provincial"
+        verbose_name_plural = "Alocações Provinciais"
+        unique_together = ['material_nacional', 'unidade']
+
+    @property
+    def reforco(self):
+        return max(0, self.quantidade_necessaria - self.quantidade_existente)
+
+class AtividadePlano(models.Model):
+    """Registo de atividades programadas para um plano logístico"""
+    TIPO_ATIVIDADE = [
+        ('formacao', 'Formação'),
+        ('distribuicao', 'Distribuição/Logística'),
+        ('fiscalizacao', 'Fiscalização'),
+        ('sensibilizacao', 'Sensibilização/Publicidade'),
+        ('montagem', 'Montagem de Mesas/Assembleias'),
+        ('outros', 'Outros'),
+    ]
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='atividades')
+    nome = models.CharField(max_length=200)
+    descricao = models.TextField(blank=True)
+    responsaveis = models.CharField(max_length=255, blank=True, help_text="Quem gere a atividade")
+    envolvidos = models.TextField(blank=True, help_text="Pessoal envolvido")
+    custo_estimado = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    material_necessario = models.TextField(blank=True, help_text="Lista de material de suporte")
+    tipo_atividade = models.CharField(max_length=50, choices=TIPO_ATIVIDADE, default='outros')
+    data_prevista = models.DateField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Atividade do Plano"
+        verbose_name_plural = "Atividades dos Planos"
+
+    def __str__(self):
+        return self.nome
 
 class DadosRecenseamento(models.Model):
     """Dados oficiais de recenseamento geridos pelo RS"""

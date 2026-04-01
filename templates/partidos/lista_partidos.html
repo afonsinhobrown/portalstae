@@ -78,6 +78,9 @@
                 <a href="{% url 'partidos:editar_partido' partido.id %}" class="action-btn" style="flex: 0 0 45px; padding: 0; display: flex; align-items: center; justify-content: center; background: #edf2f7; color: #4a5568;">
                     <i class="fas fa-edit"></i>
                 </a>
+                <a href="{% url 'partidos:apagar_partido' partido.id %}" class="action-btn" style="flex: 0 0 45px; padding: 0; display: flex; align-items: center; justify-content: center; background: #fff5f5; color: #c53030; border: 1px solid #feb2b2;" title="Apagar Partido">
+                    <i class="fas fa-trash-alt"></i>
+                </a>
             </div>
         </div>
     </div>

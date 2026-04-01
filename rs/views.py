@@ -1,12 +1,41 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
+import os
 from django.template import Context, Template
-from.models import PlanoLogistico, TipoDocumento, DocumentoGerado, MaterialEleitoral, ModeloVisualArtefacto
+from .models import (
+    PlanoLogistico, TipoDocumento, DocumentoGerado, 
+    MaterialEleitoral, ModeloVisualArtefacto, 
+    CategoriaMaterial, TipoMaterial
+)
+from .forms import CategoriaMaterialForm, TipoMaterialForm, MaterialEleitoralForm, PlanoLogisticoForm, EleicaoForm
 from eleicao.models import Eleicao
 from circuloseleitorais.models import CirculoEleitoral
 from candidaturas.models import InscricaoPartidoEleicao, Candidato, ListaCandidatura
+
+@login_required
+def lista_eleicoes_rs(request):
+    eleicoes = Eleicao.objects.all().order_by('-ano', '-data_votacao')
+    return render(request, 'rs/lista_eleicoes.html', {'eleicoes': eleicoes})
+
+@login_required
+def criar_eleicao_rs(request):
+    if request.method == 'POST':
+        form = EleicaoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Ciclo Eleitoral registado com sucesso!")
+            return redirect('rs:lista_eleicoes')
+    else:
+        form = EleicaoForm()
+    
+    return render(request, 'rs/form_eleicao.html', {
+        'form': form,
+        'titulo': "Registar Novo Ciclo Eleitoral"
+    })
 
 def dashboard(request):
     eleicoes = Eleicao.objects.filter(ativo=True).order_by('-ano')
@@ -14,49 +43,47 @@ def dashboard(request):
     
     eleicao_ativa = eleicoes.first()
     bi_data = {}
-    modelos_visuais = []
-    
-    destino_selecionado = request.GET.get('destino')
     materiais_exibir = []
-    destinos_disponiveis = []
     is_nacional = True
+    tipo_operacao_selecionado = request.GET.get('operacao')
 
     if eleicao_ativa:
-        if not eleicao_ativa.materiais_logistica.exists():
-            from .logic import sync_plano_logistico
-            sync_plano_logistico(eleicao_ativa)
-            
         from candidaturas.views import get_estatisticas_eleicao
         bi_data = get_estatisticas_eleicao(eleicao_ativa.id)
 
         materiais_qs = eleicao_ativa.materiais_logistica.all()
-        destinos_disponiveis = materiais_qs.values_list('localizacao_destino', flat=True).distinct().order_by('localizacao_destino')
         
-        if destino_selecionado:
-            # Visão Táctica: Detalha os itens de um destino específico
-            materiais_exibir = materiais_qs.filter(localizacao_destino=destino_selecionado).order_by('item')
-            is_nacional = False
-        else:
-            # Visão de Soberania (Nacional): Agrega totais por tipo para "Contas Globais"
-            from django.db.models import Sum
-            agregados = materiais_qs.values('tipo').annotate(total_qtd=Sum('quantidade_planeada')).order_by('tipo')
-            
-            tipo_map = dict(MaterialEleitoral.TIPO_CHOICES)
-            for a in agregados:
-                # Criamos um objeto mock para o template manter a compatibilidade
-                class MaterialMock:
-                    def __init__(self, t, n, q):
-                        self.tipo = t
-                        self.item = n
-                        self.quantidade_planeada = q
-                        self.localizacao_destino = 'NACIONAL (Consolidado)'
-                        self.quantidade_alocada = 0 # Agregação de alocação seria mais complexa, simplificamos aqui
-                    def get_tipo_display(self): return tipo_map.get(self.tipo, self.tipo)
+        if tipo_operacao_selecionado:
+            materiais_qs = materiais_qs.filter(tipo_operacao=tipo_operacao_selecionado)
+        
+        # Agregação por Tipo Dinâmico (Catálogo STAE)
+        agregados_dinamicos = materiais_qs.filter(tipo_dinamico__isnull=False).values(
+            'tipo_dinamico__nome', 'tipo_operacao'
+        ).annotate(
+            total_qtd=Sum('quantidade_planeada'),
+            total_custo=Sum(models.F('quantidade_planeada') * models.F('preco_unitario'), output_field=models.DecimalField())
+        ).order_by('tipo_dinamico__nome')
 
-                materiais_exibir.append(MaterialMock(a['tipo'], tipo_map.get(a['tipo'], a['tipo']), a['total_qtd']))
-            is_nacional = True
+        # Converte para objetos para o template
+        class MaterialDashboard:
+            def __init__(self, nome, qtd, operacao):
+                self.item = nome
+                self.quantidade_planeada = qtd
+                self.tipo_operacao = operacao
+                self.localizacao_destino = "NACIONAL"
+            def get_tipo_operacao_display(self):
+                return "Recenseamento" if self.tipo_operacao == 'RECENSEAMENTO' else "Votação"
 
-        # Artefactos Visuais
+        for a in agregados_dinamicos:
+            materiais_exibir.append(MaterialDashboard(
+                a['tipo_dinamico__nome'], 
+                a['total_qtd'],
+                a['tipo_operacao']
+            ))
+
+    # Artefactos Visuais (mantidos conforme original)
+    modelos_visuais = []
+    if eleicao_ativa:
         tipos = ['urna_v', 'cabine', 'colete_m', 'distico']
         for t in tipos:
             modelo = ModeloVisualArtefacto.objects.filter(eleicao=eleicao_ativa, tipo=t).order_by('-versao').first()
@@ -70,10 +97,9 @@ def dashboard(request):
         'bi': bi_data,
         'modelos_visuais': modelos_visuais,
         'materiais': materiais_exibir,
-        'destinos': destinos_disponiveis,
-        'destino_atual': destino_selecionado,
         'is_nacional': is_nacional,
-        'total': planos.count(),
+        'tipo_operacao_atual': tipo_operacao_selecionado,
+        'total_planos': planos.count(),
     })
 
 def decidir_modelo_visual(request, modelo_id, decisao):
@@ -127,30 +153,35 @@ def gerar_plano_logistico_auto(request, eleicao_id):
         return redirect('rs:dashboard')
 
     # 1. CÁLCULO NACIONAL (ARMASÉM CENTRAL)
-    # Boletins (Total + 10%)
+    # Urnas (1 per mesa)
     MaterialEleitoral.objects.update_or_create(
-        eleicao=eleicao, tipo='boletim', localizacao_destino='Armazém Central',
-        defaults={'item': 'Stock Nacional de Boletins', 'quantidade_planeada': int(total_eleitores * 1.1)}
+        eleicao=eleicao, item='Urnas de Votação (MMV)',
+        defaults={'quantidade_planeada': total_mesas, 'tipo_operacao': 'VOTACAO'}
+    )
+    # Boletins (Eleitores + 10%)
+    MaterialEleitoral.objects.update_or_create(
+        eleicao=eleicao, item='Boletins de Voto (Oficiais)',
+        defaults={'quantidade_planeada': int(total_eleitores * 1.1), 'tipo_operacao': 'VOTACAO'}
     )
     # Coletes (7 per mesa)
     MaterialEleitoral.objects.update_or_create(
-        eleicao=eleicao, tipo='colete', localizacao_destino='Armazém Central',
-        defaults={'item': 'Coletes Oficiais STAE', 'quantidade_planeada': total_mesas * 7}
+        eleicao=eleicao, item='Coletes Oficiais STAE',
+        defaults={'quantidade_planeada': total_mesas * 7, 'tipo_operacao': 'VOTACAO'}
     )
     # Tinta Indelével
     MaterialEleitoral.objects.update_or_create(
-        eleicao=eleicao, tipo='tinta', localizacao_destino='Armazém Central',
-        defaults={'item': 'Tinta Indelével (Frascos)', 'quantidade_planeada': int(total_eleitores / 500) + 1}
+        eleicao=eleicao, item='Tinta Indelével (Frascos)',
+        defaults={'quantidade_planeada': int(total_eleitores / 500) + 1, 'tipo_operacao': 'VOTACAO'}
     )
     # Cabines (2 por mesa)
     MaterialEleitoral.objects.update_or_create(
-        eleicao=eleicao, tipo='cabine', localizacao_destino='Armazém Central',
-        defaults={'item': 'Cabines de Votação (Plástico/Papelão)', 'quantidade_planeada': total_mesas * 2}
+        eleicao=eleicao, item='Cabines de Votação',
+        defaults={'quantidade_planeada': total_mesas * 2, 'tipo_operacao': 'VOTACAO'}
     )
     # Credenciais MMV (7 por mesa)
     MaterialEleitoral.objects.update_or_create(
-        eleicao=eleicao, tipo='credencial', localizacao_destino='Armazém Central',
-        defaults={'item': 'Credenciais Oficiais MMV', 'quantidade_planeada': total_mesas * 7}
+        eleicao=eleicao, item='Credenciais Oficiais MMV',
+        defaults={'quantidade_planeada': total_mesas * 7, 'tipo_operacao': 'VOTACAO'}
     )
 
     # 2. CÁLCULO PROVINCIAL (PLANOS DE DISTRIBUIÇÃO)
@@ -160,31 +191,303 @@ def gerar_plano_logistico_auto(request, eleicao_id):
         circulos_v = eleicao.circulos.filter(provincia=prov)
         m_prov = circulos_v.aggregate(total=Sum('num_mesas'))['total'] or 0
         
-        propostas = [
-            ('urna', f'Urnas - {prov}', m_prov),
-            ('kit', f'Kits Mesa - {prov}', m_prov),
-            ('papelaria', f'Papelaria e Blocos - {prov}', m_prov * 5),
-            ('iluminacao', f'Lanternas LED - {prov}', m_prov),
-            ('apoio', f'Quadros e Tripés - {prov}', m_prov),
-        ]
-        
-        for tipo, nome, qtd in propostas:
-            if qtd > 0:
-                MaterialEleitoral.objects.update_or_create(
-                    eleicao=eleicao, tipo=tipo, localizacao_destino=prov,
-                    defaults={'item': nome, 'quantidade_planeada': qtd}
-                )
+        # Como agora a visão é estratégica/nacional, ignoramos a criação de sub-materiais por província aqui
+        # e deixamos o utilizador fazer a Alocação Logística granulada via UI
+        pass
 
     messages.success(request, f"Pano de Distribuição gerado para {len(provincias)} províncias. Logística capilarizada com sucesso.")
     return redirect('rs:dashboard')
 
+def lista_planos(request):
+    """View principal para gestão de planos regionais/provinciais"""
+    planos = PlanoLogistico.objects.all().order_by('-data_inicio')
+    return render(request, 'rs/lista_planos.html', {
+        'planos': planos
+    })
+
+@login_required
+def editar_plano(request, pk):
+    plano = get_object_or_404(PlanoLogistico, pk=pk)
+    if request.method == 'POST':
+        form = PlanoLogisticoForm(request.POST, instance=plano)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Plano Logístico atualizado com sucesso!")
+            return redirect('rs:detalhes_plano', plano_id=plano.pk)
+    else:
+        form = PlanoLogisticoForm(instance=plano)
+    
+    return render(request, 'rs/form_plano.html', {
+        'form': form,
+        'plano': plano,
+        'titulo': "Editar Definições do Plano"
+    })
+
 def criar_plano(request):
-    # Placeholder para CRUD de planos (já tinha form_plano.html)
-    return render(request, 'rs/form_plano.html')
+    """Criação manual de um Plano Logístico"""
+    if request.method == 'POST':
+        form = PlanoLogisticoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Plano Logístico criado com sucesso!")
+            return redirect('rs:lista_planos')
+    else:
+        form = PlanoLogisticoForm()
+    return render(request, 'rs/form_plano.html', {'form': form})
 
 def detalhes_plano(request, plano_id):
+    """Visualização completa de um Plano Logístico com materiais e atividades"""
     plano = get_object_or_404(PlanoLogistico, id=plano_id)
-    return render(request, 'rs/dashboard.html', {'plano': plano}) # placeholder
+    materiais = plano.materiais.all().select_related('tipo_dinamico')
+    atividades = plano.atividades.all()
+    
+    # Cálculos Orçamentais
+    total_materiais = sum(m.custo_total for m in materiais)
+    total_atividades = sum(a.custo_estimado for a in atividades)
+    custo_total_estimado = total_materiais + total_atividades
+    
+    return render(request, 'rs/detalhes_plano.html', {
+        'plano': plano,
+        'materiais': materiais,
+        'atividades': atividades,
+        'total_materiais': total_materiais,
+        'total_atividades': total_atividades,
+        'custo_total_estimado': custo_total_estimado,
+        'percent_orcamento': (custo_total_estimado / plano.orcamento_total * 100) if plano.orcamento_total > 0 else 0
+    })
+
+def adicionar_material_plano(request, plano_id):
+    plano = get_object_or_404(PlanoLogistico, id=plano_id)
+    if request.method == 'POST':
+        form = MaterialEleitoralForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.plano = plano
+            obj.eleicao = plano.eleicao
+            obj.tipo_operacao = plano.tipo_operacao
+            obj.save()
+            messages.success(request, f"Material '{obj.item}' adicionado ao Plano de {plano.get_tipo_operacao_display()}!")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = MaterialEleitoralForm(initial={'plano': plano})
+    return render(request, 'rs/form_componente.html', {'form': form, 'plano': plano, 'tipo': 'Material'})
+
+@login_required
+def selecao_relatorio_material(request, plano_id):
+    plano = get_object_or_404(PlanoLogistico, id=plano_id)
+    materiais = plano.materiais.all().order_by('item')
+    
+    if request.method == 'POST':
+        ids_selecionados = request.POST.getlist('materiais_selecionados')
+        incluir_central = 'incluir_central' in request.POST
+        if ids_selecionados:
+            query = f"materiais={','.join(ids_selecionados)}&central={'1' if incluir_central else '0'}"
+            return redirect(f"/rs/plano/{plano.id}/gerar-pdf/?{query}")
+        else:
+            messages.warning(request, "Por favor, selecione pelo menos um material para o relatório.")
+            
+    return render(request, 'rs/selecao_relatorio.html', {
+        'plano': plano,
+        'materiais': materiais
+    })
+
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from io import BytesIO
+
+@login_required
+def gerar_pdf_plano(request, plano_id):
+    plano = get_object_or_404(PlanoLogistico, id=plano_id)
+    ids_materiais = request.GET.get('materiais', '').split(',')
+    incluir_central = request.GET.get('central', '1') == '1'
+    
+    # Filtrar apenas os selecionados e pertencentes ao plano
+    materiais_selecionados = MaterialEleitoral.objects.filter(id__in=ids_materiais, plano=plano).order_by('item')
+    
+    from .models import AlocacaoLogistica
+    direcoes = AlocacaoLogistica.DIRECOES_STAE # Lista de tuplas (sigla, nome)
+    
+    # Construir a Matriz de Dados
+    mapa_distribuicao = []
+    totais_colunas = [0] * len(materiais_selecionados) # Para os totais na base
+    
+    for sigla, nome in direcoes:
+        # Pular STAE Central se desmarcado
+        if sigla == 'CENTRAL' and not incluir_central:
+            continue
+            
+        # Limpeza de nome para DNOOE: "DPP GAZA" -> "GAZA"
+        nome_curto = nome.replace('DPP ', '').upper()
+        if sigla == 'CENTRAL':
+            nome_curto = 'STAE CENTRAL'
+            
+        linha = {
+            'provincia': nome_curto,
+            'quantidades': [],
+            'total_linha': 0
+        }
+        
+        for idx, mat in enumerate(materiais_selecionados):
+            # Buscar a alocação específica para este material e esta província
+            aloc = mat.alocacoes.filter(unidade=sigla).first()
+            qtd = aloc.quantidade_necessaria if aloc else 0
+            linha['quantidades'].append(qtd)
+            linha['total_linha'] += qtd
+            totais_colunas[idx] += qtd # Soma horizontal na base
+            
+        mapa_distribuicao.append(linha)
+
+    # Geração de QR Code para Autenticidade do Relatório (DNOOE)
+    import qrcode
+    import base64
+    from io import BytesIO
+    
+    agora = timezone.now()
+    qr_data = (
+        f"DATA: {agora.strftime('%d/%m/%Y')} | "
+        f"HORA: {agora.strftime('%H:%M:%S')} | "
+        f"USUARIO: {request.user.username} | "
+        f"STAE | DOOE | DDGEI | PORTAL STAE"
+    )
+    
+    qr = qrcode.QRCode(version=1, box_size=3, border=2)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    img_qr = qr.make_image(fill_color="black", back_color="white")
+    
+    qr_buffer = BytesIO()
+    img_qr.save(qr_buffer, format="PNG")
+    qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+
+    from django.conf import settings
+    # Logo está na RAIZ conforme indicado
+    logo_file = os.path.join(settings.BASE_DIR, 'logo.png')
+    
+    # Contexto para o Template
+    context = {
+        'plano': plano,
+        'materiais': materiais_selecionados,
+        'mapa': mapa_distribuicao,
+        'totais_colunas': totais_colunas,
+        'total_geral': sum(totais_colunas),
+        'data_emissao': timezone.now(),
+        'qr_code': qr_base64,
+        'logo_path': logo_file if os.path.exists(logo_file) else ''
+    }
+    
+    template = get_template('rs/relatorio_pdf_plano.html')
+    html = template.render(context)
+    print("DEBUG HTML START")
+    print(html[:1000]) # Mostrar cabeçalho nos logs
+    print("DEBUG HTML END")
+    result = BytesIO()
+    
+    # Gerar PDF
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+    
+    if not pdf.err:
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'filename="Mapa_DNOOE_Plano_{plano.id}.pdf"'
+        return response
+    
+    return HttpResponse("Erro ao gerar o PDF", status=400)
+
+@login_required
+def editar_material(request, material_id):
+    material = get_object_or_404(MaterialEleitoral, id=material_id)
+    plano = material.plano
+    if request.method == 'POST':
+        form = MaterialEleitoralForm(request.POST, instance=material)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.save()
+            messages.success(request, f"Material '{material.item}' atualizado!")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = MaterialEleitoralForm(instance=material)
+    return render(request, 'rs/form_componente.html', {'form': form, 'plano': plano, 'tipo': 'Material', 'edit': True})
+
+@login_required
+def eliminar_material(request, material_id):
+    material = get_object_or_404(MaterialEleitoral, id=material_id)
+    plano_id = material.plano.id
+    nome = material.item
+    material.delete()
+    messages.warning(request, f"Material '{nome}' eliminado do plano.")
+    return redirect('rs:detalhes_plano', plano_id=plano_id)
+
+from .forms import AtividadePlanoForm
+
+@login_required
+def editar_atividade(request, atividade_id):
+    from .models import AtividadePlano
+    atividade = get_object_or_404(AtividadePlano, id=atividade_id)
+    plano = atividade.plano
+    if request.method == 'POST':
+        form = AtividadePlanoForm(request.POST, instance=atividade)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Atividade '{atividade.nome}' atualizada!")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = AtividadePlanoForm(instance=atividade)
+    return render(request, 'rs/form_componente.html', {'form': form, 'plano': plano, 'tipo': 'Atividade', 'edit': True})
+
+@login_required
+def eliminar_atividade(request, atividade_id):
+    from .models import AtividadePlano
+    atividade = get_object_or_404(AtividadePlano, id=atividade_id)
+    plano_id = atividade.plano.id
+    nome = atividade.nome
+    atividade.delete()
+    messages.warning(request, f"Atividade '{nome}' eliminada.")
+    return redirect('rs:detalhes_plano', plano_id=plano_id)
+
+def adicionar_atividade_plano(request, plano_id):
+    plano = get_object_or_404(PlanoLogistico, id=plano_id)
+    if request.method == 'POST':
+        form = AtividadePlanoForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.plano = plano
+            obj.save()
+            messages.success(request, f"Atividade '{obj.nome}' registada!")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = AtividadePlanoForm(initial={'plano': plano})
+    return render(request, 'rs/form_componente.html', {'form': form, 'plano': plano, 'tipo': 'Atividade'})
+
+from .models import AlocacaoLogistica
+
+def distribuir_material(request, material_id):
+    """View para expandir e distribuir quantidades pelas 11 DPPs e Central"""
+    material = get_object_or_404(MaterialEleitoral, id=material_id)
+    unidades = AlocacaoLogistica.DIRECOES_STAE
+    
+    if request.method == 'POST':
+        for code, name in unidades:
+            qtd_nec = request.POST.get(f'qtd_nec_{code}', 0)
+            qtd_ext = request.POST.get(f'qtd_ext_{code}', 0)
+            
+            if qtd_nec or qtd_ext: # Só cria se houver valores
+                AlocacaoLogistica.objects.update_or_create(
+                    material_nacional=material,
+                    unidade=code,
+                    defaults={
+                        'quantidade_necessaria': int(qtd_nec or 0),
+                        'quantidade_existente': int(qtd_ext or 0)
+                    }
+                )
+        messages.success(request, f"Distribuição de '{material.item}' atualizada com sucesso!")
+        return redirect('rs:detalhes_plano', plano_id=material.plano.id)
+
+    alocacoes_dict = {a.unidade: a for a in material.alocacoes.all()}
+    return render(request, 'rs/distribuir_material.html', {
+        'material': material,
+        'unidades': unidades,
+        'alocacoes': alocacoes_dict
+    })
 
 from .forms import PlanoLogisticoForm, TipoDocumentoForm
 
@@ -607,3 +910,135 @@ def preview_cartao_eleitor(request):
         }
     }
     return render(request, 'credenciais/cartao_pvc.html', context)
+def gestao_categorias_materiais(request):
+    """Lista e cria categorias de materiais"""
+    categorias = CategoriaMaterial.objects.all()
+    if request.method == 'POST':
+        form = CategoriaMaterialForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Categoria criada com sucesso!")
+            return redirect('rs:gestao_categorias')
+    else:
+        form = CategoriaMaterialForm()
+    
+    return render(request, 'rs/gestao_categorias.html', {
+        'categorias': categorias,
+        'form': form
+    })
+
+def gestao_tipos_materiais(request):
+    """Lista e cria tipos de materiais associados a categorias"""
+    tipos = TipoMaterial.objects.all().select_related('categoria')
+    if request.method == 'POST':
+        form = TipoMaterialForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Tipo de material criado com sucesso!")
+            return redirect('rs:gestao_tipos')
+    else:
+        form = TipoMaterialForm()
+    
+    return render(request, 'rs/gestao_tipos.html', {
+        'tipos': tipos,
+        'form': form
+    })
+
+@login_required
+def eliminar_tipo_material(request, pk):
+    tipo = get_object_or_404(TipoMaterial, pk=pk)
+    nome = tipo.nome
+    tipo.delete()
+    messages.warning(request, f"Tipo de material '{nome}' eliminado com sucesso.")
+    return redirect('rs:gestao_tipos')
+
+def inicializar_catalogo_stae(request):
+    """Pré-carrega o catálogo oficial do STAE Moçambique (Votação + Recenseamento)"""
+    dados = [
+        # --- VOTAÇÃO ---
+        ('Votação: Equipamento & Mobiliário', 'Infraestrutura de assembleia de voto', [
+            ('Cabine de Votação (Individual)', 'Padrão STAE p/ Sigilo do Voto', 'fas fa-person-booth'),
+            ('Urna de Votação (MMV)', 'Padrão STAE Transparente', 'fas fa-box-open'),
+            ('Mesa de Brigada / Assembleia', 'Mobiliário de apoio a MMVs', 'fas fa-table'),
+        ]),
+        ('Votação: Material Sensível', 'Itens de segurança e controlo de voto', [
+            ('Boletins de Voto', 'Impressões Oficiais de Soberania', 'fas fa-file-invoice'),
+            ('Tinta Indelével (Frascos)', 'Controle de multivotantes (15ml)', 'fas fa-fill-drip'),
+            ('Selos de Segurança', 'Plástico Numerado para Urnas', 'fas fa-lock'),
+            ('Caderno de Actas Votação', 'Registo oficial da mesa', 'fas fa-book'),
+        ]),
+        # --- RECENSEAMENTO ---
+        ('Recenseamento: Equipamento & TI', 'Hardware para registo de eleitores', [
+            ('Mobile ID Kit (Completo)', 'Maleta de registo com PC/Câmara/Scanner', 'fas fa-laptop-medical'),
+            ('Impressora de Cartões PVC', 'Emissão instantânea do cartão', 'fas fa-print'),
+            ('Painel Solar de Campanha', 'Energia para postos remotos', 'fas fa-solar-panel'),
+            ('Bateria de Lítio (Kit ID)', 'Autonomia para o Mobile ID', 'fas fa-battery-full'),
+            ('Câmara Fotográfica Web', 'Captura de imagem do eleitor', 'fas fa-camera'),
+        ]),
+        ('Recenseamento: Consumíveis', 'Materiais gastos na emissão de cartões', [
+            ('Cartões PVC (Brancos)', 'Base para impressão do cartão eleitor', 'fas fa-id-card-alt'),
+            ('Ribbon / Fita de Impressão', 'Consumível para impressora de cartões', 'fas fa-stream'),
+            ('Caderno de Recenseamento', 'Registo manual de brigada', 'fas fa-address-book'),
+            ('Formulário de Inscrição', 'Ficha de recolha de dados', 'fas fa-file-alt'),
+        ]),
+        # --- LOGÍSTICA COMUM ---
+        ('Logística e Transporte', 'Embalagem e movimentação de material', [
+            ('Saco Plástico p/ Urna', 'Impermeabilização e fecho', 'fas fa-shopping-bag'),
+            ('Fita Adesiva Logotipada', 'Selagem de caixas e kits', 'fas fa-tape'),
+            ('Maleta de Transporte', 'Kits de material de mesa/brigada', 'fas fa-briefcase'),
+        ]),
+        ('Apoio e Geradores', 'Energia e suporte de campo', [
+            ('Gerador a Gasolina (2.5kVA)', 'Energia para postos de recenseamento', 'fas fa-plug'),
+            ('Megafone c/ Sirene', 'Comunicação e gestão de filas', 'fas fa-bullhorn'),
+            ('Lanterna LED Pesada', 'Iluminação para contagem e segurança', 'fas fa-lightbulb'),
+        ]),
+        ('Indumentária Oficial', 'Identificação de agentes do STAE', [
+            ('Colete Azul (STAE)', 'Identificação de brigadistas e MMVs', 'fas fa-user-tie'),
+            ('Boné Oficial STAE', 'Proteção solar e identificação', 'fas fa-hat-cowboy'),
+            ('Crachá Magnético', 'Identificação segura de pessoal', 'fas fa-id-badge'),
+        ])
+    ]
+    
+    criados_cat = 0
+    criados_tip = 0
+    for cat_nome, cat_desc, tipos in dados:
+        cat, created = CategoriaMaterial.objects.get_or_create(
+            nome=cat_nome, defaults={'descricao': cat_desc}
+        )
+        if created: criados_cat += 1
+        
+        for tip_nome, tip_desc, icone in tipos:
+            # Primeiro tentamos buscar APENAS pelo nome para evitar IntegrityError
+            obj, t_created = TipoMaterial.objects.get_or_create(
+                nome=tip_nome, 
+                defaults={'categoria': cat, 'descricao': tip_desc, 'icone': icone}
+            )
+            # Se já existia, garantimos que a categoria e dados estão atualizados (Votação vs Recenseamento)
+            if not t_created:
+                obj.categoria = cat
+                obj.descricao = tip_desc
+                obj.icone = icone
+                obj.save()
+            
+            criados_tip += 1
+            
+    messages.success(request, f"Catálogo Ampliado STAE: {criados_cat} novas categorias e {criados_tip} tipos de material (Votação + Recenseamento) carregados.")
+    return redirect('rs:gestao_tipos')
+
+def criar_requisito_material(request):
+    """Permite adicionar um novo requisito de material para a eleição ativa"""
+    eleicao_ativa = Eleicao.objects.filter(ativo=True).first()
+    if request.method == 'POST':
+        form = MaterialEleitoralForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Novo requisito logístico adicionado!")
+            return redirect('rs:dashboard')
+    else:
+        # Pré-selecionar a eleição ativa
+        form = MaterialEleitoralForm(initial={'eleicao': eleicao_ativa})
+    
+    return render(request, 'rs/form_material.html', {
+        'form': form,
+        'eleicao': eleicao_ativa
+    })

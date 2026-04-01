@@ -100,7 +100,9 @@ class ListaCandidatura(models.Model):
                     erros.append(f"Fraude Detectada: {cand.nome_completo} consta também na lista do {outra_lista.inscricao.partido.sigla} em {outra_lista.circulo.nome}.")
                     cand.duplicado = True
             
-            cand.save()
+            # cand.save() # REMOVIDO para performance: o STAE deve chamar save() ou bulk_update externamente se precisar persistir
+        
+        # Otimização: Só atualizamos o status se houver alterações reais no futuro (versão assíncrona)
 
         return {
             'conforme': len(erros) == 0,

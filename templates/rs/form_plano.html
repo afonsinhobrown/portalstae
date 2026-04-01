@@ -1,23 +1,99 @@
 {% extends 'base_apps.html' %}
+{% load static %}
+
 {% block title %}{{ titulo }}{% endblock %}
-{% block module_name %}RS & LOGÍSTICA{% endblock %}
-{% block icon %}fas fa-truck-loading{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-cog{% endblock %}
 {% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
-{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item active"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
+<a href="{% url 'rs:gestao_tipos' %}" class="menu-item"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
+{% endblock %}
+
 {% block content %}
-<div class="card">
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-grid">
-            <div class="form-group" style="grid-column: span 2;">{{ form.nome.label_tag }}{{ form.nome }}</div>
-            <div class="form-group">{{ form.tipo.label_tag }}{{ form.tipo }}</div>
-            <div class="form-group">{{ form.orcamento_total.label_tag }}{{ form.orcamento_total }}</div>
-            <div class="form-group">{{ form.data_inicio.label_tag }}{{ form.data_inicio }}</div>
-            <div class="form-group">{{ form.data_fim.label_tag }}{{ form.data_fim }}</div>
-            <div class="form-group" style="grid-column: span 2;">{{ form.descricao.label_tag }}{{ form.descricao }}</div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-dark p-4 text-white">
+                <h5 class="fw-bold mb-0 text-uppercase d-flex align-items-center">
+                    <i class="fas fa-edit me-2"></i> {{ titulo }}
+                </h5>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Nome do Plano</label>
+                            {{ form.nome }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-primary small text-uppercase">
+                                <i class="fas fa-exchange-alt me-1"></i> Tipo de Operação
+                            </label>
+                            {{ form.tipo_operacao }}
+                            <div class="form-text smaller">Selecione se o plano é para Recenseamento ou Votação.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Eleição</label>
+                            {{ form.eleicao }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Início</label>
+                            {{ form.data_inicio }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Fim</label>
+                            {{ form.data_fim }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Orçamento Total (MZN)</label>
+                            {{ form.orcamento_total }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Responsável</label>
+                            {{ form.responsavel }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Descrição/Notas</label>
+                            {{ form.descricao }}
+                        </div>
+                    </div>
+
+                    <div class="mt-5 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold flex-grow-1 shadow-sm">
+                            <i class="fas fa-save me-2"></i> GRAVAR ALTERAÇÕES
+                        </button>
+                        {% if plano.id %}
+                        <a href="{% url 'rs:detalhes_plano' plano.id %}" class="btn btn-light rounded-pill px-4 py-3 fw-bold border">
+                            CANCELAR
+                        </a>
+                        {% else %}
+                        <a href="{% url 'rs:lista_planos' %}" class="btn btn-light rounded-pill px-4 py-3 fw-bold border">
+                            CANCELAR
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
         </div>
-        <button type="submit" class="action-btn" style="margin-top:20px;">Salvar Plano</button>
-    </form>
+    </div>
 </div>
-<style>.form-control{width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;margin-top:5px;}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}</style>
+
+<style>
+    .smaller { font-size: 0.75rem; }
+    .form-control { border-radius: 10px; padding: 0.8rem 1rem; border: 1px solid #dee2e6; }
+    .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); border-color: #0d6efd; }
+</style>
 {% endblock %}

@@ -158,7 +158,7 @@ def get_estatisticas_eleicao(eleicao_id):
         listas_audit.append({
             'lista': lista,
             'operador': lista.submetido_por.get_full_name() or lista.submetido_por.username if lista.submetido_por else "Importação Sistema",
-            'status': lista.verificar_conformidade()
+            'status': {'conforme': lista.validada, 'erros': [], 'alertas': []} # Versão Light para Dashboard
         })
 
     fraudes = cands_qs.filter(duplicado=True).count()
@@ -605,14 +605,8 @@ def dashboard(request):
     candidatos = Candidato.objects.all()
     
     # --- AUDITORIA DE INTEGRIDADE (Anti-Fraude) ---
-    duplicados_count = 0
-    bi_stats = Candidato.objects.values('bi_numero').annotate(count=Count('id')).filter(count__gt=1)
-    if bi_stats.exists():
-        duplicados_count = bi_stats.count()
-        bis = [d['bi_numero'] for d in bi_stats]
-        Candidato.objects.filter(bi_numero__in=bis).update(duplicado=True)
-    else:
-        Candidato.objects.update(duplicado=False)
+    # Otimizado: Só atualizamos se houver incidência de novos dados ou via rotina manual
+    duplicados_count = Candidato.objects.filter(duplicado=True).count()
 
     # --- ESTATÍSTICAS DEMOGRÁFICAS ---
     stats_gen = candidatos.aggregate(

@@ -1,0 +1,65 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Registar Ciclo Eleitoral{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-calendar-plus{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item active"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-dark p-4 text-white">
+                <h5 class="fw-bold mb-0 text-uppercase"><i class="fas fa-plus-circle me-2"></i> {{ titulo }}</h5>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Nome da Eleição / Ciclo</label>
+                            {{ form.nome }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Tipo de Eleição</label>
+                            {{ form.tipo }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Ano Civil</label>
+                            {{ form.ano }}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-primary small text-uppercase"><i class="fas fa-calendar-day me-1"></i> Data da Votação</label>
+                            {{ form.data_votacao }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Descrição e Notas Legais</label>
+                            {{ form.descricao }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-5 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold flex-grow-1 shadow-sm">
+                            <i class="fas fa-check-circle me-2"></i> CONFIRMAR REGISTO
+                        </button>
+                        <a href="{% url 'rs:lista_eleicoes' %}" class="btn btn-light rounded-pill px-4 py-3 fw-bold border">CANCELAR</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control { border-radius: 12px; padding: 0.8rem 1.2rem; border: 1px solid #e0e0e0; }
+    .form-control:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
+</style>
+{% endblock %}

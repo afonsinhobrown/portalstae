@@ -1,0 +1,79 @@
+{% extends 'base_apps.html' %}
+{% block title %}Novo Requisito Logístico{% endblock %}
+{% block module_name %}RS & LOGÍSTICA{% endblock %}
+{% block icon %}fas fa-plus-circle{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-lg rounded-4 p-5">
+            <div class="text-center mb-5">
+                <div class="icon-box bg-soft-primary text-primary mx-auto mb-3 rounded-circle" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-truck-loading fa-2x"></i>
+                </div>
+                <h3 class="fw-bold">Adicionar Material</h3>
+                <p class="text-muted">Registe uma nova necessidade de material para a eleição: <strong>{{ eleicao }}</strong></p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Descrição do Item</label>
+                        {{ form.item }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Tipo de Material</label>
+                        {{ form.tipo_dinamico }}
+                        <div class="mt-1">
+                            <a href="{% url 'rs:gestao_tipos' %}" class="small text-primary"><i class="fas fa-plus me-1"></i> Criar novo tipo</a>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Quantidade Planeada</label>
+                        {{ form.quantidade_planeada }}
+                    </div>
+                    
+                    <div class="col-12 mb-4">
+                        <label class="form-label fw-bold small text-uppercase">Localização de Destino</label>
+                        {{ form.localizacao_destino }}
+                    </div>
+
+                    <!-- Campo oculto para Eleição se necessário -->
+                    <div style="display:none;">{{ form.eleicao }}</div>
+                </div>
+
+                <div class="d-flex gap-3 pt-3">
+                    <a href="{% url 'rs:dashboard' %}" class="btn btn-light rounded-pill px-4 fw-bold">Cancelar</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm flex-grow-1">
+                        Gravar Requisito
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.querySelector('select[name="tipo_dinamico"]');
+        const itemInput = document.querySelector('input[name="item"]');
+        
+        if (tipoSelect && itemInput) {
+            tipoSelect.addEventListener('change', function() {
+                // Ao mudar o tipo, preencher o nome do item automaticamente
+                const selectedText = tipoSelect.options[tipoSelect.selectedIndex].text;
+                if (selectedText && selectedText !== '---------') {
+                    // Limpar categorias do texto se existirem (ex: "Categoria > Tipo" para "Tipo")
+                    const cleanName = selectedText.includes('>') ? selectedText.split('>').pop().trim() : selectedText;
+                    itemInput.value = cleanName;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

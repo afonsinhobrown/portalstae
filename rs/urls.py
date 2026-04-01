@@ -5,8 +5,15 @@ app_name = 'rs'
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
+    path('eleicoes/', views.lista_eleicoes_rs, name='lista_eleicoes'),
+    path('eleicao/nova/', views.criar_eleicao_rs, name='criar_eleicao'),
+    path('planos/', views.lista_planos, name='lista_planos'),
     path('novo/', views.criar_plano, name='criar_plano'),
     path('plano/<int:plano_id>/', views.detalhes_plano, name='detalhes_plano'),
+    path('plano/<int:pk>/editar/', views.editar_plano, name='editar_plano'),
+    path('plano/<int:plano_id>/add-material/', views.adicionar_material_plano, name='adicionar_material'),
+    path('plano/<int:plano_id>/add-atividade/', views.adicionar_atividade_plano, name='adicionar_atividade'),
+    path('material/<int:material_id>/distribuir/', views.distribuir_material, name='distribuir_material'),
     
     # Documentos
     path('documentos/', views.documentos_view, name='documentos'),
@@ -19,7 +26,7 @@ urlpatterns = [
     
     # Apuramento e Lançamento
     path('edital/lancar/', views.lancar_edital, name='lancar_edital'),
-    path('edital/controlo/', views.documentos_view, name='controlo_editais'), # Placeholder por agora
+    path('edital/controlo/', views.documentos_view, name='controlo_editais'),
     
     path('gerar-plano-auto/<int:eleicao_id>/', views.gerar_plano_logistico_auto, name='gerar_plano_auto'),
     path('modelo-visual/decidir/<int:modelo_id>/<str:decisao>/', views.decidir_modelo_visual, name='decidir_modelo_visual'),
@@ -27,4 +34,17 @@ urlpatterns = [
     # Gestão de Material
     path('material/editar/<int:material_id>/', views.editar_material, name='editar_material'),
     path('material/eliminar/<int:material_id>/', views.eliminar_material, name='eliminar_material'),
+    path('material/novo/', views.criar_requisito_material, name='novo_material'),
+    path('material/categorias/', views.gestao_categorias_materiais, name='gestao_categorias'),
+    path('material/tipos/', views.gestao_tipos_materiais, name='gestao_tipos'),
+    path('material/tipo/eliminar/<int:pk>/', views.eliminar_tipo_material, name='eliminar_tipo'),
+    
+    # Gestão de Atividades
+    path('atividade/editar/<int:atividade_id>/', views.editar_atividade, name='editar_atividade'),
+    path('atividade/eliminar/<int:atividade_id>/', views.eliminar_atividade, name='eliminar_atividade'),
+    
+    # Relatórios
+    path('plano/<int:plano_id>/report-selector/', views.selecao_relatorio_material, name='selecao_relatorio'),
+    path('plano/<int:plano_id>/gerar-pdf/', views.gerar_pdf_plano, name='gerar_pdf'),
+    path('material/inicializar-catalogo/', views.inicializar_catalogo_stae, name='inicializar_catalogo'),
 ]

@@ -3,8 +3,8 @@ from .models import PlanoLogistico, TipoDocumento, DocumentoGerado
 
 @admin.register(PlanoLogistico)
 class PlanoLogisticoAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'tipo', 'data_inicio', 'data_fim', 'orcamento_total']
-    list_filter = ['tipo']
+    list_display = ['nome', 'tipo_operacao', 'data_inicio', 'data_fim', 'orcamento_total']
+    list_filter = ['tipo_operacao']
 
 @admin.register(TipoDocumento)
 class TipoDocumentoAdmin(admin.ModelAdmin):

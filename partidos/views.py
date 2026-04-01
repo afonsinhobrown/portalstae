@@ -87,3 +87,13 @@ def lista_documentos(request):
     return render(request, 'partidos/lista_documentos.html', {
         'partidos': partidos
     })
+@login_required
+def apagar_partido(request, partido_id):
+    partido = get_object_or_404(Partido, id=partido_id)
+    if request.method == 'POST':
+        sigla = partido.sigla
+        partido.delete()
+        messages.success(request, f'Partido {sigla} removido definitivamente!')
+        return redirect('partidos:lista_partidos')
+    
+    return render(request, 'partidos/confirm_delete.html', {'partido': partido})

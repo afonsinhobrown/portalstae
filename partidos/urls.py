@@ -11,4 +11,5 @@ urlpatterns = [
     path('novo/', views.criar_partido, name='criar_partido'),
     path('detalhe/<int:partido_id>/', views.detalhe_partido, name='detalhe_partido'),
     path('editar/<int:partido_id>/', views.editar_partido, name='editar_partido'),
+    path('apagar/<int:partido_id>/', views.apagar_partido, name='apagar_partido'),
 ]

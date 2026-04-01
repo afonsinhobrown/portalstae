@@ -1,146 +1,97 @@
 {% extends 'base_apps.html' %}
+{% load static %}
 
-{% block title %}Recenseamento e Logística: Soberania{% endblock %}
-{% block module_name %}RS & LOGÍSTICA ESTRATÉGICA{% endblock %}
+{% block title %}Logística Eleitoral: Painel Estratégico{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
 {% block icon %}fas fa-truck-ramp-box{% endblock %}
 {% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
 
 {% block menu_items %}
-<a href="{% url 'rs:dashboard' %}" class="menu-item active"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
-<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Eco-Sistema Documental</span></a>
-<a href="#" class="menu-item"><i class="fas fa-boxes-stacked"></i> <span>Stock Nacional</span></a>
+<a href="{% url 'rs:dashboard' %}" class="menu-item active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
+<a href="{% url 'rs:gestao_tipos' %}" class="menu-item"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
 {% endblock %}
 
 {% block content %}
-
 <!-- 1. PAINEL DE SOBERANIA LOGÍSTICA -->
 <div class="row g-4 mb-5">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-dark text-white">
-            <small class="text-uppercase opacity-50 fw-bold smaller">Eleição Activa</small>
-            <h4 class="fw-bold mb-3 mt-1">{{ eleicao_ativa.nome }}</h4>
-            <div class="badge bg-warning text-dark mb-0">Modo: {{ eleicao_ativa.tipo|title }}</div>
+            <small class="text-uppercase opacity-50 fw-bold smaller">Ciclo Ativo</small>
+            <h4 class="fw-bold mb-3 mt-1">{{ eleicao_ativa.nome|default:"Nenhum Ciclo" }}</h4>
+            <div class="badge bg-warning text-dark mb-0">{{ eleicao_ativa.ano }}</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-primary text-white">
-            <small class="text-uppercase opacity-75 fw-bold smaller">Ordenamento Candidaturas</small>
-            <h2 class="fw-bold mb-0 mt-1">{{ bi.grande_total }}</h2>
-            <small>Listas Oficiais Registadas</small>
+            <small class="text-uppercase opacity-75 fw-bold smaller">Previsões Nacionais</small>
+            <h2 class="fw-bold mb-0 mt-1">{{ materiais|length }}</h2>
+            <small>Itens de Material Estratégico</small>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-success text-white">
-            <small class="text-uppercase opacity-75 fw-bold smaller">Integridade Demográfica</small>
-            <h2 class="fw-bold mb-0 mt-1">{{ bi.demografia.total }}</h2>
-            <small>Candidatos Auditados</small>
+            <small class="text-uppercase opacity-75 fw-bold smaller">Planos Provinciais</small>
+            <h2 class="fw-bold mb-0 mt-1">{{ total_planos }}</h2>
+            <small>Operações Territoriais</small>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-danger text-white">
-            <small class="text-uppercase opacity-75 fw-bold smaller">Rastreabilidade RS</small>
-            <h2 class="fw-bold mb-0 mt-1">{% widthratio bi.demografia.rs_confirmados bi.demografia.total 100 %}%</h2>
-            <small>Validação Biométrica</small>
+            <small class="text-uppercase opacity-75 fw-bold smaller">Execução Global</small>
+            <h2 class="fw-bold mb-0 mt-1">N/D</h2>
+            <small>Logística Integrada</small>
         </div>
     </div>
 </div>
 
-<!-- 2. DESTAQUES DE CANDIDATURAS (INPUT PARA LOGÍSTICA) -->
-<div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
-    <div class="card-header bg-white py-3 border-light d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0"><i class="fas fa-users-viewfinder me-2 text-primary"></i>Destaques Críticos (Insumos Documentais)</h5>
-        <a href="{% url 'candidaturas:relatorios_eleicao' eleicao_ativa.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver Central de BI</a>
-    </div>
-    <div class="card-body p-4 bg-light bg-opacity-50">
-        <div class="row g-4">
-            <div class="col-12">
-                <h6 class="text-muted text-uppercase smaller fw-bold mb-3">Ordenamento Jurídico e Sorteio (Posição Oficial no Boletim)</h6>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light text-muted fw-bold small">
-                            <tr>
-                                <th class="ps-3">ORDEM</th>
-                                <th>IDENTIDADE VISUAL / PARTIDO</th>
-                                <th>SIGLA</th>
-                                <th>COBERTURA NACIONAL</th>
-                                <th class="text-end pe-3">ESTADO</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p_stat in bi.partidos_estat|slice:":8" %}
-                            <tr>
-                                <td class="ps-3">
-                                    <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 35px; height: 35px; font-size: 14pt;">
-                                        {{ p_stat.partido.posicao_boletim|default:"-" }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-3">
-                                        {% if p_stat.partido.simbolo %}
-                                            <img src="{{ p_stat.partido.simbolo.url }}" alt="{{ p_stat.partido.sigla }}" style="width: 45px; height: 45px; object-fit: contain;" class="bg-white border rounded p-1 shadow-sm">
-                                        {% else %}
-                                            <div class="bg-white border rounded d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px;"><i class="fas fa-flag text-muted"></i></div>
-                                        {% endif %}
-                                        <div>
-                                            <div class="fw-bold text-dark">{{ p_stat.partido.nome_completo|upper }}</div>
-                                            <div class="smaller text-muted">Entidade Política Validada</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="fw-bold text-primary">{{ p_stat.partido.sigla }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
-                                            <div class="progress-bar bg-primary" style="width: {{ p_stat.cobertura }}%"></div>
-                                        </div>
-                                        <span class="fw-bold">{{ p_stat.cobertura }}%</span>
-                                    </div>
-                                </td>
-                                <td class="text-end pe-3">
-                                    <span class="badge bg-success-subtle text-success border border-success px-3">APTO</span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 3. GESTÃO DO PLANO LOGÍSTICO (PRAM) -->
+<!-- 2. GESTÃO DO PLANO LOGÍSTICO (PRAM) -->
 <div class="card border-0 shadow-sm rounded-4 mb-5">
     <div class="card-header bg-white py-4 d-flex justify-content-between align-items-center">
         <div>
-            <h4 class="fw-bold mb-1">Planeamento de Requisitos e Activos Automático (PRAM)</h4>
-            <p class="text-muted mb-0 small">Cálculo dinâmico baseado em Candidaturas Inscritas, Mesas e Eleitores Oficiais.</p>
+            <h4 class="fw-bold mb-1">Stock Estratégico Nacional</h4>
+            <div class="smaller text-muted mb-0">Visão consolidada de Recenseamento e Votação.</div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if eleicao_ativa %}
+            <div class="d-grid gap-2">
+                <a href="{% url 'candidaturas:relatorios_eleicao' eleicao_ativa.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver Central de BI</a>
+                <a href="{% url 'rs:inicializar_catalogo' %}" class="btn btn-sm btn-primary rounded-pill shadow-sm">
+                    <i class="fas fa-sync-alt me-1"></i> SINCRONIZAR CATÁLOGO NACIONAL
+                </a>
+            </div>
+            {% endif %}
+            <a href="{% url 'rs:novo_material' %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-plus me-1 small"></i> NOVO REQUISITO</a>
         </div>
     </div>
     
-    <!-- Filtro Dinâmico (Soberania vs Operação) -->
+    <!-- Filtro de Operação -->
     <div class="bg-white border-bottom py-3 px-4 d-flex flex-wrap gap-2 align-items-center">
-        <div class="small text-muted fw-bold text-uppercase me-2"><i class="fas fa-filter me-1"></i> Contexto:</div>
-        <a href="?destino=" class="btn btn-sm {% if not destino_atual %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3 shadow-sm">
-            <i class="fas fa-globe me-1"></i> CONTAS GLOBAIS (NACIONAL)
+        <div class="small text-muted fw-bold text-uppercase me-2"><i class="fas fa-filter me-1"></i> Filtrar por Fase:</div>
+        <a href="?operacao=" class="btn btn-sm {% if not tipo_operacao_atual %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-4 shadow-sm">
+            <i class="fas fa-globe me-1"></i> TODO O CICLO
         </a>
-        {% for d in destinos %}
-            <a href="?destino={{ d }}" class="btn btn-sm {% if destino_atual == d %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3 shadow-sm">
-                {% if d == 'Armazém Central' %}<i class="fas fa-warehouse me-1"></i>{% else %}<i class="fas fa-map-marker-alt me-1"></i>{% endif %} {{ d }}
-            </a>
-        {% endfor %}
+        <a href="?operacao=RECENSEAMENTO" class="btn btn-sm {% if tipo_operacao_atual == 'RECENSEAMENTO' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-4 shadow-sm">
+            <i class="fas fa-id-card me-1"></i> RECENSEAMENTO
+        </a>
+        <a href="?operacao=VOTACAO" class="btn btn-sm {% if tipo_operacao_atual == 'VOTACAO' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-4 shadow-sm">
+            <i class="fas fa-box-archive me-1"></i> VOTAÇÃO
+        </a>
     </div>
+
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light text-muted fw-bold small">
                     <tr>
-                        <th class="ps-4">MATERIAL / ACTIVO</th>
-                        <th>DESTINO / PROVÍNCIA</th>
-                        <th>CATEGORIA</th>
-                        <th>ESTIMATIVA</th>
-                        <th>STATUS</th>
-                        <th class="text-end pe-4">AÇÕES</th>
+                        <th class="ps-4">MATERIAL ESTRATÉGICO</th>
+                        <th>FASE / OPERAÇÃO</th>
+                        <th>DESTINO</th>
+                        <th class="text-center">NECESSIDADE NACIONAL</th>
+                        <th class="text-end pe-4">ESTADO</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,90 +99,27 @@
                     <tr>
                         <td class="ps-4">
                             <div class="fw-bold text-dark">{{ m.item }}</div>
-                            <div class="smaller text-muted">
-                                {% if is_nacional %}
-                                    <span class="badge bg-secondary-subtle text-secondary small">CONSOLIDADO NACIONAL</span>
-                                {% else %}
-                                    Referência: REF-{{ m.id|default:"AUT" }}
-                                {% endif %}
-                            </div>
+                            <div class="smaller text-muted text-uppercase">Cálculo de Previsão STAE</div>
                         </td>
                         <td>
-                            {% if is_nacional %}
-                                <span class="badge bg-dark text-white"><i class="fas fa-chart-pie me-1"></i> TOTAL PAÍS</span>
-                            {% elif m.localizacao_destino == 'Armazém Central' %}
-                                <span class="badge bg-dark text-white"><i class="fas fa-warehouse me-1"></i> CENTRAL</span>
-                            {% else %}
-                                <span class="badge bg-primary-subtle text-primary border border-primary small">{{ m.localizacao_destino|upper }}</span>
-                            {% endif %}
+                            <span class="badge {% if m.tipo_operacao == 'RECENSEAMENTO' %}bg-info-subtle text-info border-info{% else %}bg-primary-subtle text-primary border-primary{% endif %} border px-3 rounded-pill text-uppercase smaller fw-bold">
+                                {{ m.get_tipo_operacao_display }}
+                            </span>
                         </td>
-                        <td><span class="badge bg-light text-dark border small">{{ m.get_tipo_display|upper }}</span></td>
-                        <td class="fw-bold fs-5 text-primary">{{ m.quantidade_planeada }}</td>
                         <td>
-                            {% if is_nacional %}
-                                <span class="text-muted small">Sujeito a Alocação Local</span>
-                            {% else %}
-                                {% if m.quantidade_alocada >= m.quantidade_planeada %}
-                                    <span class="badge bg-success-subtle text-success border border-success">COBERTO</span>
-                                {% else %}
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-warning-subtle text-warning border border-warning">DÉFICE</span>
-                                    </div>
-                                {% endif %}
-                            {% endif %}
+                             <span class="badge bg-dark text-white"><i class="fas fa-warehouse me-1"></i> NACIONAL</span>
                         </td>
+                        <td class="text-center fw-bold fs-5 text-primary">{{ m.quantidade_planeada }}</td>
                         <td class="text-end pe-4">
-                            {% if not is_nacional %}
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-light rounded-circle shadow-sm" data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-2">
-                                    <li><button class="dropdown-item rounded-2" data-bs-toggle="modal" data-bs-target="#editMaterial{{ m.id }}">
-                                        <i class="fas fa-edit me-2 text-primary opacity-75"></i> Editar Requisito
-                                    </button></li>
-                                    <li><hr class="dropdown-divider opacity-50"></li>
-                                    <li><a class="dropdown-item rounded-2 text-danger" href="{% url 'rs:eliminar_material' m.id %}" onclick="return confirm('Eliminar permanentemente?')">
-                                        <i class="fas fa-trash me-2 opacity-75"></i> Eliminar
-                                    </a></li>
-                                </ul>
-                            </div>
-                            {% else %}
-                            <i class="fas fa-lock text-muted opacity-25" title="Edição bloqueada em vista nacional"></i>
-                            {% endif %}
+                            <span class="badge bg-success-subtle text-success border border-success px-3">CONSOLIDADO</span>
                         </td>
                     </tr>
-                    
-                    {% if not is_nacional and m.id %}
-                    <!-- Modal de Edição Rápida (Apenas para vista detalhada) -->
-                    <div class="modal fade" id="editMaterial{{ m.id }}" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <form action="{% url 'rs:editar_material' m.id %}" method="POST" class="modal-content border-0 shadow-lg rounded-4">
-                                {% csrf_token %}
-                                <div class="modal-header border-0 bg-light rounded-top-4">
-                                    <h5 class="fw-bold mb-0">Ajustar: {{ m.item }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body p-4">
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-bold text-muted">Quantidade Planeada</label>
-                                        <input type="number" name="quantidade" class="form-control rounded-3 fs-4 fw-bold text-primary" value="{{ m.quantidade_planeada }}" required>
-                                    </div>
-                                    <input type="hidden" name="item" value="{{ m.item }}">
-                                </div>
-                                <div class="modal-footer border-0 pb-4 px-4">
-                                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow">Aplicar Alteração</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    {% endif %}
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center p-5">
-                            <i class="fas fa-triangle-exclamation fa-3x text-warning mb-3"></i>
-                            <h5 class="text-muted">Nenhum requisito logístico calculado para {{ eleicao_ativa.nome }}.</h5>
-                            <small>Utilize o botão "Executar Cálculo Dinâmico" para começar.</small>
+                        <td colspan="5" class="text-center p-5">
+                            <i class="fas fa-box-open fa-3x text-muted opacity-25 mb-3"></i>
+                            <h5 class="text-muted">Nenhum requisito estratégico encontrado para este ciclo.</h5>
+                            <a href="{% url 'rs:novo_material' %}" class="btn btn-primary rounded-pill mt-3 px-4">Adicionar Primeiro Requisito</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -239,92 +127,13 @@
             </table>
         </div>
     </div>
-<!-- 4. GALERIA DE ARTEFACTOS E PROPOSTAS TÉCNICAS (DINÂMICO) -->
-<div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
-    <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0"><i class="fas fa-palette me-2 text-warning"></i>Gestão de Modelos Visuais e Propostas</h5>
-        <div class="smaller opacity-75">Máximo 50 Iterações por Artefacto</div>
-    </div>
-    <div class="card-body p-4 bg-light">
-        {% if modelos_visuais %}
-        <div class="row g-4">
-            {% for mod in modelos_visuais %}
-            <div class="col-md-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div class="position-relative">
-                        <img src="{{ mod.imagem.url }}" class="card-img-top" alt="{{ mod.get_tipo_display }}" style="height: 300px; object-fit: cover;">
-                        <div class="position-absolute top-0 end-0 p-3">
-                            <span class="badge {% if mod.status == 'aceite' %}bg-success{% elif mod.status == 'reprovado' %}bg-danger{% else %}bg-warning text-dark{% endif %} shadow-sm fs-6">
-                                {{ mod.get_status_display|upper }}
-                            </span>
-                        </div>
-                        <div class="position-absolute bottom-0 start-0 p-3 bg-dark bg-opacity-75 text-white w-100">
-                            <div class="fw-bold">{{ mod.get_tipo_display }} - Versão {{ mod.versao }}</div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <p class="small text-muted mb-3">{{ mod.descricao_tecnica|truncatewords:30 }}</p>
-                        
-                        {% if mod.status == 'pendente' %}
-                        <div class="d-flex gap-2">
-                            <a href="{% url 'rs:decidir_modelo_visual' mod.id 'aceitar' %}" class="btn btn-success btn-sm flex-fill rounded-pill fw-bold">
-                                <i class="fas fa-check me-1"></i> Aceitar Proposta
-                            </a>
-                            <button class="btn btn-danger btn-sm flex-fill rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#modalReprovar{{ mod.id }}">
-                                <i class="fas fa-redo me-1"></i> Reprovar / Iterar
-                            </button>
-                        </div>
-                        {% elif mod.status == 'reprovado' %}
-                        <div class="alert alert-danger py-2 px-3 small mb-0 rounded-3">
-                            <i class="fas fa-exclamation-circle me-1"></i> <strong>Reprovado:</strong> {{ mod.feedback_admin }}
-                        </div>
-                        {% else %}
-                        <div class="alert alert-success py-2 px-3 small mb-0 rounded-3">
-                            <i class="fas fa-check-circle me-1"></i> Este modelo foi <strong>homologado</strong> como oficial.
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Reprovar -->
-            <div class="modal fade" id="modalReprovar{{ mod.id }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form action="{% url 'rs:decidir_modelo_visual' mod.id 'reprovar' %}" method="POST" class="modal-content rounded-4 border-0">
-                        {% csrf_token %}
-                        <div class="modal-header border-0 pb-0">
-                            <h5 class="fw-bold">Reprovar V{{ mod.versao }}: {{ mod.get_tipo_display }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p class="text-muted small">Indique as razões para a nova iteração (Tentativa {{ mod.versao|add:1 }} de 50):</p>
-                            <textarea name="feedback" class="form-control rounded-3" rows="3" placeholder="Ex: Ajustar as cores para o padrão oficial, realçar o logo..." required></textarea>
-                        </div>
-                        <div class="modal-footer border-0 pt-0">
-                            <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold">Confirmar e Solicitar Nova Proposta</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center p-5 text-muted">
-            <i class="fas fa-wand-magic-sparkles fa-3x mb-3 opacity-25"></i>
-            <h5>Nenhum modelo visual carregado na base de dados.</h5>
-            <p class="small">Solicite ao sistema a geração das primeiras propostas de urnas, cabines e coletes.</p>
-        </div>
-        {% endif %}
-    </div>
-</div>
 </div>
 
 <style>
-    .card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
     .smaller { font-size: 0.75rem; }
-    .bg-opacity-50 { background-color: rgba(248, 250, 252, 0.5) !important; }
-    .dropdown-item:active { background-color: var(--bs-primary); }
-    img.rounded-4 { border: 5px solid #fff; }
+    .hover-elevate { transition: all 0.2s ease; }
+    .hover-elevate:hover { transform: translateY(-3px); }
 </style>
 
 {% endblock %}

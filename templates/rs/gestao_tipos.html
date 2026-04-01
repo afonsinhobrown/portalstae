@@ -1,0 +1,111 @@
+{% extends 'base_apps.html' %}
+{% block title %}Gestão de Tipos de Material{% endblock %}
+{% block module_name %}RS & LOGÍSTICA{% endblock %}
+{% block icon %}fas fa-box-open{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
+<a href="{% url 'rs:gestao_tipos' %}" class="menu-item active"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Novo Tipo de Material</h5>
+                <a href="{% url 'rs:inicializar_catalogo' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                    <i class="fas fa-file-import me-1"></i> Carregar Padrão STAE
+                </a>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-2 mt-2 shadow-sm">
+                    <i class="fas fa-check me-2"></i> Adicionar Tipo
+                </button>
+            </form>
+            <div class="mt-4 p-3 bg-light rounded-3 small text-muted">
+                <i class="fas fa-info-circle me-1"></i> Os tipos permitem especificar que material pertence a qual categoria (ex: Urna -> Material Sensível).
+            </div>
+        </div>
+    </div>
+    
+        <div class="col-md-8">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-light d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Tipos de Material Definidos</h5>
+                    <div class="input-group input-group-sm w-50">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-search text-muted opacity-50"></i></span>
+                        <input type="text" id="filtroTipos" class="form-control border-start-0 rounded-end-pill shadow-none" placeholder="Procurar material/categoria...">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="tabelaTipos">
+                            <thead class="bg-light text-muted fw-bold small">
+                                <tr>
+                                    <th class="ps-4">TIPO / ÍCONE</th>
+                                    <th>CATEGORIA</th>
+                                    <th>DESCRIÇÃO</th>
+                                    <th class="text-end pe-4">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in tipos %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="icon-sm bg-light rounded text-primary text-center" style="width:35px; height:35px; line-height:35px;">
+                                                <i class="{{ t.icone }}"></i>
+                                            </div>
+                                            <div class="fw-bold text-dark">{{ t.nome }}</div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-primary-subtle text-primary">{{ t.categoria.nome }}</span></td>
+                                    <td class="text-muted small">{{ t.descricao|truncatewords:8 }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'rs:eliminar_tipo' t.pk %}" class="btn btn-sm btn-light rounded-circle text-danger" title="Eliminar" onclick="return confirm('ATENÇÃO: Eliminar este tipo pode afetar planos existentes. Confirmar?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center p-4 text-muted">Nenhum tipo de material definido.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<script>
+    document.getElementById('filtroTipos').addEventListener('keyup', function() {
+        const query = this.value.toLowerCase();
+        const trs = document.querySelectorAll('#tabelaTipos tbody tr');
+        
+        trs.forEach(tr => {
+            const texto = tr.innerText.toLowerCase();
+            if (texto.includes(query)) {
+                tr.style.display = '';
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}

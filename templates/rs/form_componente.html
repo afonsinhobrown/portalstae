@@ -1,0 +1,220 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Adicionar {{ tipo }} ao Plano{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-truck-ramp-box{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white p-4 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-shape bg-white text-dark rounded-circle me-3 shadow-sm" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                            <i class="{% if tipo == 'Material' %}fas fa-box-open{% else %}fas fa-tasks{% endif %} fa-lg text-primary"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">{% if edit %}Editar{% else %}Novo{% endif %} {{ tipo }} no Plano</h4>
+                            <p class="text-white-50 small mb-0">Plano Associado: <strong>{{ plano.nome }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div style="display:none;">{{ form.plano }}</div> <!-- Escondido via style para garantir preenchimento silent -->
+                        
+                        <div class="row g-4">
+                            {% if tipo == 'Material' %}
+                                <!-- Bloco Histórico -->
+                                <div class="col-12">
+                                    <div class="bg-light p-3 rounded-3 border-start border-primary border-4 mb-2">
+                                        <h6 class="fw-bold mb-0"><i class="fas fa-history me-2"></i>Referência Histórica</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label fw-bold text-muted small">Designação do Material (Nacional)</label>
+                                    {{ form.item }}
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-bold text-muted small">Tipo de Material</label>
+                                    {{ form.tipo_dinamico }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-muted small">Ano de Referência</label>
+                                    {{ form.ano_referencia }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-muted small">Qtd. Adquirida Ref.</label>
+                                    {{ form.quantidade_adquirida_referencia }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-muted small">Preço Unit. Ref. (MZN)</label>
+                                    {{ form.preco_unitario_referencia }}
+                                </div>
+
+                                <!-- Bloco Previsão -->
+                                <div class="col-12 mt-4">
+                                    <div class="bg-primary text-white p-3 rounded-3 mb-2 shadow-sm d-flex justify-content-between align-items-center">
+                                        <h6 class="fw-bold mb-0"><i class="fas fa-chart-line me-2"></i>Cálculo da Nova Previsão (+30%)</h6>
+                                        <span class="badge bg-white text-primary">MARGEM STAE</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded-4 bg-white shadow-sm">
+                                        <label class="form-label fw-bold text-primary">Qtd. Existente Stock</label>
+                                        {{ form.quantidade_existente }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded-4 bg-info-subtle border-info shadow-sm">
+                                        <label class="form-label fw-bold text-dark">Previsão Qtd.</label>
+                                        {{ form.quantidade_planeada }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded-4 bg-success-subtle border-success shadow-sm">
+                                        <label class="form-label fw-bold text-success">Previsão Preço Unit.</label>
+                                        {{ form.preco_unitario }}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-muted small">Notas e Justificativos</label>
+                                    {{ form.descricao }}
+                                </div>
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const inputAdquirido = document.getElementById('id_quantidade_adquirida_referencia');
+                                        const inputPrecoRef = document.getElementById('id_preco_unitario_referencia');
+                                        
+                                        const inputPrevisaoQtd = document.getElementById('id_quantidade_planeada');
+                                        const inputPrevisaoPreco = document.getElementById('id_preco_unitario');
+
+                                        const selectTipo = document.getElementById('id_tipo_dinamico');
+                                        const inputItem = document.getElementById('id_item');
+
+                                        // Função de Preenchimento Automático do Nome
+                                        if (selectTipo && inputItem) {
+                                            selectTipo.addEventListener('change', function() {
+                                                const selectedText = selectTipo.options[selectTipo.selectedIndex].text;
+                                                if (selectedText && selectedText !== '---------') {
+                                                    // Limpar prefixos de categoria se existirem
+                                                    const cleanName = selectedText.includes('-') ? selectedText.split('-').pop().trim() : selectedText;
+                                                    inputItem.value = cleanName;
+                                                }
+                                            });
+                                        }
+
+                                        // Função de Cálculo 30%
+                                        function calcular() {
+                                            const qtdRef = parseInt(inputAdquirido.value) || 0;
+                                            const precoRef = parseFloat(inputPrecoRef.value) || 0;
+
+                                            if (qtdRef > 0) {
+                                                inputPrevisaoQtd.value = Math.ceil(qtdRef * 1.3);
+                                            }
+                                            if (precoRef > 0) {
+                                                inputPrevisaoPreco.value = (precoRef * 1.3).toFixed(2);
+                                            }
+                                        }
+
+                                        // Função de Sincronização Inteligente (Foco Ativo)
+                                        function sincronizar(origem, destino, fator, operacao) {
+                                            origem.addEventListener('input', function() {
+                                                if (document.activeElement !== origem) return;
+                                                const val = parseFloat(this.value) || 0;
+                                                if (val > 0) {
+                                                    if (operacao === 'multiplicar') {
+                                                        destino.value = (fator === 1.3 && destino.tagName === 'INPUT' && !destino.id.includes('preco')) 
+                                                            ? Math.ceil(val * fator) 
+                                                            : (val * fator).toFixed(2);
+                                                    } else {
+                                                        destino.value = (fator === 1.3 && destino.tagName === 'INPUT' && !destino.id.includes('preco'))
+                                                            ? Math.floor(val / fator)
+                                                            : (val / fator).toFixed(2);
+                                                    }
+                                                } else {
+                                                    destino.value = 0;
+                                                }
+                                            });
+                                        }
+
+                                        // Sincronizar Quantidades (Factor 1.3 da STAE)
+                                        sincronizar(inputAdquirido, inputPrevisaoQtd, 1.3, 'multiplicar');
+                                        sincronizar(inputPrevisaoQtd, inputAdquirido, 1.3, 'dividir');
+
+                                        // Sincronizar Preços (Factor 1.3 da STAE)
+                                        sincronizar(inputPrecoRef, inputPrevisaoPreco, 1.3, 'multiplicar');
+                                        sincronizar(inputPrevisaoPreco, inputPrecoRef, 1.3, 'dividir');
+
+                                    });
+                                </script>
+                            {% else %}
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold text-muted small">Nome da Atividade</label>
+                                    {{ form.nome }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-muted small">Tipo de Operação</label>
+                                    {{ form.tipo_atividade }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-muted small">Entidade/Gabinete Responsável</label>
+                                    {{ form.responsaveis }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-muted small">Data Prevista</label>
+                                    {{ form.data_prevista }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-muted small">Pessoal Envolvido</label>
+                                    {{ form.envolvidos }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-muted small">Custo Mensurável MZN</label>
+                                    {{ form.custo_estimado }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-muted small">Material de Suporte Necessário</label>
+                                    {{ form.material_necessario }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-muted small">Descrição do Procedimento</label>
+                                    {{ form.descricao }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-3 mt-5">
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 shadow-sm fw-bold flex-grow-1">
+                                <i class="fas fa-save me-2"></i>Gravar no Plano
+                            </button>
+                            <a href="{% url 'rs:detalhes_plano' plano.id %}" class="btn btn-light rounded-pill px-4 py-2 border">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 2px solid #f1f4f9;
+        background-color: #fcfdfe;
+        transition: all 0.2s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        background-color: #fff;
+    }
+</style>
+{% endblock %}

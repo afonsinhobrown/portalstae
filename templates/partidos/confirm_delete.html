@@ -1,0 +1,39 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Confirmar Remoção{% endblock %}
+{% block module_name %}PARTIDOS{% endblock %}
+{% block icon %}fas fa-trash-alt{% endblock %}
+{% block dashboard_url %}{% url 'partidos:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'partidos:lista_partidos' %}" class="menu-item"><i class="fas fa-list-ul"></i> <span>Lista de Partidos</span></a>
+<a href="{% url 'partidos:lista_liderancas' %}" class="menu-item"><i class="fas fa-user-tie"></i> <span>Lideranças</span></a>
+<a href="{% url 'partidos:lista_documentos' %}" class="menu-item"><i class="fas fa-file-pdf"></i> <span>Documentação</span></a>
+<a href="#" class="menu-item active"><i class="fas fa-exclamation-triangle"></i> <span>Confirmar Remoção</span></a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto;">
+    <div class="card" style="padding: 40px; text-align: center; border-radius: 20px; border: 1px solid #fed7d7; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+        <div style="width: 80px; height: 80px; background: #fff5f5; color: #e53e3e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px; font-size: 35px;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h2 style="color: #2d3748; margin-bottom: 15px; font-weight: 800;">Confirmar Remoção?</h2>
+        <p style="color: #718096; font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px;">
+            Tem a certeza que deseja apagar o partido <strong>{{ partido.sigla }}</strong> ({{ partido.nome_completo }})?<br>
+            <span style="color: #e53e3e; font-weight: 700;">Esta ação é irreversível e removerá todos os dados associados.</span>
+        </p>
+
+        <form method="post" style="display: flex; gap: 15px; justify-content: center;">
+            {% csrf_token %}
+            <a href="{% url 'partidos:lista_partidos' %}" class="action-btn" style="background: #edf2f7; color: #4a5568; padding: 12px 30px; font-weight: 700;">
+                CANCELAR
+            </a>
+            <button type="submit" class="action-btn" style="background: #e53e3e; color: white; padding: 12px 40px; font-weight: 700; border: none; cursor: pointer;">
+                SIM, APAGAR DEFINITIVAMENTE
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

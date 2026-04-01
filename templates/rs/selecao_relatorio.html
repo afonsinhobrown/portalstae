@@ -1,0 +1,61 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Seleção de Materiais para Relatório{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-file-pdf{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white p-4">
+                    <h4 class="fw-bold mb-0"><i class="fas fa-list-check me-2"></i>Gerador de Mapa de Distribuição</h4>
+                    <p class="text-white-50 small mb-0">Plano: {{ plano.nome }}</p>
+                </div>
+                <div class="card-body p-5">
+                    <p class="text-muted mb-4">Selecione os materiais e opções do relatório da <strong>DNOOE</strong>.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-check mb-4 p-3 bg-light rounded-3 border">
+                            <input class="form-check-input ms-0 me-3" type="checkbox" name="incluir_central" id="id_incluir_central" checked>
+                            <label class="form-check-label fw-bold" for="id_incluir_central">
+                                Incluir STAE Central no Relatório
+                            </label>
+                            <p class="text-muted small mb-0 ms-4 ps-2">Se desmarcado, apenas as Províncias/DPPs aparecerão na tabela.</p>
+                        </div>
+
+                        <h6 class="fw-bold mb-3">Materiais a incluir nas colunas:</h6>
+                        <div class="list-group list-group-flush mb-4 border rounded-3 overflow-hidden">
+                            {% for mat in materiais %}
+                            <label class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                                <input class="form-check-input me-3" type="checkbox" name="materiais_selecionados" value="{{ mat.id }}" checked>
+                                <div>
+                                    <span class="fw-bold d-block">{{ mat.item }}</span>
+                                    <span class="text-muted small">{{ mat.get_tipo_operacao_display }}</span>
+                                </div>
+                            </label>
+                            {% empty %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="fas fa-box-open fa-3x mb-3 d-block opacity-25"></i>
+                                Não há materiais registados neste plano.
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold flex-grow-1">
+                                <i class="fas fa-file-export me-2"></i>Gerar Relatório PDF
+                            </button>
+                            <a href="{% url 'rs:detalhes_plano' plano.id %}" class="btn btn-light rounded-pill px-4 py-2 border">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
