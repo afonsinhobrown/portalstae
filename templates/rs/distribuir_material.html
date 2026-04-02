@@ -17,9 +17,17 @@
                     <h4 class="fw-bold text-dark mb-1">Distribuição de Materiais por Direção</h4>
                     <p class="text-muted mb-0">Material: <strong class="text-primary">{{ material.item }}</strong> | Meta Nacional: <strong>{{ material.quantidade_planeada }} unidades</strong></p>
                 </div>
-                <div class="text-end">
-                    <span class="badge {% if material.saldo_a_distribuir > 0 %}bg-warning text-dark{% else %}bg-success{% endif %} p-2 px-3 rounded-pill">
-                        Saldo a distribuir: {{ material.saldo_a_distribuir }} unidades
+                <div class="d-flex align-items-center gap-3">
+                    <form method="get" class="d-flex align-items-center gap-2 bg-light p-2 rounded-pill px-3 border shadow-sm">
+                        <label class="small fw-bold text-muted text-uppercase mb-0"><i class="fas fa-filter me-1"></i> Base Geográfica:</label>
+                        <select name="eleicao_ref_id" class="form-select form-select-sm border-0 bg-transparent fw-bold" onchange="this.form.submit()">
+                            {% for e in eleicoes %}
+                            <option value="{{ e.id }}" {% if eleicao_ref_id == e.id %}selected{% endif %}>{{ e.nome }} ({{ e.ano }})</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <span class="badge {% if material.saldo_a_distribuir > 0 %}bg-warning text-dark{% else %}bg-success{% endif %} p-2 px-3 rounded-pill shadow-sm">
+                        <i class="fas fa-boxes me-1"></i> Saldo: {{ material.saldo_a_distribuir }} u.
                     </span>
                 </div>
             </div>
@@ -66,12 +74,12 @@
                                     <div class="input-group input-group-sm" style="width: 130px;">
                                         <span class="input-group-text bg-light border-0 smaller py-0"><i class="fas fa-map me-1"></i></span>
                                         <input type="number" name="n_dist_{{ code }}" class="form-control form-control-sm border-0 bg-light smaller fw-bold py-0" 
-                                               value="{{ aloc.num_distritos|default:0 }}" title="Modificar número de Distritos">
+                                               value="{% if eleicao_ref_id %}{{ stats|dict_key:code|dict_key:'distritos' }}{% else %}{{ aloc.num_distritos|default:0 }}{% endif %}" title="Número de Distritos para este Ciclo">
                                     </div>
                                     <div class="input-group input-group-sm" style="width: 140px;">
                                         <span class="input-group-text bg-light border-0 smaller py-0"><i class="fas fa-check-to-slot me-1"></i></span>
                                         <input type="number" name="n_mesas_{{ code }}" class="form-control form-control-sm border-0 bg-light smaller text-primary fw-bold py-0" 
-                                               value="{{ aloc.num_mesas|default:0 }}" title="Modificar número de Mesas">
+                                               value="{% if eleicao_ref_id %}{{ stats|dict_key:code|dict_key:'mesas' }}{% else %}{{ aloc.num_mesas|default:0 }}{% endif %}" title="Número de Mesas para este Ciclo">
                                     </div>
                                 </div>
                             </td>
@@ -151,5 +159,10 @@
             });
         }
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if material.por_distrito %}
+            calcularPorDistrito();
+        {% endif %}
+    });
 </script>
 {% endblock %}

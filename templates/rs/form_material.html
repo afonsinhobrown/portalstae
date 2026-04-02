@@ -38,10 +38,16 @@
                         {{ form.quantidade_planeada }}
                     </div>
                     
-                    <div class="col-12 mb-4">
-                        <label class="form-label fw-bold small text-uppercase">Localização de Destino</label>
-                        {{ form.localizacao_destino }}
+                    <div class="col-md-7 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Eleição de Referência</label>
+                        {{ form.eleicao_referencia }}
                     </div>
+                    
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Ano Manual (Opcional)</label>
+                        {{ form.ano_referencia }}
+                    </div>
+
 
                     <!-- Campo oculto para Eleição se necessário -->
                     <div style="display:none;">{{ form.eleicao }}</div>

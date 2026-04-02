@@ -1,16 +1,4 @@
-{% extends 'base_apps.html' %}
-
-{% block title %}Círculos Eleitorais{% endblock %}
-{% block module_name %}CÍRCULOS{% endblock %}
-{% block icon %}fas fa-map-marked-alt{% endblock %}
-{% block dashboard_url %}{% url 'circuloseleitorais:dashboard' %}{% endblock %}
-
-{% block menu_items %}
-<a href="#" class="menu-item"><i class="fas fa-map-marker-alt"></i> <span>Círculos</span></a>
-<a href="#" class="menu-item"><i class="fas fa-building"></i> <span>Postos de Votação</span></a>
-<a href="#" class="menu-item"><i class="fas fa-chair"></i> <span>Mesas</span></a>
-<a href="#" class="menu-item"><i class="fas fa-chart-pie"></i> <span>Estatísticas</span></a>
-{% endblock %}
+{% extends 'circuloseleitorais/base_circulo.html' %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
@@ -64,6 +52,11 @@
                     <li>
                         <a class="dropdown-item" href="{% url 'circuloseleitorais:sincronizar_rs' eleicao.id %}">
                             <i class="fas fa-sync-alt me-2 text-muted"></i> Sincronizar Dados do RS
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'circuloseleitorais:configurar_divisao' eleicao.id %}">
+                            <i class="fas fa-sitemap me-2 text-muted"></i> Divisão Administrativa-Eleição
                         </a>
                     </li>
                     <li class="dropdown-divider"></li>

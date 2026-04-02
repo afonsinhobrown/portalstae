@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .models import CirculoEleitoral, PostoVotacao, DivisaoAdministrativa
+from .models import CirculoEleitoral, PostoVotacao, DivisaoAdministrativa, DivisaoEleicao
 from .forms import CirculoForm, PostoForm
 from eleicao.models import Eleicao
 from rs.models import DadosRecenseamento
@@ -95,18 +95,20 @@ def gerar_circulos_automatico(request, eleicao_id):
         selecionados = request.POST.getlist('itens_selecionados')
         map_dados = {item['codigo']: item for item in base_dados}
         
-        for codigo in selecionados:
-            if codigo in map_dados:
-                data = map_dados[codigo]
-                CirculoEleitoral.objects.get_or_create(
-                    eleicao=eleicao,
-                    codigo=codigo,
-                    defaults={
-                        'nome': data['nome'],
-                        'provincia': data['provincia'],
-                        'ativo': True
-                    }
-                )
+        from django.db import transaction
+        with transaction.atomic():
+            for codigo in selecionados:
+                if codigo in map_dados:
+                    data = map_dados[codigo]
+                    CirculoEleitoral.objects.get_or_create(
+                        eleicao=eleicao,
+                        codigo=codigo,
+                        defaults={
+                            'nome': data['nome'],
+                            'provincia': data['provincia'],
+                            'ativo': True
+                        }
+                    )
         messages.success(request, f"Círculos Eleitorais gerados com sucesso para {eleicao.nome}")
         return redirect('circuloseleitorais:dashboard')
 
@@ -193,6 +195,7 @@ def importar_postos(request, circulo_id):
             messages.error(request, f"Erro ao processar ficheiro: {str(e)}")
             
     return render(request, 'circuloseleitorais/importar_postos.html', {'circulo': circulo})
+
 def eliminar_circulo(request, circulo_id):
     """Elimina um círculo e todos os seus dados vinculados"""
     circulo = get_object_or_404(CirculoEleitoral, id=circulo_id)
@@ -200,3 +203,46 @@ def eliminar_circulo(request, circulo_id):
     circulo.delete()
     messages.warning(request, f"Círculo '{nome}' removido definitivamente do sistema.")
     return redirect('circuloseleitorais:dashboard')
+
+def configurar_divisao_eleicao(request, eleicao_id):
+    """Gere a árvore administrativa para uma eleição específica"""
+    eleicao = get_object_or_404(Eleicao, id=eleicao_id)
+    divisoes = DivisaoEleicao.objects.filter(eleicao=eleicao).select_related('parent').order_by('nivel', 'codigo')
+    
+    if request.method == 'POST' and 'importar' in request.POST:
+        # Importar da base global
+        base = DivisaoAdministrativa.objects.all().order_by('nivel', 'codigo')
+        criados = 0
+        mapping = {} # Para manter a hierarquia local
+        
+        from django.db import transaction
+        with transaction.atomic():
+            for b in base:
+                # Tentar encontrar ou criar baseado no código para esta eleição
+                obj, created = DivisaoEleicao.objects.get_or_create(
+                    eleicao=eleicao,
+                    codigo=b.codigo,
+                    defaults={
+                        'nome': b.nome,
+                        'nivel': b.nivel,
+                        'divisao_base': b
+                    }
+                )
+                mapping[b.id] = obj
+                if created: criados += 1
+                
+            # Segunda passagem para associar parents locais
+            for b in base:
+                if b.parent_id and b.parent_id in mapping:
+                    obj_local = mapping[b.id]
+                    obj_local.parent = mapping[b.parent_id]
+                    obj_local.save()
+
+        messages.success(request, f"Sucesso: {criados} divisões administrativas associadas à eleição {eleicao.nome}.")
+        return redirect('circuloseleitorais:configurar_divisao', eleicao_id=eleicao.id)
+
+    return render(request, 'circuloseleitorais/divisao_eleicao.html', {
+        'eleicao': eleicao,
+        'divisoes': divisoes,
+        'tem_divisoes': divisoes.exists()
+    })

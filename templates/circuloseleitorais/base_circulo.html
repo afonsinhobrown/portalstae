@@ -1,0 +1,18 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Círculos Eleitorais{% endblock %}
+{% block module_name %}CÍRCULOS{% endblock %}
+{% block icon %}fas fa-map-marked-alt{% endblock %}
+{% block dashboard_url %}{% url 'circuloseleitorais:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'circuloseleitorais:dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <i class="fas fa-map-marker-alt"></i> <span>Círculos</span>
+</a>
+<a href="#" class="menu-item">
+    <i class="fas fa-sitemap"></i> <span>Divisão Eleição</span>
+</a>
+<a href="#" class="menu-item"><i class="fas fa-building"></i> <span>Postos de Votação</span></a>
+<a href="#" class="menu-item"><i class="fas fa-chair"></i> <span>Mesas</span></a>
+<a href="#" class="menu-item"><i class="fas fa-chart-pie"></i> <span>Estatísticas</span></a>
+{% endblock %}

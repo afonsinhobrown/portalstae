@@ -12,4 +12,5 @@ urlpatterns = [
     path('sincronizar-rs/<int:eleicao_id>/', views.sincronizar_dados_rs, name='sincronizar_rs'),
     path('importar-postos/<int:circulo_id>/', views.importar_postos, name='importar_postos'),
     path('eliminar/<int:circulo_id>/', views.eliminar_circulo, name='eliminar_circulo'),
+    path('divisao-eleicao/<int:eleicao_id>/', views.configurar_divisao_eleicao, name='configurar_divisao'),
 ]

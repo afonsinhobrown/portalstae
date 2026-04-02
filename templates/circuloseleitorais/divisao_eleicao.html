@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Divisão Administrativa - {{ eleicao.nome }}</h1>
+            <p class="text-muted">Gestão da estrutura territorial específica para esta eleição</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'circuloseleitorais:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Voltar ao Dashboard
+            </a>
+            {% if not tem_divisoes %}
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" name="importar" class="btn btn-primary">
+                    <i class="fas fa-file-import me-1"></i> Importar da Base Global
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if tem_divisoes %}
+    <div class="row">
+        <!-- Mapa Hierárquico (Esquerda) -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Estrutura Territorial</h6>
+                </div>
+                <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+                    <div id="tree-container">
+                        {% regroup divisoes by nivel as nivel_list %}
+                        <ul class="list-unstyled ps-0">
+                        {% for nivel in nivel_list %}
+                            {% if nivel.grouper == 'provincia' %}
+                                {% for provincia in nivel.list %}
+                                <li class="mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        <span class="fw-bold">{{ provincia.nome }}</span>
+                                        <span class="badge bg-secondary ms-2 small">{{ provincia.codigo }}</span>
+                                    </div>
+                                    <ul class="list-unstyled ps-4 mt-2 border-start">
+                                        {% for distrito in divisoes %}
+                                            {% if distrito.nivel == 'distrito' and distrito.parent == provincia %}
+                                            <li class="mb-1">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-city text-info me-2 small"></i>
+                                                    <span class="small">{{ distrito.nome }}</span>
+                                                </div>
+                                            </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista Detalhada (Direita) -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tabela de Gestão</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
+                            <div class="dropdown-header">Opções:</div>
+                            <form method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" name="importar" class="dropdown-item text-danger">Re-Sincronizar Global</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm" id="dataTable" width="100%" cellspacing="0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nível</th>
+                                    <th>Código</th>
+                                    <th>Nome</th>
+                                    <th>Superior (Parent)</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in divisoes %}
+                                <tr>
+                                    <td>
+                                        <span class="badge {% if d.nivel == 'provincia' %}bg-primary{% elif d.nivel == 'distrito' %}bg-info{% else %}bg-secondary{% endif %}">
+                                            {{ d.get_nivel_display }}
+                                        </span>
+                                    </td>
+                                    <td><code>{{ d.codigo }}</code></td>
+                                    <td class="fw-bold">{{ d.nome }}</td>
+                                    <td>{{ d.parent.nome|default:"---" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-circle btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-circle btn-outline-danger" title="Remover desta Eleição">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">Nenhuma divisão configurada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow mb-4">
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-map-marked-alt fa-4x text-gray-300"></i>
+            </div>
+            <h4 class="text-gray-800">Ainda não há divisão administrativa definida</h4>
+            <p class="mb-4">Esta eleição é nova e ainda não tem a sua grelha territorial configurada. Pode importar a estrutura oficial do país para começar.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" name="importar" class="btn btn-primary btn-lg">
+                    <i class="fas fa-magic me-2"></i> Inicializar Divisão Administrativa
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .border-start {
+        border-left: 1px dashed #dee2e6 !important;
+    }
+    #tree-container ul {
+        margin-top: 5px;
+    }
+    
+    /* Overlay CSS */
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.85);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+    .spinner-border-xl {
+        width: 4rem;
+        height: 4rem;
+        border-width: 0.3em;
+    }
+</style>
+
+<!-- Full Screen Loading Overlay -->
+<div id="loading-overlay">
+    <div class="spinner-border spinner-border-xl text-primary mb-4" role="status">
+        <span class="visually-hidden">A processar...</span>
+    </div>
+    <h3 class="fw-bold text-dark">Sincronizando Estrutura Territorial</h3>
+    <p class="text-muted fs-5 text-center mt-2" style="max-width: 500px;">
+        Isto pode demorar alguns segundos, pois o sistema está a cruzar centenas de registos regionais com a nova matriz eleitoral.<br><br>
+        <strong>Por favor, não feche a janela.</strong>
+    </p>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Encontrar todos os formulários que têm o botão de importar
+        const forms = document.querySelectorAll('form');
+        const overlay = document.getElementById('loading-overlay');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Verificar se o form submetido tem um botão de nome "importar"
+                const importarBtn = this.querySelector('button[name="importar"]');
+                if (importarBtn) {
+                    // Mostrar overlay
+                    overlay.style.display = 'flex';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

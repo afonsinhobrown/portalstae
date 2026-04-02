@@ -21,6 +21,83 @@ def lista_eleicoes_rs(request):
     eleicoes = Eleicao.objects.all().order_by('-ano', '-data_votacao')
     return render(request, 'rs/lista_eleicoes.html', {'eleicoes': eleicoes})
 
+from circuloseleitorais.models import DivisaoAdministrativa, DivisaoEleicao
+from django.db import transaction
+
+@login_required
+def divisao_eleicao_index(request):
+    """Novo fluxo: Associar distritos a uma eleição em massa."""
+    eleicoes = Eleicao.objects.all().order_by('-ano', '-data_votacao')
+    todas_provincias = DivisaoAdministrativa.objects.filter(nivel='provincia').order_by('codigo')
+    todos_distritos = DivisaoAdministrativa.objects.filter(nivel='distrito').order_by('parent__codigo', 'codigo')
+    
+    eleicao_selecionada = None
+    distritos_associados = []
+    
+    eleicao_id = request.GET.get('eleicao_id')
+    if not eleicao_id and request.method == 'POST':
+        eleicao_id = request.POST.get('eleicao_id')
+
+    if eleicao_id:
+        eleicao_selecionada = get_object_or_404(Eleicao, id=eleicao_id)
+        # Obter os IDs das divisões base que já estão associadas a esta eleição
+        distritos_associados_queryset = DivisaoEleicao.objects.filter(
+            eleicao=eleicao_selecionada, nivel='distrito'
+        ).values_list('divisao_base_id', flat=True)
+        distritos_associados = list(distritos_associados_queryset)
+
+    if request.method == 'POST' and eleicao_selecionada:
+        distritos_ids = request.POST.getlist('distritos')
+        
+        with transaction.atomic():
+            # Limpar antigas associações desta eleição (editable)
+            DivisaoEleicao.objects.filter(eleicao=eleicao_selecionada).delete()
+            
+            # Re-criar tudo com base nos distritos selecionados
+            distritos_checked = DivisaoAdministrativa.objects.filter(id__in=distritos_ids, nivel='distrito')
+            
+            provinces_needed = set()
+            for d in distritos_checked:
+                if d.parent:
+                    provinces_needed.add(d.parent_id)
+            
+            # Criar Provincias necessárias primeiro
+            map_provincias = {}
+            provinces_base = DivisaoAdministrativa.objects.filter(id__in=provinces_needed, nivel='provincia')
+            for p in provinces_base:
+                obj = DivisaoEleicao.objects.create(
+                    eleicao=eleicao_selecionada,
+                    nome=p.nome,
+                    codigo=p.codigo,
+                    nivel=p.nivel,
+                    divisao_base=p
+                )
+                map_provincias[p.id] = obj
+            
+            # Criar Distritos selecionados e conectá-los às províncias parent
+            for d in distritos_checked:
+                parent_obj = map_provincias.get(d.parent_id) if d.parent_id else None
+                DivisaoEleicao.objects.create(
+                    eleicao=eleicao_selecionada,
+                    nome=d.nome,
+                    codigo=d.codigo,
+                    nivel=d.nivel,
+                    parent=parent_obj,
+                    divisao_base=d
+                )
+                
+        messages.success(request, f"Associação da Divisão Administrativa para a eleição '{eleicao_selecionada.nome}' foi atualizada e aplicada com sucesso!")
+        return redirect(f"{request.path}?eleicao_id={eleicao_selecionada.id}")
+
+    context = {
+        'eleicoes': eleicoes,
+        'eleicao_selecionada': eleicao_selecionada,
+        'provincias': todas_provincias,
+        'distritos': todos_distritos,
+        'distritos_associados': distritos_associados
+    }
+    return render(request, 'rs/divisao_eleicao_index.html', context)
+
 @login_required
 def criar_eleicao_rs(request):
     if request.method == 'POST':
@@ -36,6 +113,34 @@ def criar_eleicao_rs(request):
         'form': form,
         'titulo': "Registar Novo Ciclo Eleitoral"
     })
+
+@login_required
+def editar_eleicao_rs(request, pk):
+    eleicao = get_object_or_404(Eleicao, pk=pk)
+    if request.method == 'POST':
+        form = EleicaoForm(request.POST, instance=eleicao)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Ciclo Eleitoral '{eleicao.nome}' atualizado com sucesso!")
+            return redirect('rs:lista_eleicoes')
+    else:
+        form = EleicaoForm(instance=eleicao)
+    
+    return render(request, 'rs/form_eleicao.html', {
+        'form': form,
+        'titulo': f"Editar Ciclo Eleitoral: {eleicao.nome}",
+        'eleicao': eleicao
+    })
+
+@login_required
+def eliminar_eleicao_rs(request, pk):
+    eleicao = get_object_or_404(Eleicao, pk=pk)
+    if request.method == 'POST':
+        nome = eleicao.nome
+        eleicao.delete()
+        messages.warning(request, f"Ciclo Eleitoral '{nome}' removido com sucesso.")
+        return redirect('rs:lista_eleicoes')
+    return render(request, 'rs/confirm_delete.html', {'objeto': eleicao, 'cancel_url': 'rs:lista_eleicoes'})
 
 def dashboard(request):
     eleicoes = Eleicao.objects.filter(ativo=True).order_by('-ano')
@@ -258,6 +363,15 @@ def detalhes_plano(request, plano_id):
 
 def adicionar_material_plano(request, plano_id):
     plano = get_object_or_404(PlanoLogistico, id=plano_id)
+    from circuloseleitorais.models import DivisaoEleicao
+    from django.db.models import Count
+    
+    # Mapeamento de Eleição -> Total de Distritos
+    eleicao_distritos = {
+        e['eleicao_id']: e['total'] 
+        for e in DivisaoEleicao.objects.filter(nivel='distrito').values('eleicao_id').annotate(total=Count('id'))
+    }
+
     if request.method == 'POST':
         form = MaterialEleitoralForm(request.POST)
         if form.is_valid():
@@ -270,7 +384,12 @@ def adicionar_material_plano(request, plano_id):
             return redirect('rs:detalhes_plano', plano_id=plano.id)
     else:
         form = MaterialEleitoralForm(initial={'plano': plano})
-    return render(request, 'rs/form_componente.html', {'form': form, 'plano': plano, 'tipo': 'Material'})
+    return render(request, 'rs/form_componente.html', {
+        'form': form, 
+        'plano': plano, 
+        'tipo': 'Material',
+        'distritos_map': eleicao_distritos
+    })
 
 @login_required
 def selecao_relatorio_material(request, plano_id):
@@ -397,6 +516,15 @@ def gerar_pdf_plano(request, plano_id):
 def editar_material(request, material_id):
     material = get_object_or_404(MaterialEleitoral, id=material_id)
     plano = material.plano
+    from circuloseleitorais.models import DivisaoEleicao
+    from django.db.models import Count
+    
+    # Mapeamento de Eleição -> Total de Distritos
+    eleicao_distritos = {
+        e['eleicao_id']: e['total'] 
+        for e in DivisaoEleicao.objects.filter(nivel='distrito').values('eleicao_id').annotate(total=Count('id'))
+    }
+
     if request.method == 'POST':
         form = MaterialEleitoralForm(request.POST, instance=material)
         if form.is_valid():
@@ -406,7 +534,13 @@ def editar_material(request, material_id):
             return redirect('rs:detalhes_plano', plano_id=plano.id)
     else:
         form = MaterialEleitoralForm(instance=material)
-    return render(request, 'rs/form_componente.html', {'form': form, 'plano': plano, 'tipo': 'Material', 'edit': True})
+    return render(request, 'rs/form_componente.html', {
+        'form': form, 
+        'plano': plano, 
+        'tipo': 'Material', 
+        'edit': True,
+        'distritos_map': eleicao_distritos
+    })
 
 @login_required
 def eliminar_material(request, material_id):
@@ -460,26 +594,68 @@ def adicionar_atividade_plano(request, plano_id):
 
 from .models import AlocacaoLogistica
 
+@login_required
 def distribuir_material(request, material_id):
     """View para expandir e distribuir quantidades pelas 11 DPPs e Central"""
     material = get_object_or_404(MaterialEleitoral, id=material_id)
     unidades = AlocacaoLogistica.DIRECOES_STAE
+    from eleicao.models import Eleicao
+    from circuloseleitorais.models import DivisaoEleicao
     
-    # Dicionário de estatísticas conforme mapa fornecido
-    STATS_PROVINCIAS = {
-        'MAPUTO_C': {'distritos': 7, 'mesas': 1224},
-        'MAPUTO_P': {'distritos': 5, 'mesas': 2225},
-        'GAZA': {'distritos': 6, 'mesas': 449},
-        'INHAMBANE': {'distritos': 6, 'mesas': 474},
-        'SOFALA': {'distritos': 6, 'mesas': 1074},
-        'MANICA': {'distritos': 6, 'mesas': 799},
-        'TETE': {'distritos': 5, 'mesas': 667},
-        'ZAMBEZIA': {'distritos': 7, 'mesas': 883},
-        'NAMPULA': {'distritos': 8, 'mesas': 1269},
-        'CABO_D': {'distritos': 7, 'mesas': 863},
-        'NIASSA': {'distritos': 6, 'mesas': 304},
-        'CENTRAL': {'distritos': 0, 'mesas': 0}
+    eleicoes = Eleicao.objects.all().order_by('-ano')
+    
+    # Mapeamento robusto (ignora maiúsculas/minúsculas e espaços)
+    def normalize_key(name):
+        import unicodedata
+        return "".join(c for c in unicodedata.normalize('NFD', name.lower()) if unicodedata.category(c) != 'Mn').strip()
+
+    MAP_PROV_CODES = {
+        normalize_key('Maputo Cidade'): 'MAPUTO_C',
+        normalize_key('Maputo Província'): 'MAPUTO_P',
+        normalize_key('Gaza'): 'GAZA',
+        normalize_key('Inhambane'): 'INHAMBANE',
+        normalize_key('Sofala'): 'SOFALA',
+        normalize_key('Manica'): 'MANICA',
+        normalize_key('Tete'): 'TETE',
+        normalize_key('Zambézia'): 'ZAMBEZIA',
+        normalize_key('Nampula'): 'NAMPULA',
+        normalize_key('Cabo Delgado'): 'CABO_D',
+        normalize_key('Niassa'): 'NIASSA',
     }
+    
+    # Seletor de estatísticas (padrão ou de eleição específica)
+    stats_final = {code: {'distritos': 0, 'mesas': 0} for code, _ in unidades}
+    
+    eleicao_ref_id = request.GET.get('eleicao_ref_id')
+    eleicao_ref_id = request.GET.get('eleicao_ref_id')
+
+    if not eleicao_ref_id:
+        if material.eleicao_referencia:
+            eleicao_ref_id = material.eleicao_referencia.id
+        elif material.plano.eleicao:
+            eleicao_ref_id = material.plano.eleicao.id
+        
+    if eleicao_ref_id:
+        divisoes_ref = DivisaoEleicao.objects.filter(eleicao_id=eleicao_ref_id).select_related('parent')
+        
+        # 1. Contar Distritos das Divisões Administrativas
+        provincias_list = divisoes_ref.filter(nivel='provincia')
+        for d in provincias_list:
+            norm_name = normalize_key(d.nome)
+            code = MAP_PROV_CODES.get(norm_name)
+            if code:
+                n_dist = divisoes_ref.filter(nivel='distrito', parent=d).count()
+                stats_final[code]['distritos'] = n_dist
+
+        # 2. Contar Mesas dos Círculos Eleitorais
+        from circuloseleitorais.models import CirculoEleitoral
+        from django.db.models import Sum
+        mesas_count = CirculoEleitoral.objects.filter(eleicao_id=eleicao_ref_id).values('provincia').annotate(total=Sum('num_mesas'))
+        for mc in mesas_count:
+            norm_prov = normalize_key(mc['provincia'])
+            code = MAP_PROV_CODES.get(norm_prov)
+            if code:
+                stats_final[code]['mesas'] = mc['total'] or 0
     
     if request.method == 'POST':
         for code, name in unidades:
@@ -505,10 +681,10 @@ def distribuir_material(request, material_id):
     alocacoes_qs = material.alocacoes.all()
     alocacoes_dict = {a.unidade: a for a in alocacoes_qs}
     
-    # Garantir que novos registos tenham o default geográfico
+    # Garantir que novos registos tenham o default geográfico da eleição selecionada
     for code, name in unidades:
         if code not in alocacoes_dict:
-            stats_p = STATS_PROVINCIAS.get(code, {'distritos': 0, 'mesas': 0})
+            stats_p = stats_final.get(code, {'distritos': 0, 'mesas': 0})
             alocacoes_dict[code] = AlocacaoLogistica(
                 unidade=code, 
                 num_distritos=stats_p['distritos'], 
@@ -519,7 +695,9 @@ def distribuir_material(request, material_id):
         'material': material,
         'unidades': unidades,
         'alocacoes': alocacoes_dict,
-        'stats': STATS_PROVINCIAS
+        'eleicoes': eleicoes,
+        'eleicao_ref_id': int(eleicao_ref_id) if eleicao_ref_id else None,
+        'stats': stats_final
     })
 
 from .forms import PlanoLogisticoForm, TipoDocumentoForm
@@ -736,7 +914,7 @@ def eliminar_tipo_documento(request, tipo_id):
         tipo.delete()
         messages.warning(request, f'Documento {nome} removido do sistema.')
         return redirect('rs:documentos')
-    return render(request, 'ugea/confirm_delete.html', {'objeto': tipo, 'cancel_url': 'rs:documentos'})
+    return render(request, 'rs/confirm_delete.html', {'objeto': tipo, 'cancel_url': 'rs:documentos'})
 
 def preview_generico(request, tipo_id):
     """Visualizador genérico com suporte a impressão em massa territorializada"""

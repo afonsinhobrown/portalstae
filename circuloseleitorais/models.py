@@ -47,3 +47,22 @@ class DivisaoAdministrativa(models.Model):
 
     def __str__(self):
         return f"{self.nivel.capitalize()}: {self.nome} ({self.codigo})"
+
+class DivisaoEleicao(models.Model):
+    eleicao = models.ForeignKey(Eleicao, on_delete=models.CASCADE, related_name='divisoes_adm', verbose_name="Eleição")
+    nome = models.CharField(max_length=200)
+    codigo = models.CharField(max_length=20)
+    nivel = models.CharField(max_length=20, choices=DivisaoAdministrativa.LEVELS)
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subdivisoes')
+    
+    # Referência à divisão base (opcional, para rastreabilidade)
+    divisao_base = models.ForeignKey(DivisaoAdministrativa, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Divisão da Eleição"
+        verbose_name_plural = "Divisões das Eleições"
+        unique_together = ['eleicao', 'codigo']
+        ordering = ['nivel', 'codigo']
+
+    def __str__(self):
+        return f"[{self.eleicao.ano}] {self.nivel.capitalize()}: {self.nome}"

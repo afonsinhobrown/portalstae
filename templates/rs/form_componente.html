@@ -44,8 +44,8 @@
                                     {{ form.tipo_dinamico }}
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold text-muted small">Ano de Referência</label>
-                                    {{ form.ano_referencia }}
+                                    <label class="form-label fw-bold text-muted small">Eleição de Referência</label>
+                                    {{ form.eleicao_referencia }}
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold text-muted small">Qtd. Adquirida Ref.</label>
@@ -58,9 +58,21 @@
 
                                 <!-- Bloco Previsão -->
                                 <div class="col-12 mt-4">
-                                    <div class="bg-primary text-white p-3 rounded-3 mb-2 shadow-sm d-flex justify-content-between align-items-center">
-                                        <h6 class="fw-bold mb-0"><i class="fas fa-chart-line me-2"></i>Cálculo da Nova Previsão (+30%)</h6>
-                                        <span class="badge bg-white text-primary">MARGEM STAE</span>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-7">
+                                            <div class="bg-primary text-white p-3 rounded-3 mb-0 shadow-sm d-flex justify-content-between align-items-center">
+                                                <h6 class="fw-bold mb-0"><i class="fas fa-chart-line me-2"></i>Cálculo da Nova Previsão (+30%)</h6>
+                                                <span class="badge bg-white text-primary">MARGEM STAE</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="form-check form-switch bg-light p-3 rounded-3 border d-flex align-items-center gap-3">
+                                                <div class="ps-1">
+                                                    {{ form.por_distrito }}
+                                                    <label class="form-check-label fw-bold text-dark small ms-2" for="id_por_distrito">CALCULAR POR DISTRITO?</label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -97,6 +109,30 @@
 
                                         const selectTipo = document.getElementById('id_tipo_dinamico');
                                         const inputItem = document.getElementById('id_item');
+
+                                        const checkPorDistrito = document.getElementById('id_por_distrito');
+                                        const selectEleicaoRef = document.getElementById('id_eleicao_referencia');
+                                        const distritosMap = {{ distritos_map|safe|default:"{}" }};
+
+                                        // Função de Cálculo por Distrito
+                                        function calcularPorDistrito() {
+                                            if (checkPorDistrito && checkPorDistrito.checked) {
+                                                const eleicaoId = selectEleicaoRef.value;
+                                                const nDistritos = distritosMap[eleicaoId] || 0;
+                                                
+                                                if (nDistritos > 0) {
+                                                    inputPrevisaoQtd.value = nDistritos;
+                                                    // Opcional: Bloquear input se for por distrito? Melhor deixar editável
+                                                }
+                                            }
+                                        }
+
+                                        if (checkPorDistrito) {
+                                            checkPorDistrito.addEventListener('change', calcularPorDistrito);
+                                        }
+                                        if (selectEleicaoRef) {
+                                            selectEleicaoRef.addEventListener('change', calcularPorDistrito);
+                                        }
 
                                         // Função de Preenchimento Automático do Nome
                                         if (selectTipo && inputItem) {

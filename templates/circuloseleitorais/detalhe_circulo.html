@@ -1,9 +1,4 @@
-{% extends 'base_apps.html' %}
-
-{% block title %}{{ circulo.nome }}{% endblock %}
-{% block module_name %}CÍRCULOS{% endblock %}
-{% block icon %}fas fa-map-marked-alt{% endblock %}
-{% block dashboard_url %}{% url 'circuloseleitorais:dashboard' %}{% endblock %}
+{% extends 'circuloseleitorais/base_circulo.html' %}
 
 {% block page_title %}{{ circulo.nome }} ({{ circulo.codigo }}){% endblock %}
 

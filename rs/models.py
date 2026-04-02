@@ -10,6 +10,7 @@ class PlanoLogistico(models.Model):
     nome = models.CharField(max_length=200, verbose_name="Nome do Plano")
     tipo_operacao = models.CharField(max_length=20, choices=TIPO_OPERACAO, default='VOTACAO', verbose_name="Tipo de Operação")
     eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Eleição Associada")
+    eleicao_referencia = models.ForeignKey('eleicao.Eleicao', on_delete=models.SET_NULL, null=True, blank=True, related_name='planos_ref', verbose_name="Eleição Passada (Referência)", help_text="Ciclo anterior usado como base.")
     
     data_inicio = models.DateField(default=now)
     data_fim = models.DateField(null=True, blank=True)
@@ -85,6 +86,8 @@ class MaterialEleitoral(models.Model):
     tipo_dinamico = models.ForeignKey(TipoMaterial, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tipo de Catálogo")
     
     ano_referencia = models.IntegerField(null=True, blank=True, verbose_name="Ano de Referência")
+    eleicao_referencia = models.ForeignKey('eleicao.Eleicao', on_delete=models.SET_NULL, null=True, blank=True, related_name='materiais_ref', verbose_name="Eleição de Referência")
+
     quantidade_adquirida_referencia = models.IntegerField(default=0, verbose_name="Qtd. Adquirida Ref.")
     preco_unitario_referencia = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Preço Unit. Ref.")
     
@@ -93,6 +96,10 @@ class MaterialEleitoral(models.Model):
     
     preco_unitario = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Preço Unit. Estimado")
     descricao = models.TextField(blank=True, null=True, verbose_name="Notas")
+    
+    # Automatização Geográfica
+    por_distrito = models.BooleanField(default=False, verbose_name="É calculado por Distrito?")
+
     
     class Meta:
         verbose_name = "Previsão de Material"

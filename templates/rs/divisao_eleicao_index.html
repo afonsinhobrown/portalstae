@@ -1,0 +1,159 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Divisão Administrativa por Eleição{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-sitemap{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:divisao_eleicao_index' %}" class="menu-item active"><i class="fas fa-sitemap"></i> <span>Divisão Eleição</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
+<a href="{% url 'rs:gestao_tipos' %}" class="menu-item"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-white p-4 border-light">
+                <h5 class="fw-bold mb-1 text-primary"><i class="fas fa-layer-group me-2"></i>Associar Distritos a uma Eleição</h5>
+                <p class="text-muted small mb-0">Selecione o Ciclo Eleitoral onde deseja configurar a estrutura territorial participante.</p>
+            </div>
+            <div class="card-body p-4 bg-light">
+                <form method="GET" id="eleicaoForm" class="d-flex align-items-center gap-3">
+                    <label class="fw-bold text-dark text-nowrap">Ciclo Eleitoral:</label>
+                    <select name="eleicao_id" class="form-select form-select-lg border-0 shadow-sm rounded-pill" onchange="document.getElementById('eleicaoForm').submit();" required>
+                        <option value="">-- Escolha a Eleição no Select --</option>
+                        {% for e in eleicoes %}
+                        <option value="{{ e.id }}" {% if eleicao_selecionada and eleicao_selecionada.id == e.id %}selected{% endif %}>
+                            {{ e.nome }} ({{ e.ano }}) - {{ e.get_tipo_display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if eleicao_selecionada %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <form method="POST" id="associarForm" action="{% url 'rs:divisao_eleicao_index' %}">
+                {% csrf_token %}
+                <input type="hidden" name="eleicao_id" value="{{ eleicao_selecionada.id }}">
+                
+                <div class="card-header bg-white p-4 border-light d-flex justify-content-between align-items-center position-sticky top-0 z-1 border-bottom">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fas fa-map-marked-alt text-primary me-2"></i>Distritos Participantes</h5>
+                        <p class="text-muted mb-0 small">Marque os distritos que fazem parte de <strong>{{ eleicao_selecionada.nome }}</strong>. As respetivas províncias serão vinculadas automaticamente.</p>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold">
+                            <i class="fas fa-check-circle me-1"></i> APLICAR ASSOCIAÇÃO
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body p-4" style="max-height: 60vh; overflow-y: auto;">
+                    <div class="row g-4">
+                        {% for prov in provincias %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="border rounded-4 p-3 h-100 bg-white hover-border">
+                                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                    <div class="fw-bold text-dark text-uppercase">
+                                        <i class="fas fa-map-marker-alt text-danger me-2"></i>{{ prov.nome }}
+                                    </div>
+                                    <div class="form-check form-switch cursor-pointer">
+                                        <input class="form-check-input cursor-pointer" type="checkbox" id="prov_{{ prov.id }}" onchange="toggleDistritos(this, {{ prov.id }})">
+                                        <label class="form-check-label small" for="prov_{{ prov.id }}">Todos</label>
+                                    </div>
+                                </div>
+                                <div class="distritos-list ps-2" id="list_prov_{{ prov.id }}">
+                                    {% for dist in distritos %}
+                                        {% if dist.parent_id == prov.id %}
+                                        <div class="form-check custom-checkbox mb-2">
+                                            <input class="form-check-input dist-check prov-{{ prov.id }}" type="checkbox" 
+                                                   name="distritos" value="{{ dist.id }}" id="dist_{{ dist.id }}" 
+                                                   {% if dist.id in distritos_associados %}checked{% endif %}>
+                                            <label class="form-check-label text-muted" for="dist_{{ dist.id }}">
+                                                {{ dist.nome }} <small class="text-black-50">({{ dist.codigo }})</small>
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light p-4 border-0 rounded-bottom-4 text-end">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold">
+                        <i class="fas fa-save me-2"></i> APLICAR NA ELEIÇÃO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-mouse-pointer fa-4x text-muted opacity-25 mb-4"></i>
+    <h4 class="text-muted fw-bold">Nenhuma Eleição Selecionada</h4>
+    <p class="text-muted">Por favor, utilize o 'select' acima para escolher o ciclo eleitoral que deseja gerir.</p>
+</div>
+{% endif %}
+
+<style>
+    .hover-border { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .hover-border:hover { border-color: #0d6efd !important; box-shadow: 0 0.125rem 0.25rem rgba(13, 110, 253, 0.075) !important; }
+    .cursor-pointer { cursor: pointer; }
+    .custom-checkbox .form-check-input {
+        width: 1.2rem; height: 1.2rem; margin-top: 0.1rem;
+    }
+    .custom-checkbox .form-check-label {
+        padding-top: 0.1rem; cursor: pointer;
+    }
+</style>
+
+<script>
+    function toggleDistritos(masterCheckbox, provId) {
+        const checkboxes = document.querySelectorAll('.dist-check.prov-' + provId);
+        checkboxes.forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+    }
+
+    // Auto-check "Todos" se todos os distritos da província estiverem checados no load da página
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if eleicao_selecionada %}
+            {% for prov in provincias %}
+            (function(){
+                const allDistricts = document.querySelectorAll('.dist-check.prov-{{ prov.id }}');
+                const checkedDistricts = document.querySelectorAll('.dist-check.prov-{{ prov.id }}:checked');
+                const master = document.getElementById('prov_{{ prov.id }}');
+                if(allDistricts.length > 0 && allDistricts.length === checkedDistricts.length) {
+                    master.checked = true;
+                }
+            })();
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

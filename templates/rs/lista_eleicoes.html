@@ -9,6 +9,7 @@
 {% block menu_items %}
 <a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
 <a href="{% url 'rs:lista_eleicoes' %}" class="menu-item active"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:divisao_eleicao_index' %}" class="menu-item"><i class="fas fa-sitemap"></i> <span>Divisão Eleição</span></a>
 <a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
 <a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
 {% endblock %}
@@ -67,7 +68,15 @@
             <div class="card-footer bg-light p-3 border-0">
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="text-muted">Apoio Logístico Nacional</small>
-                    <a href="{% url 'rs:lista_planos' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ver Planos</a>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'rs:editar_eleicao' e.id %}" class="btn btn-sm btn-outline-secondary rounded-circle" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'rs:eliminar_eleicao' e.id %}" class="btn btn-sm btn-outline-danger rounded-circle" title="Eliminar">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                        <a href="{% url 'rs:lista_planos' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ver Planos</a>
+                    </div>
                 </div>
             </div>
         </div>

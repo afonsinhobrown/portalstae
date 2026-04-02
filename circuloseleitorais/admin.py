@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import CirculoEleitoral, PostoVotacao, DivisaoAdministrativa
+from .models import CirculoEleitoral, PostoVotacao, DivisaoAdministrativa, DivisaoEleicao
+
+@admin.register(DivisaoEleicao)
+class DivisaoEleicaoAdmin(admin.ModelAdmin):
+    list_display = ('eleicao', 'nivel', 'nome', 'codigo', 'parent')
+    list_filter = ('eleicao', 'nivel')
+    search_fields = ('nome', 'codigo')
 
 @admin.register(CirculoEleitoral)
 class CirculoEleitoralAdmin(admin.ModelAdmin):

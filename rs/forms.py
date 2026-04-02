@@ -47,11 +47,12 @@ class TipoMaterialForm(forms.ModelForm):
 class PlanoLogisticoForm(forms.ModelForm):
     class Meta:
         model = PlanoLogistico
-        fields = ['nome', 'tipo_operacao', 'eleicao', 'data_inicio', 'data_fim', 'orcamento_total', 'responsavel', 'descricao']
+        fields = ['nome', 'tipo_operacao', 'eleicao', 'eleicao_referencia', 'data_inicio', 'data_fim', 'orcamento_total', 'responsavel', 'descricao']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Planificação Geral 2028'}),
             'tipo_operacao': forms.Select(attrs={'class': 'form-control'}),
             'eleicao': forms.Select(attrs={'class': 'form-control'}),
+            'eleicao_referencia': forms.Select(attrs={'class': 'form-control'}),
             'data_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'data_fim': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'orcamento_total': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -62,11 +63,12 @@ class PlanoLogisticoForm(forms.ModelForm):
 class MaterialEleitoralForm(forms.ModelForm):
     class Meta:
         model = MaterialEleitoral
-        fields = ['plano', 'item', 'tipo_dinamico', 'ano_referencia', 'quantidade_adquirida_referencia', 'preco_unitario_referencia', 'quantidade_existente', 'quantidade_planeada', 'preco_unitario', 'descricao']
+        fields = ['plano', 'item', 'tipo_dinamico', 'eleicao_referencia', 'ano_referencia', 'por_distrito', 'quantidade_adquirida_referencia', 'preco_unitario_referencia', 'quantidade_existente', 'quantidade_planeada', 'preco_unitario', 'descricao']
         widgets = {
             'plano': forms.Select(attrs={'class': 'form-control'}),
             'item': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Urnas de Votação (Nacional)'}),
             'tipo_dinamico': forms.Select(attrs={'class': 'form-control'}),
+            'eleicao_referencia': forms.Select(attrs={'class': 'form-control'}),
             'ano_referencia': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 2024'}),
             'quantidade_adquirida_referencia': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_quantidade_adquirida_referencia'}),
             'preco_unitario_referencia': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_preco_unitario_referencia'}),

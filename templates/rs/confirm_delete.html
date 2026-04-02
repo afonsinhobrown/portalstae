@@ -1,0 +1,56 @@
+{% extends 'base_apps.html' %}
+
+{% block title %}Confirmar Eliminação{% endblock %}
+{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
+{% block icon %}fas fa-exclamation-triangle{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<a href="{% url 'rs:dashboard' %}" class="menu-item"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
+<a href="{% url 'rs:divisao_eleicao_index' %}" class="menu-item"><i class="fas fa-sitemap"></i> <span>Divisão Eleição</span></a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
+<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
+<a href="{% url 'rs:gestao_tipos' %}" class="menu-item"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 mt-5">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden text-center">
+            <div class="card-header bg-danger text-white p-4">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <h4 class="fw-bold mb-0">Confirmar Eliminação</h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <h5 class="text-dark mb-4">Tem a certeza de que pretende eliminar este registo?</h5>
+                <p class="fs-4 fw-bold text-danger bg-light p-3 rounded-3 border border-danger-subtle mb-4">
+                    {{ objeto }}
+                </p>
+                <div class="alert alert-warning border-warning text-start small mb-4">
+                    <i class="fas fa-info-circle me-2"></i> <strong>Aviso:</strong> Esta ação é irreversível e poderá apagar todos os dados críticos associados a este registo no sistema.
+                </div>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex gap-3 justify-content-center mt-3 flex-wrap">
+                        {% if cancel_url %}
+                        <a href="{% url cancel_url %}" class="btn btn-light border px-4 py-2 fw-bold rounded-pill text-dark shadow-sm">
+                            <i class="fas fa-times me-2"></i> CANCELAR
+                        </a>
+                        {% else %}
+                        <a href="javascript:history.back()" class="btn btn-light border px-4 py-2 fw-bold rounded-pill text-dark shadow-sm">
+                            <i class="fas fa-times me-2"></i> VOLTAR
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-danger px-4 py-2 fw-bold rounded-pill shadow-sm">
+                            <i class="fas fa-trash-alt me-2"></i> ELIMINAR DEFINITIVAMENTE
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
