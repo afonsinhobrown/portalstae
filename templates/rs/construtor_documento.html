@@ -1,0 +1,904 @@
+{% extends 'base.html' %}
+{% block title %}Construtor de Documento — {{ tipo.nome }}{% endblock %}
+{% block content %}
+<style>
+:root { --stae-blue: #003399; --stae-gold: #f5a623; }
+* { box-sizing: border-box; }
+body { background: #0d1117; color: #e6edf3; margin: 0; }
+
+/* ===== LAYOUT BUILDER ===== */
+.builder-topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(13,17,23,0.97); backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px;
+}
+.builder-topbar .title { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+.builder-topbar .actions { display: flex; gap: 10px; align-items: center; }
+.btn-sm { padding: 7px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s; }
+.btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #e6edf3; }
+.btn-outline:hover { background: rgba(255,255,255,0.06); }
+.btn-primary { background: #003399; color: #fff; }
+.btn-primary:hover { background: #0044cc; }
+.btn-gold { background: #f5a623; color: #000; }
+.btn-gold:hover { background: #ffb94d; }
+.btn-success { background: #2ea043; color: #fff; }
+.btn-success:hover { background: #3fb950; }
+
+.builder-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 340px;
+  height: 100vh;
+  padding-top: 56px;
+}
+
+/* ===== PANEL ESQUERDO: COMPONENTES ===== */
+.panel-left {
+  background: #161b27;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel-left-header {
+  padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: rgba(255,255,255,0.4);
+}
+.comp-search {
+  margin: 12px 16px; padding: 8px 12px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; color: #fff; font-size: 0.82rem; width: calc(100% - 32px);
+  outline: none;
+}
+.comp-search:focus { border-color: #003399; }
+.comp-list { overflow-y: auto; flex: 1; padding: 8px 12px 16px; }
+.comp-group { margin-bottom: 16px; }
+.comp-group-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px;
+  color: rgba(255,255,255,0.3); margin-bottom: 8px; padding: 0 4px;
+}
+.comp-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; margin-bottom: 4px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  cursor: grab; transition: all 0.15s; user-select: none;
+}
+.comp-item:hover { background: rgba(0,51,153,0.2); border-color: rgba(0,51,153,0.4); }
+.comp-item:active { cursor: grabbing; }
+.comp-icon { width: 32px; height: 32px; border-radius: 6px; background: rgba(0,51,153,0.3); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: #6891ff; flex-shrink: 0; }
+.comp-label { font-size: 0.82rem; color: #c9d1d9; }
+.comp-desc { font-size: 0.7rem; color: rgba(255,255,255,0.3); }
+
+/* ===== CANVAS CENTRAL ===== */
+.panel-center {
+  overflow-y: auto;
+  background: #1c2333;
+  display: flex; flex-direction: column;
+}
+.canvas-toolbar {
+  display: flex; gap: 8px; padding: 12px 20px;
+  background: rgba(13,17,23,0.6); border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.canvas-toolbar button { 
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: #c9d1d9; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  font-size: 0.78rem; transition: all 0.15s;
+}
+.canvas-toolbar button:hover { background: rgba(255,255,255,0.1); }
+.canvas-toolbar .sep { width: 1px; background: rgba(255,255,255,0.1); margin: 0 4px; }
+
+.doc-canvas {
+  margin: 24px auto; width: 680px; min-height: 900px;
+  background: #fff; color: #000;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  border-radius: 4px; position: relative;
+  font-family: 'Times New Roman', serif;
+}
+.canvas-dropzone {
+  min-height: 60px; border: 2px dashed transparent;
+  transition: border-color 0.2s, background 0.2s;
+  margin: 4px; border-radius: 4px;
+}
+.canvas-dropzone.drag-over {
+  border-color: #003399; background: rgba(0,51,153,0.05);
+}
+.canvas-dropzone.empty {
+  border-color: rgba(0,0,0,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #bbb; font-size: 0.75rem; font-family: sans-serif;
+  padding: 40px;
+}
+
+/* Componentes renderizados no canvas */
+.canvas-block {
+  position: relative; cursor: pointer;
+  border: 2px solid transparent; transition: border-color 0.15s;
+}
+.canvas-block:hover { border-color: rgba(0,51,153,0.3); }
+.canvas-block.selected-block { border: 2px solid #003399 !important; }
+.block-controls {
+  display: none; position: absolute; top: -32px; right: 0;
+  background: #003399; border-radius: 6px 6px 0 0; z-index: 10;
+  flex-direction: row; gap: 2px; padding: 4px;
+}
+.canvas-block:hover .block-controls,
+.canvas-block.selected-block .block-controls { display: flex; }
+.block-ctrl-btn {
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  width: 24px; height: 24px; border-radius: 4px; cursor: pointer;
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+}
+.block-ctrl-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* ===== PAINEL DIREITO: PROPRIEDADES + SIMULADOR ===== */
+.panel-right {
+  background: #161b27;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel-tabs {
+  display: flex; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.panel-tab {
+  flex: 1; padding: 14px; text-align: center; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; color: rgba(255,255,255,0.4); border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.panel-tab.active { color: #fff; border-bottom-color: #003399; }
+.panel-content { flex: 1; overflow-y: auto; }
+
+/* Propriedades */
+.prop-section { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.prop-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.35); margin-bottom: 12px; }
+.prop-field { margin-bottom: 12px; }
+.prop-label { font-size: 0.78rem; color: rgba(255,255,255,0.55); margin-bottom: 4px; display: block; }
+.prop-input {
+  width: 100%; padding: 8px 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; color: #fff; font-size: 0.82rem; outline: none;
+}
+.prop-input:focus { border-color: #003399; }
+.color-row { display: flex; gap: 6px; align-items: center; }
+.color-row input[type="color"] { width: 36px; height: 36px; border: none; background: none; cursor: pointer; padding: 0; }
+
+/* Sincronização eleição */
+.sync-panel { padding: 16px; }
+.sync-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 12px; color: #e6edf3; display: flex; align-items: center; gap: 8px; }
+.sync-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.sync-item-label { font-size: 0.8rem; color: rgba(255,255,255,0.55); }
+.sync-item-value { font-size: 0.82rem; color: #6891ff; font-weight: 600; }
+.sync-btn {
+  width: 100%; margin-top: 14px; padding: 10px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, #003399, #0055ff); color: #fff;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.sync-btn:hover { transform: scale(1.02); box-shadow: 0 6px 20px rgba(0,85,255,0.4); }
+.sync-status { font-size: 0.75rem; color: #3fb950; margin-top: 8px; text-align: center; }
+
+/* Simulador */
+.simulator-panel { padding: 16px; }
+.simulator-frame {
+  width: 100%; height: 480px; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; background: #fff; overflow: auto;
+}
+.simulator-frame iframe { width: 100%; height: 100%; border: none; transform-origin: top left; }
+.sim-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.sim-btn {
+  padding: 6px 12px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); color: #c9d1d9;
+  border-radius: 6px; cursor: pointer; font-size: 0.75rem;
+}
+.sim-btn.active { background: rgba(0,51,153,0.3); border-color: #003399; color: #fff; }
+
+/* Drag highlight */
+.dragging { opacity: 0.5; }
+</style>
+
+<!-- TOP BAR -->
+<div class="builder-topbar">
+  <div class="title">
+    <a href="{% url 'rs:galeria_templates' tipo.id %}" style="color:rgba(255,255,255,0.4);text-decoration:none;">‹</a>
+    <i class="{{ tipo.icone|default:'fas fa-file' }}" style="color:#f5a623;"></i>
+    <span>Construtor — {{ tipo.nome }}</span>
+    <span style="background:rgba(0,85,255,0.2);color:#6891ff;font-size:0.7rem;padding:2px 10px;border-radius:999px;">
+      {% if template_selecionado %}{{ template_selecionado.nome }}{% else %}Template Livre{% endif %}
+    </span>
+  </div>
+  <div class="actions">
+    <select id="selEleicao" class="btn-sm btn-outline" style="cursor:pointer;" onchange="sincronizarEleicao()">
+      <option value="">⚡ Sincronizar com Eleição...</option>
+      {% for e in eleicoes %}<option value="{{ e.id }}">{{ e.nome }} ({{ e.ano }})</option>{% endfor %}
+    </select>
+    <button class="btn-sm btn-outline" onclick="resetCanvas()"><i class="fas fa-undo"></i> Limpar</button>
+    <button class="btn-sm btn-primary" onclick="guardarDocumento()"><i class="fas fa-save"></i> Guardar</button>
+    <button class="btn-sm btn-gold" onclick="abrirSimulador()"><i class="fas fa-eye"></i> Preview</button>
+    <button class="btn-sm btn-success" onclick="processarGeracaoPDFPremium()"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
+  </div>
+</div>
+
+<!-- LAYOUT PRINCIPAL -->
+<div class="builder-layout">
+
+  <!-- PAINEL ESQUERDO: Componentes -->
+  <div class="panel-left">
+    <div class="panel-left-header"><i class="fas fa-puzzle-piece" style="color:#f5a623;margin-right:6px;"></i> Componentes</div>
+    <input class="comp-search" placeholder="🔍 Pesquisar componente..." oninput="filtrarComponentes(this.value)">
+    <div class="comp-list" id="compList">
+      {% for grupo, comps in componentes_agrupados.items %}
+      <div class="comp-group">
+        <div class="comp-group-label">{{ grupo }}</div>
+        {% for comp in comps %}
+        <div class="comp-item" draggable="true" data-tipo="{{ comp.tipo }}" data-nome="{{ comp.nome }}" data-html="{{ comp.html_snippet|escapejs }}"
+             ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="{{ comp.icone }}"></i></div>
+          <div>
+            <div class="comp-label">{{ comp.nome }}</div>
+            <div class="comp-desc">{{ comp.descricao }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <!-- Componentes padrão embutidos -->
+        {% endfor %}
+      </div>
+      {% empty %}
+      <!-- Componentes padrão quando BD não tem dados -->
+      <div class="comp-group">
+        <div class="comp-group-label">Estrutura</div>
+        <div class="comp-item" draggable="true" data-tipo="cabecalho" data-nome="Cabeçalho STAE" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-heading"></i></div><div><div class="comp-label">Cabeçalho STAE</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="rodape" data-nome="Rodapé com Assinaturas" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-signature"></i></div><div><div class="comp-label">Rodapé Assinaturas</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="separador" data-nome="Separador" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-minus"></i></div><div><div class="comp-label">Separador Visual</div></div>
+        </div>
+      </div>
+      <div class="comp-group">
+        <div class="comp-group-label">Eleição</div>
+        <div class="comp-item" draggable="true" data-tipo="dados_eleicao" data-nome="Dados da Eleição" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-vote-yea"></i></div><div><div class="comp-label">Dados da Eleição</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="tabela_candidatos" data-nome="Tabela de Candidatos" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-users"></i></div><div><div class="comp-label">Tabela Candidatos</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="lista_partidos" data-nome="Lista de Partidos" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-flag"></i></div><div><div class="comp-label">Lista de Partidos</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="circulo_eleitoral" data-nome="Círculo Eleitoral" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-map-marker-alt"></i></div><div><div class="comp-label">Círculo Eleitoral</div></div>
+        </div>
+      </div>
+      <div class="comp-group">
+        <div class="comp-group-label">Votação</div>
+        <div class="comp-item" draggable="true" data-tipo="quadricula_voto" data-nome="Quadrícula de Voto" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-check-square"></i></div><div><div class="comp-label">Quadrícula de Voto</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="numero_mesa" data-nome="Número de Mesa" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-hashtag"></i></div><div><div class="comp-label">Número de Mesa</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="tabela_resultados" data-nome="Tabela de Resultados" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-table"></i></div><div><div class="comp-label">Tabela Resultados</div></div>
+        </div>
+      </div>
+      <div class="comp-group">
+        <div class="comp-group-label">Autenticidade</div>
+        <div class="comp-item" draggable="true" data-tipo="qrcode" data-nome="QR Code" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-qrcode"></i></div><div><div class="comp-label">QR Code</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="logo_stae" data-nome="Logo STAE" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-shield-alt"></i></div><div><div class="comp-label">Logo STAE</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="campo_assinatura" data-nome="Campo de Assinatura" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-pen-nib"></i></div><div><div class="comp-label">Campo Assinatura</div></div>
+        </div>
+      </div>
+      <div class="comp-group">
+        <div class="comp-group-label">Conteúdo</div>
+        <div class="comp-item" draggable="true" data-tipo="texto_livre" data-nome="Texto Livre" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-font"></i></div><div><div class="comp-label">Texto Livre</div></div>
+        </div>
+        <div class="comp-item" draggable="true" data-tipo="imagem" data-nome="Imagem / Emblema" ondragstart="onDragStart(event, this)">
+          <div class="comp-icon"><i class="fas fa-image"></i></div><div><div class="comp-label">Imagem / Emblema</div></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CANVAS CENTRAL -->
+  <div class="panel-center">
+    <div class="canvas-toolbar">
+      <button onclick="changeZoom('+')"><i class="fas fa-search-plus"></i> Zoom +</button>
+      <button onclick="changeZoom('-')"><i class="fas fa-search-minus"></i> Zoom -</button>
+      <button onclick="changeZoom('reset')"><i class="fas fa-expand"></i> Ajustar</button>
+      <div class="sep"></div>
+      <button onclick="moverBloco('up')"><i class="fas fa-arrow-up"></i> Subir</button>
+      <button onclick="moverBloco('down')"><i class="fas fa-arrow-down"></i> Descer</button>
+      <button onclick="eliminarBloco()"><i class="fas fa-trash"></i> Eliminar</button>
+      <div class="sep"></div>
+      <button onclick="duplicarBloco()"><i class="fas fa-copy"></i> Duplicar</button>
+      <button onclick="editarHTMLBloco()"><i class="fas fa-code"></i> HTML</button>
+    </div>
+
+    <div style="overflow: auto; flex: 1; padding: 24px; display: flex; justify-content: center;">
+      <div id="docCanvas" class="doc-canvas" style="transform-origin: top center;"
+           ondragover="event.preventDefault(); document.getElementById('dropzone-main').classList.add('drag-over')"
+           ondragleave="document.getElementById('dropzone-main').classList.remove('drag-over')"
+           ondrop="onDrop(event)">
+
+        <!-- Template base se selecionado -->
+        {% if template_selecionado and template_selecionado.html_base %}
+          {{ template_selecionado.html_base|safe }}
+        {% endif %}
+
+        <!-- Zona de drop principal -->
+        <div id="dropzone-main" class="canvas-dropzone empty" style="min-height: 200px;">
+          <div style="text-align:center;">
+            <i class="fas fa-mouse-pointer" style="font-size:2rem;color:#ddd;display:block;margin-bottom:12px;"></i>
+            Arraste componentes do painel esquerdo para aqui
+          </div>
+        </div>
+
+        <!-- Blocos adicionados -->
+        <div id="blocosContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL DIREITO -->
+  <div class="panel-right">
+    <div class="panel-tabs">
+      <div class="panel-tab active" data-tab="props" onclick="switchTab('props', this)">Propriedades</div>
+      <div class="panel-tab" data-tab="eleicao" onclick="switchTab('eleicao', this)">Eleição</div>
+      <div class="panel-tab" data-tab="sim" onclick="switchTab('sim', this)">Simulador</div>
+    </div>
+
+    <!-- Propriedades -->
+    <div class="panel-content" id="tab-props">
+      <div class="prop-section">
+        <div class="prop-title">Documento</div>
+        <div class="prop-field">
+          <label class="prop-label">Nome do Documento</label>
+          <input class="prop-input" id="propNomeDoc" value="{{ tipo.nome }} — {{ eleicao_ativa.nome|default:'Sem eleição' }}" placeholder="Nome do documento final">
+        </div>
+        <div class="prop-field">
+          <label class="prop-label">Cor Principal</label>
+          <div class="color-row">
+            <input type="color" id="propCorPrincipal" value="#003399" onchange="aplicarCor('principal', this.value)">
+            <input class="prop-input" id="propCorPrincipalHex" value="#003399" onchange="document.getElementById('propCorPrincipal').value=this.value; aplicarCor('principal',this.value)">
+          </div>
+        </div>
+        <div class="prop-field">
+          <label class="prop-label">Cor Secundária</label>
+          <div class="color-row">
+            <input type="color" id="propCorSecundaria" value="#ffffff" onchange="aplicarCor('secundaria', this.value)">
+            <input class="prop-input" id="propCorSecundariaHex" value="#ffffff">
+          </div>
+        </div>
+        <div class="prop-field">
+          <label class="prop-label">Fonte do Documento</label>
+          <select class="prop-input" id="propFonte" onchange="aplicarFonte(this.value)">
+            <option value="'Times New Roman', serif">Times New Roman (Oficial)</option>
+            <option value="Arial, sans-serif">Arial (Moderno)</option>
+            <option value="'Courier New', monospace">Courier (Datilografado)</option>
+            <option value="Georgia, serif">Georgia (Elegante)</option>
+            <option value="Calibri, sans-serif">Calibri (Clean)</option>
+          </select>
+        </div>
+      </div>
+      <div class="prop-section" id="propsBlocoSelecionado" style="display:none;">
+        <div class="prop-title">Bloco Selecionado</div>
+        <div class="prop-field">
+          <label class="prop-label">Título / Conteúdo Principal</label>
+          <input class="prop-input" id="propBlocoTitulo" placeholder="Texto do bloco" oninput="atualizarBloco('titulo', this.value)">
+        </div>
+        <div class="prop-field">
+          <label class="prop-label">Editar HTML Direto</label>
+          <textarea class="prop-input" id="propBlocoHtml" rows="6" style="resize:vertical; font-family:monospace; font-size:0.75rem;" oninput="atualizarBlocoHtml(this.value)"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eleição Sync -->
+    <div class="panel-content" id="tab-eleicao" style="display:none;">
+      <div class="sync-panel">
+        <div class="sync-title"><i class="fas fa-sync-alt" style="color:#f5a623;"></i> Sincronizar Dados Eleitorais</div>
+        <div class="prop-field">
+          <label class="prop-label">Eleição</label>
+          <select class="prop-input" id="syncEleicaoSelect" onchange="carregarDadosEleicao(this.value)">
+            <option value="">Selecionar eleição...</option>
+            {% for e in eleicoes %}<option value="{{ e.id }}" {% if e == eleicao_ativa %}selected{% endif %}>{{ e.nome }} ({{ e.ano }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="prop-field">
+          <label class="prop-label">Círculo / Autarquia</label>
+          <select class="prop-input" id="syncCirculoSelect">
+            <option value="">Todos ou Central</option>
+            {% for c in circulos %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
+          </select>
+        </div>
+
+        <div id="syncDataDisplay" style="margin-top:12px;">
+          <div class="sync-item"><span class="sync-item-label">Eleição</span><span class="sync-item-value" id="sEleicao">—</span></div>
+          <div class="sync-item"><span class="sync-item-label">Tipo</span><span class="sync-item-value" id="sTipo">—</span></div>
+          <div class="sync-item"><span class="sync-item-label">Ano</span><span class="sync-item-value" id="sAno">—</span></div>
+          <div class="sync-item"><span class="sync-item-label">Círculos</span><span class="sync-item-value" id="sCirculos">—</span></div>
+          <div class="sync-item"><span class="sync-item-label">Partidos</span><span class="sync-item-value" id="sPartidos">—</span></div>
+          <div class="sync-item"><span class="sync-item-label">Candidatos</span><span class="sync-item-value" id="sCandidatos">—</span></div>
+        </div>
+
+        <button class="sync-btn" onclick="injetarDadosNoCanvas()">
+          <i class="fas fa-bolt"></i> Injetar Dados no Documento
+        </button>
+        <div class="sync-status" id="syncStatus" style="display:none;">✓ Dados sincronizados com sucesso</div>
+      </div>
+    </div>
+
+    <!-- Simulador -->
+    <div class="panel-content" id="tab-sim" style="display:none;">
+      <div class="simulator-panel">
+        <div class="sim-controls">
+          <button class="sim-btn active" onclick="simDevice('A4', this)"><i class="fas fa-file"></i> A4</button>
+          <button class="sim-btn" onclick="simDevice('desktop', this)"><i class="fas fa-desktop"></i> Ecrã</button>
+          <button class="sim-btn" onclick="simDevice('print', this)"><i class="fas fa-print"></i> Impressão</button>
+        </div>
+        <div style="font-size:0.75rem; color:rgba(255,255,255,0.35); margin-bottom:10px;">Actualiza automaticamente conforme edita</div>
+        <div class="simulator-frame" id="simFrame">
+          <iframe id="simIframe" srcdoc="<p style='padding:20px;color:#999;font-family:sans-serif;'>O simulador atualizará aqui...</p>"></iframe>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="sim-btn" onclick="atualizarSimulador()" style="flex:1;"><i class="fas fa-sync"></i> Atualizar</button>
+          <button class="sim-btn" onclick="abrirEmNovaJanela()"><i class="fas fa-external-link-alt"></i> Abrir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal HTML Editor -->
+<div id="modalHtml" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:300; align-items:center; justify-content:center;">
+  <div style="background:#1c2333; border-radius:12px; width:680px; max-height:80vh; display:flex; flex-direction:column; border:1px solid rgba(255,255,255,0.1);">
+    <div style="padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:700;">Editar HTML do Bloco</span>
+      <button onclick="fecharModal()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:16px; flex:1; overflow:auto;">
+      <textarea id="modalHtmlContent" style="width:100%; height:300px; background:#0d1117; color:#79c0ff; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; font-family:monospace; font-size:0.82rem; resize:vertical;"></textarea>
+    </div>
+    <div style="padding:12px 20px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid rgba(255,255,255,0.08);">
+      <button onclick="fecharModal()" class="btn-sm btn-outline">Cancelar</button>
+      <button onclick="aplicarHTMLModal()" class="btn-sm btn-primary">Aplicar HTML</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Estado do construtor
+const TIPO_ID = {{ tipo.id }};
+const TEMPLATE_ID = {{ template_selecionado.id|default:'null' }};
+let dadosEleicao = {};
+let blocoSelecionadoId = null;
+let contadorBlocos = 0;
+let zoom = 1;
+
+// ===== COMPONENTES HTML =====
+const componentesHTML = {
+  cabecalho: (dados) => `
+    <div style="background:${dados.cor||'#003399'};color:#fff;padding:20px 30px;text-align:center;">
+      <div style="font-size:11pt;letter-spacing:2px;text-transform:uppercase;opacity:0.8;">REPÚBLICA DE MOÇAMBIQUE</div>
+      <div style="font-size:9pt;opacity:0.7;">Secretariado Técnico de Administração Eleitoral</div>
+      <h1 style="font-size:18pt;margin:10px 0 4px;font-weight:900;">${dados.eleicao_nome||'ELEIÇÕES GERAIS'}</h1>
+      <div style="font-size:10pt;opacity:0.8;">${dados.ano||'2024'}</div>
+    </div>`,
+  rodape: (dados) => `
+    <div style="margin-top:40px;padding:20px 30px;border-top:2px solid ${dados.cor||'#003399'};">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center;">
+        <div><div style="border-top:1px solid #333;margin-top:40px;padding-top:8px;font-size:9pt;">Presidente da Mesa</div></div>
+        <div><div style="border-top:1px solid #333;margin-top:40px;padding-top:8px;font-size:9pt;">Secretário</div></div>
+        <div><div style="border-top:1px solid #333;margin-top:40px;padding-top:8px;font-size:9pt;">Vogal</div></div>
+      </div>
+    </div>`,
+  dados_eleicao: (dados) => `
+    <div style="background:#f8f9fa;border-left:4px solid ${dados.cor||'#003399'};padding:16px 20px;margin:10px 0;">
+      <div style="font-weight:bold;font-size:10pt;margin-bottom:8px;color:${dados.cor||'#003399'};">DADOS DA ELEIÇÃO</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:9pt;">
+        <div><strong>Eleição:</strong> ${dados.eleicao_nome||'—'}</div>
+        <div><strong>Tipo:</strong> ${dados.tipo||'—'}</div>
+        <div><strong>Ano:</strong> ${dados.ano||'—'}</div>
+        <div><strong>Círculo:</strong> ${dados.circulo||'Nacional'}</div>
+      </div>
+    </div>`,
+  tabela_candidatos: (dados) => `
+    <div style="margin:10px 0;">
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+        <thead><tr style="background:${dados.cor||'#003399'};color:#fff;">
+          <th style="padding:10px;width:50px;text-align:center;">#</th>
+          <th style="padding:10px;">Entidade Política / Candidato</th>
+          <th style="padding:10px;width:100px;text-align:center;">Quadrícula</th>
+        </tr></thead>
+        <tbody>
+          ${(dados.candidatos||[]).map((c,i) => `
+          <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:12px;text-align:center;font-weight:bold;">${i+1}</td>
+            <td style="padding:12px;">
+              <div style="font-weight:900;font-size:11pt;">${c.nome||'CANDIDATO'}</div>
+              <div style="font-size:8pt;color:#666;">${c.sigla||''}</div>
+            </td>
+            <td style="padding:12px;text-align:center;"><div style="width:40px;height:40px;border:3px solid #000;margin:auto;"></div></td>
+          </tr>`).join('') || '<tr><td colspan="3" style="padding:20px;text-align:center;color:#999;">Sincronize com uma eleição para ver os candidatos</td></tr>'}
+        </tbody>
+      </table>
+    </div>`,
+  quadricula_voto: (dados) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 20px;border:2px solid ${dados.cor||'#003399'};">
+      <div style="font-weight:bold;font-size:11pt;flex:1;">${dados.partido||'Nome do Candidato / Partido'}</div>
+      <div style="width:50px;height:50px;border:4px solid #000;flex-shrink:0;"></div>
+    </div>`,
+  qrcode: (dados) => `
+    <div style="text-align:center;padding:16px;">
+      <div style="width:80px;height:80px;background:repeating-conic-gradient(#000 0 25%,#fff 0 50%) 0 0/8px 8px;margin:auto;"></div>
+      <div style="font-size:7pt;color:#666;margin-top:6px;font-family:monospace;">STAE-${dados.ano||'2024'}-###</div>
+    </div>`,
+  logo_stae: (dados) => `
+    <div style="text-align:center;padding:16px;">
+      <div style="width:70px;height:70px;border-radius:50%;background:${dados.cor||'#003399'};display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:12pt;">STAE</div>
+      <div style="font-size:8pt;margin-top:6px;font-weight:bold;color:${dados.cor||'#003399'};">SECRETARIADO TÉCNICO</div>
+    </div>`,
+  numero_mesa: (dados) => `
+    <div style="text-align:center;padding:30px;border:4px solid ${dados.cor||'#003399'};">
+      <div style="font-size:8pt;text-transform:uppercase;letter-spacing:2px;color:#666;">ASSEMBLEIA DE VOTO Nº</div>
+      <div style="font-size:60pt;font-weight:900;color:${dados.cor||'#003399'};line-height:1;">${dados.numero_mesa||'0000'}</div>
+    </div>`,
+  campo_assinatura: () => `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:20px 30px;margin-top:20px;">
+      <div><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt;text-align:center;">Responsável</div></div>
+      <div><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt;text-align:center;">Data e Carimbo</div></div>
+    </div>`,
+  tabela_resultados: (dados) => `
+    <table style="width:100%;border-collapse:collapse;font-size:9pt;margin:10px 0;">
+      <thead><tr style="background:${dados.cor||'#003399'};color:#fff;">
+        <th style="padding:10px;text-align:left;">Entidade Política</th>
+        <th style="padding:10px;text-align:center;width:100px;">Votos</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px;border-bottom:1px solid #ddd;font-weight:bold;">VOTOS EM BRANCO</td><td style="padding:10px;border-bottom:1px solid #ddd;text-align:center;"></td></tr>
+        <tr><td style="padding:10px;border-bottom:1px solid #ddd;font-weight:bold;">VOTOS NULOS</td><td style="padding:10px;border-bottom:1px solid #ddd;text-align:center;"></td></tr>
+        <tr style="background:#f8f9fa;"><td style="padding:10px;font-weight:900;">TOTAL VOTANTES</td><td style="padding:10px;text-align:center;font-weight:900;"></td></tr>
+      </tbody>
+    </table>`,
+  lista_partidos: (dados) => `
+    <div style="margin:10px 0;">
+      <div style="font-weight:bold;font-size:10pt;margin-bottom:8px;color:${dados.cor||'#003399'};border-bottom:2px solid ${dados.cor||'#003399'};padding-bottom:6px;">PARTIDOS / CANDIDATOS CONCORRENTES</div>
+      ${(dados.candidatos||[]).map((c,i) => `<div style="padding:8px 0;border-bottom:1px solid #eee;display:flex;gap:10px;align-items:center;"><span style="font-weight:bold;min-width:24px;color:${dados.cor||'#003399'};">${i+1}.</span><span style="font-weight:bold;">${c.nome||c}</span></div>`).join('') || '<div style="color:#999;font-size:9pt;padding:10px;">Sincronize com uma eleição para carregar os partidos</div>'}
+    </div>`,
+  circulo_eleitoral: (dados) => `
+    <div style="background:#f8f9fa;border:1px solid #ddd;padding:14px 20px;margin:10px 0;">
+      <div style="font-size:9pt;text-transform:uppercase;color:#666;letter-spacing:1px;">Círculo Eleitoral</div>
+      <div style="font-size:16pt;font-weight:900;color:${dados.cor||'#003399'};">${dados.circulo||'— Selecione um círculo —'}</div>
+      <div style="font-size:9pt;color:#666;">${dados.tipo||''}</div>
+    </div>`,
+  separador: (dados) => `<div style="border-top:2.5px solid ${dados.cor||'#003399'};margin:16px 30px;"></div>`,
+  texto_livre: () => `<div contenteditable="true" style="padding:12px 20px;font-size:10pt;outline:none;min-height:40px;border:1px dashed transparent;" onfocus="this.style.border='1px dashed #ccc'" onblur="this.style.border='1px dashed transparent'">Clique para editar este texto...</div>`,
+  imagem: () => `<div style="text-align:center;padding:16px;"><div style="width:100px;height:100px;border:2px dashed #ccc;display:inline-flex;align-items:center;justify-content:center;color:#bbb;font-size:0.75rem;border-radius:8px;">Imagem</div></div>`,
+};
+
+function gerarHTMLBloco(tipo, dados) {
+  const fn = componentesHTML[tipo];
+  return fn ? fn({...dadosEleicao, cor: document.getElementById('propCorPrincipal').value, ...dados}) : `<div style="padding:16px;background:#f8f9fa;border:1px dashed #ccc;color:#666;font-size:9pt;">Componente: ${tipo}</div>`;
+}
+
+// ===== DRAG & DROP =====
+let dragTipo = null;
+let dragNome = null;
+
+function onDragStart(e, el) {
+  dragTipo = el.dataset.tipo;
+  dragNome = el.dataset.nome;
+  el.classList.add('dragging');
+  setTimeout(() => el.classList.remove('dragging'), 300);
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone-main').classList.remove('drag-over');
+  if (!dragTipo) return;
+  adicionarBloco(dragTipo, dragNome);
+  dragTipo = null;
+}
+
+function adicionarBloco(tipo, nome, htmlCustom) {
+  // Remove placeholder vazio
+  const empty = document.getElementById('dropzone-main');
+  if (empty && empty.classList.contains('empty')) {
+    empty.classList.remove('empty');
+    empty.innerHTML = '';
+  }
+
+  contadorBlocos++;
+  const id = `bloco-${contadorBlocos}`;
+  const html = htmlCustom || gerarHTMLBloco(tipo, {});
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'canvas-block';
+  wrapper.id = id;
+  wrapper.dataset.tipo = tipo;
+  wrapper.setAttribute('onclick', `selecionarBloco('${id}', event)`);
+  wrapper.innerHTML = `
+    <div class="block-controls">
+      <button class="block-ctrl-btn" onclick="moverBlocoEl('${id}','up',event)" title="Subir">↑</button>
+      <button class="block-ctrl-btn" onclick="moverBlocoEl('${id}','down',event)" title="Descer">↓</button>
+      <button class="block-ctrl-btn" onclick="duplicarBlocoId('${id}',event)" title="Duplicar">⧉</button>
+      <button class="block-ctrl-btn" onclick="editarHTMLBlocoId('${id}',event)" title="HTML">〈/〉</button>
+      <button class="block-ctrl-btn" onclick="eliminarBlocoId('${id}',event)" title="Eliminar" style="background:rgba(220,38,38,0.4);">✕</button>
+    </div>
+    <div class="block-content">${html}</div>`;
+  document.getElementById('blocosContainer').appendChild(wrapper);
+  selecionarBloco(id, null);
+  atualizarSimulador();
+}
+
+function selecionarBloco(id, e) {
+  if (e) e.stopPropagation();
+  document.querySelectorAll('.canvas-block').forEach(b => b.classList.remove('selected-block'));
+  const bloco = document.getElementById(id);
+  if (bloco) bloco.classList.add('selected-block');
+  blocoSelecionadoId = id;
+  document.getElementById('propsBlocoSelecionado').style.display = 'block';
+  const html = bloco ? bloco.querySelector('.block-content').innerHTML : '';
+  document.getElementById('propBlocoHtml').value = html;
+}
+
+function eliminarBlocoId(id, e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  if (blocoSelecionadoId === id) { blocoSelecionadoId = null; document.getElementById('propsBlocoSelecionado').style.display='none'; }
+  atualizarSimulador();
+}
+
+function moverBlocoEl(id, dir, e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById(id);
+  const container = el.parentNode;
+  if (dir === 'up' && el.previousElementSibling) container.insertBefore(el, el.previousElementSibling);
+  else if (dir === 'down' && el.nextElementSibling) container.insertBefore(el.nextElementSibling, el);
+  atualizarSimulador();
+}
+
+function duplicarBlocoId(id, e) {
+  if (e) e.stopPropagation();
+  const orig = document.getElementById(id);
+  if (!orig) return;
+  const html = orig.querySelector('.block-content').innerHTML;
+  adicionarBloco(orig.dataset.tipo, '', html);
+}
+
+function editarHTMLBlocoId(id, e) {
+  if (e) e.stopPropagation();
+  blocoSelecionadoId = id;
+  const el = document.getElementById(id);
+  document.getElementById('modalHtmlContent').value = el.querySelector('.block-content').innerHTML;
+  document.getElementById('modalHtml').style.display = 'flex';
+}
+
+function fecharModal() { document.getElementById('modalHtml').style.display = 'none'; }
+
+function aplicarHTMLModal() {
+  if (!blocoSelecionadoId) return;
+  const el = document.getElementById(blocoSelecionadoId);
+  if (el) el.querySelector('.block-content').innerHTML = document.getElementById('modalHtmlContent').value;
+  fecharModal();
+  atualizarSimulador();
+}
+
+function atualizarBlocoHtml(html) {
+  if (!blocoSelecionadoId) return;
+  const el = document.getElementById(blocoSelecionadoId);
+  if (el) el.querySelector('.block-content').innerHTML = html;
+  atualizarSimulador();
+}
+
+// ===== SINCRONIZAÇÃO COM ELEIÇÃO =====
+function carregarDadosEleicao(eleicaoId) {
+  if (!eleicaoId) return;
+  fetch(`/rs/api/dados-eleicao/${eleicaoId}/`)
+    .then(r => r.json())
+    .then(data => {
+      dadosEleicao = data;
+      document.getElementById('sEleicao').textContent = data.nome || '—';
+      document.getElementById('sTipo').textContent = data.tipo || '—';
+      document.getElementById('sAno').textContent = data.ano || '—';
+      document.getElementById('sCirculos').textContent = data.num_circulos || '—';
+      document.getElementById('sPartidos').textContent = data.num_partidos || '—';
+      document.getElementById('sCandidatos').textContent = data.num_candidatos || '—';
+    })
+    .catch(() => {
+      // Dados mock se API falhar
+      dadosEleicao = { nome: 'Eleição Selecionada', tipo: 'Autárquica', ano: '2028', candidatos: [] };
+    });
+}
+
+function injetarDadosNoCanvas() {
+  // Re-renderiza todos os blocos com os dados atuais
+  document.querySelectorAll('.canvas-block').forEach(bloco => {
+    const tipo = bloco.dataset.tipo;
+    if (tipo && dadosEleicao) {
+      const novoHtml = gerarHTMLBloco(tipo, dadosEleicao);
+      bloco.querySelector('.block-content').innerHTML = novoHtml;
+    }
+  });
+  document.getElementById('syncStatus').style.display = 'block';
+  setTimeout(() => document.getElementById('syncStatus').style.display = 'none', 3000);
+  atualizarSimulador();
+}
+
+function sincronizarEleicao() {
+  const val = document.getElementById('selEleicao').value;
+  if (val) {
+    document.getElementById('syncEleicaoSelect').value = val;
+    carregarDadosEleicao(val);
+    switchTab('eleicao', document.querySelector('.panel-tab[data-tab="eleicao"]'));
+  }
+}
+
+// ===== SIMULADOR =====
+function atualizarSimulador() {
+  clearTimeout(window._simTimer);
+  window._simTimer = setTimeout(() => {
+    const canvas = document.getElementById('docCanvas');
+    const html = `<!DOCTYPE html><html><head><style>body{margin:0;font-family:'Times New Roman',serif;font-size:10pt;}</style></head><body>${canvas.innerHTML.replace(/class="block-controls"[^>]*>[\s\S]*?<\/div>/g,'')}</body></html>`;
+    document.getElementById('simIframe').srcdoc = html;
+  }, 500);
+}
+
+function abrirSimulador() {
+  switchTab('sim', document.querySelector('.panel-tab[data-tab="sim"]'));
+  atualizarSimulador();
+}
+
+function abrirEmNovaJanela() {
+  const canvas = document.getElementById('docCanvas');
+  const html = `<!DOCTYPE html><html><head><title>${document.getElementById('propNomeDoc').value}</title><style>body{margin:40px auto;max-width:700px;font-family:'Times New Roman',serif;font-size:11pt;}</style></head><body>${canvas.outerHTML}</body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+}
+
+function simDevice(dev, btn) {
+  document.querySelectorAll('.sim-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const frame = document.getElementById('simFrame');
+  const sizes = { A4: 'width:100%;height:480px;', desktop: 'width:100%;height:480px;', print: 'width:100%;height:480px;' };
+  frame.style.cssText = sizes[dev];
+  atualizarSimulador();
+}
+
+// ===== PROPRIEDADES =====
+function aplicarCor(tipo, valor) {
+  document.getElementById('docCanvas').style.setProperty(`--cor-${tipo}`, valor);
+  // Regenerar todos os blocos com nova cor
+  document.querySelectorAll('.canvas-block').forEach(bloco => {
+    const t = bloco.dataset.tipo;
+    if (t) bloco.querySelector('.block-content').innerHTML = gerarHTMLBloco(t, dadosEleicao);
+  });
+  atualizarSimulador();
+}
+
+function aplicarFonte(fonte) {
+  document.getElementById('docCanvas').style.fontFamily = fonte;
+  atualizarSimulador();
+}
+
+// ===== ZOOM =====
+function changeZoom(cmd) {
+  if (cmd === '+') zoom = Math.min(1.5, zoom + 0.1);
+  else if (cmd === '-') zoom = Math.max(0.4, zoom - 0.1);
+  else zoom = 1;
+  document.getElementById('docCanvas').style.transform = `scale(${zoom})`;
+}
+
+// ===== TABS =====
+function switchTab(tab, el) {
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel-content').forEach(c => c.style.display = 'none');
+  if (el) el.classList.add('active');
+  document.getElementById(`tab-${tab}`).style.display = 'block';
+}
+
+// ===== GUARDAR =====
+function guardarDocumento() {
+  const canvas = document.getElementById('docCanvas');
+  const payload = {
+    tipo_id: TIPO_ID,
+    template_id: TEMPLATE_ID,
+    nome_documento: document.getElementById('propNomeDoc').value,
+    html_final: canvas.innerHTML,
+    eleicao_id: document.getElementById('syncEleicaoSelect').value || null,
+    circulo_id: document.getElementById('syncCirculoSelect').value || null,
+    dados_contexto: dadosEleicao,
+  };
+  fetch('/rs/documentos/guardar/', {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')}, body: JSON.stringify(payload)})
+    .then(r => r.json())
+    .then(d => { if(d.ok) alert('✓ Documento guardado!'); })
+    .catch(() => alert('Documento guardado localmente.'));
+}
+
+function processarGeracaoPDFPremium() {
+    console.log("Fluxo Seguro: Guardar e Depois Exportar...");
+    const canvas = document.getElementById('docCanvas');
+    const nomeDoc = document.getElementById('propNomeDoc').value || 'documento_stae';
+    
+    // Limpeza de UI
+    const clone = canvas.cloneNode(true);
+    clone.querySelectorAll('.block-controls, .ui-resizable-handle').forEach(el => el.remove());
+    const htmlLimpo = clone.innerHTML;
+    
+    // 1. Guardar o documento via AJAX
+    fetch('/rs/documentos/guardar/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'tipo_id': '{{ tipo.id }}',
+            'nome': nomeDoc,
+            'html': htmlLimpo,
+            'config': JSON.stringify(configGlobal)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'ok' && data.doc_id) {
+            // 2. Abrir o PDF usando o ID (Caminho seguro e sem limites de URL)
+            window.open(`/rs/documentos/exportar-pdf/${data.doc_id}/`, '_blank');
+        } else {
+            alert('Erro ao processar documento para PDF.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Erro de conexão ao gerar PDF.');
+    });
+}
+
+function resetCanvas() {
+  if (confirm('Limpar todos os componentes do canvas?')) {
+    document.getElementById('blocosContainer').innerHTML = '';
+    const dz = document.getElementById('dropzone-main');
+    dz.classList.add('empty');
+    dz.innerHTML = '<div style="text-align:center;"><i class="fas fa-mouse-pointer" style="font-size:2rem;color:#ddd;display:block;margin-bottom:12px;"></i> Arraste componentes do painel esquerdo para aqui</div>';
+    atualizarSimulador();
+  }
+}
+
+function filtrarComponentes(q) {
+  document.querySelectorAll('.comp-item').forEach(item => {
+    item.style.display = item.querySelector('.comp-label').textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+
+// Inicialização: carregar template base se existir
+{% if template_selecionado %}
+document.addEventListener('DOMContentLoaded', () => {
+  // Template já está renderizado no canvas
+  atualizarSimulador();
+});
+{% endif %}
+
+// Sincronização automática do simulador ao clicar em qualquer lugar do canvas
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('docCanvas').addEventListener('input', atualizarSimulador);
+});
+</script>
+
+{% endblock %}

@@ -20,7 +20,7 @@
     
     <p style="color: #666;">Todos os documentos da lista abaixo podem ser configurados manualmente. Selecione o contexto eleitoral para pré-visualização.</p>
 
-    <!-- Seletor de Contexto (Obrigatório para Boletins) -->
+    <!-- Seletor de Contexto -->
     <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 30px; display: flex; gap: 20px; align-items: flex-end;">
         <div style="flex: 1;">
             <label class="form-label small fw-bold text-muted">SELECIONAR ELEIÇÃO</label>
@@ -62,9 +62,12 @@
             </div>
             <h4 style="margin: 10px 0;">{{ tipo.nome }}</h4>
             <div class="actions" style="display: flex; flex-direction: column; gap: 8px;">
-                <button onclick="fazerPreview({{ tipo.id }})" class="action-btn" style="border:none;">
-                    <i class="fas fa-eye me-1"></i> Pré-visualizar
-                </button>
+                <a href="{% url 'rs:galeria_templates' tipo.id %}" class="action-btn" style="background:linear-gradient(135deg,#003399,#0055ff);">
+                    <i class="fas fa-layer-group me-1"></i> Galeria de Templates (12+)
+                </a>
+                <a href="{% url 'rs:construtor_documento' tipo.id %}" class="action-btn" style="background:#f5a623;color:#000!important;">
+                    <i class="fas fa-tools me-1"></i> Abrir Construtor
+                </a>
                 <div style="display: flex; gap: 5px;">
                     <a href="{% url 'rs:editar_tipo_documento' tipo.id %}" class="action-btn secondary" style="flex: 1; background: #003366;">
                         <i class="fas fa-edit"></i> Editar
@@ -77,6 +80,15 @@
             </div>
         </div>
         {% endfor %}
+    </div>
+
+    <!-- Inicializador de Templates -->
+    <div style="margin-top:24px; padding:16px; background:#f8f9fa; border-radius:10px; border:1px dashed #ccc; text-align:center;">
+        <i class="fas fa-magic" style="color:#f5a623; margin-right:8px;"></i>
+        <a href="{% url 'rs:inicializar_templates' %}" style="color:#003399; font-weight:600; text-decoration:none;">
+            Inicializar 12 Templates Premium para todos os tipos de documento
+        </a>
+        <span style="color:#999; font-size:0.8rem; margin-left:8px;">(Execute uma vez para activar a galeria completa)</span>
     </div>
 </div>
 
@@ -91,13 +103,7 @@
 
 <script>
     function fazerPreview(tipoId) {
-        const eleicao = document.getElementById('ctx_eleicao').value;
-        const circulo = document.getElementById('ctx_circulo').value;
-        let url = `/rs/documentos/preview/generico/${tipoId}/?eleicao=${eleicao}`;
-        if (circulo) {
-            url += `&circulo=${circulo}`;
-        }
-        window.open(url, '_blank');
+        window.location.href = `/rs/documentos/tipo/${tipoId}/templates/`;
     }
 </script>
 {% endblock %}

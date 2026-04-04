@@ -40,15 +40,21 @@
                     <p class="text-muted">{{ plano.descricao|default:"Sem descrição adicional." }}</p>
                     
                     <div class="d-flex gap-2 mt-4 flex-wrap">
-                        <a href="{% url 'rs:adicionar_material' plano.id %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <a href="{% url 'rs:sugerir_ia' plano.id %}" class="btn btn-primary rounded-pill px-4 shadow-sm border-0 fw-bold" style="background: linear-gradient(45deg, #6610f2, #0d6efd);">
+                            <i class="fas fa-microchip me-2"></i>Motor IA
+                        </a>
+                        <a href="{% url 'rs:adicionar_material' plano.id %}" class="btn btn-dark rounded-pill px-4">
                             <i class="fas fa-plus-circle me-2"></i>Adicionar Material
                         </a>
-                        <a href="{% url 'rs:adicionar_atividade' plano.id %}" class="btn btn-outline-primary rounded-pill px-4">
+                        <a href="{% url 'rs:adicionar_atividade' plano.id %}" class="btn btn-outline-dark rounded-pill px-4">
                             <i class="fas fa-tasks me-2"></i>Registar Atividade
                         </a>
-                        <a href="{% url 'rs:selecao_relatorio' plano.id %}" class="btn btn-dark rounded-pill px-4">
-                            <i class="fas fa-print me-2"></i>Mapa de Distribuição PDF
+                        <a href="{% url 'rs:selecao_relatorio' plano.id %}" class="btn btn-light rounded-pill px-4 border">
+                            <i class="fas fa-print me-2"></i>Mapa PDF
                         </a>
+                        <button type="button" class="btn btn-warning rounded-pill px-4 text-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalImportPlano">
+                            <i class="fas fa-file-import me-2"></i>Importar Modelo
+                        </button>
                     </div>
                 </div>
                 <div class="col-md-4 bg-light border-start p-4 d-flex flex-column justify-content-center">
@@ -82,9 +88,10 @@
                             <thead class="bg-light text-muted small fw-bold text-uppercase">
                                 <tr>
                                     <th class="ps-4">Material (Nacional)</th>
-                                    <th>Meta Nacional</th>
-                                    <th>Distribuído</th>
-                                    <th>Saldo a Alocar</th>
+                                    <th class="text-center">Meta Nac.</th>
+                                    <th class="text-center">Reforço (A)</th>
+                                    <th class="text-center">Preço Unit. (B)</th>
+                                    <th class="text-end pe-4">Custo Item (A x B)</th>
                                     <th class="text-end pe-4">Ações</th>
                                 </tr>
                             </thead>
@@ -95,16 +102,20 @@
                                         <div class="fw-bold text-dark">{{ m.item }}</div>
                                         <div class="smaller text-muted">{{ m.tipo_dinamico.nome|default:"Equipamento" }}</div>
                                     </td>
-                                    <td class="fw-bold">{{ m.quantidade_planeada }}</td>
-                                    <td>
-                                        <span class="text-muted">{{ m.total_distribuido|default:0 }}</span>
-                                    </td>
-                                    <td>
-                                        {% if m.saldo_a_distribuir > 0 %}
-                                            <span class="badge bg-warning text-dark">{{ m.saldo_a_distribuir }} em falta</span>
+                                    <td class="text-center fw-bold">{{ m.quantidade_planeada }}</td>
+                                    <td class="text-center">
+                                        {% if m.reforco_nacional > 0 %}
+                                            <span class="text-primary fw-bold">{{ m.reforco_nacional }}</span>
                                         {% else %}
-                                            <span class="badge bg-success"><i class="fas fa-check me-1"></i> Alocado</span>
+                                            <span class="text-success small">EM STOCK</span>
                                         {% endif %}
+                                    </td>
+                                    <td class="text-center text-muted small">MZN {{ m.preco_unitario|floatformat:2 }}</td>
+                                    <td class="text-end fw-bold text-primary pe-4">
+                                        MZN {{ m.custo_total|floatformat:2 }}
+                                        <div class="smaller text-muted fw-normal" style="font-size: 0.75rem;">
+                                            {{ m.reforco_nacional }} &times; {{ m.preco_unitario|floatformat:2 }}
+                                        </div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group">
@@ -123,7 +134,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center p-5 text-muted">
+                                    <td colspan="6" class="text-center p-5 text-muted">
                                         <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
                                         <p>Nenhum material associado a este plano.</p>
                                     </td>
@@ -131,10 +142,14 @@
                                 {% endfor %}
                             </tbody>
                             {% if materiais %}
-                            <tfoot class="bg-light bg-opacity-50">
+                            <tfoot class="bg-light bg-opacity-75">
                                 <tr>
-                                    <td colspan="3" class="ps-4 fw-bold text-dark">Subtotal Materiais</td>
-                                    <td class="text-end pe-4 fw-bold text-dark">MZN {{ total_materiais|floatformat:2 }}</td>
+                                    <td colspan="4" class="ps-4 fw-bold text-dark">Subtotal Orçamentário de Materiais</td>
+                                    <td class="text-end pe-4 fw-bold text-primary">
+                                        MZN {{ total_materiais|floatformat:2 }}
+                                        <div class="smaller text-muted fw-normal" style="font-size: 0.7rem;">Soma dos custos por item</div>
+                                    </td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                             {% endif %}
@@ -183,6 +198,40 @@
                 {% endif %}
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal Importar Plano -->
+<div class="modal fade" id="modalImportPlano" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" action="{% url 'rs:importar_modelo_plano' plano.id %}" class="modal-content border-0 shadow-lg rounded-4">
+            {% csrf_token %}
+            <div class="modal-header border-0 pb-0 ps-4 pt-4">
+                <h5 class="fw-bold"><i class="fas fa-clone text-warning me-2"></i>Importar Modelo Logístico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-4">Escolha um plano de referência. O sistema irá abrir a página de seleção de materiais para confirmar a distribuição provincial.</p>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Plano de Origem (Modelo)</label>
+                    <select name="plano_origem_id" id="id_plano_origem_id" class="form-select rounded-3 border-light bg-light p-3" required>
+                        <option value="">Selecione o plano modelo...</option>
+                        {% for p in planos_disponiveis %}
+                            <option value="{{ p.id }}">{{ p.nome }} ({{ p.data_inicio|date:"Y" }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="alert alert-info border-0 rounded-3 small">
+                    <i class="fas fa-info-circle me-2"></i> No próximo passo poderá marcar quais os materiais que pretende sincronizar.
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-warning rounded-pill px-4 text-dark fw-bold shadow-sm">
+                    Iniciar Sincronização <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

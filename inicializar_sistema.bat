@@ -20,10 +20,11 @@ if not exist "venv/Scripts/python.exe" (
 echo [OK] Ambiente virtual detectado.
 echo.
 
-:: 2. Verificação de Base de Dados (Otimizado)
-echo [2/5] Ignorando migrações automatizadas para velocidade máxima...
-:: venv\Scripts\python.exe manage.py migrate --noinput
-echo [OK] Pronto para iniciar.
+:: 2. Verificação de Base de Dados (Otimizado para Planeamento)
+echo [2/5] Sincronizando tabelas de Planeamento Eleitoral...
+venv\Scripts\python.exe manage.py makemigrations rs --noinput
+venv\Scripts\python.exe manage.py migrate rs --noinput
+echo [OK] Base de dados atualizada.
 echo.
 
 :: 3. Sincronização de Templates (Otimizado)
@@ -42,9 +43,9 @@ echo.
 echo [5/5] Iniciando o servidor...
 echo.
 echo ========================================================
-echo   SISTEMA PRONTO - ACESSE: http://localhost:8000
+echo   SISTEMA PRONTO - ACESSE: http://127.0.0.1:8500
 echo ========================================================
 echo.
-venv\Scripts\python.exe manage.py runserver 8000
+venv\Scripts\python.exe manage.py runserver 8500 --skip-checks
 
 PAUSE

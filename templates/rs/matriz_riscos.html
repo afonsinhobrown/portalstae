@@ -1,0 +1,98 @@
+{% extends 'rs/base_rs.html' %}
+
+{% block title %}Matriz de Riscos Operacionais | STAE{% endblock %}
+
+{% block rs_content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mt-2">7. Matriz de Riscos Operacionais</h2>
+    </div>
+
+    <!-- PAINEL DE IDENTIFICAÇÃO DE RISCO (VISÍVEL E DIRETO) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5 border-start border-5 border-danger bg-dark text-white">
+        <div class="card-header bg-transparent py-3 border-0">
+            <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-biohazard me-2"></i> Identificar Nova Ameaça ao Ciclo</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_risco">
+                <div class="col-md-3">
+                    <label class="smaller fw-bold mb-1">ÁREA DO RISCO</label>
+                    <input type="text" name="area" class="form-control rounded-pill bg-secondary text-white border-0" placeholder="Ex: Comunicação" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="smaller fw-bold mb-1">DESCRIÇÃO DA AMEAÇA</label>
+                    <input type="text" name="descricao" class="form-control rounded-pill bg-secondary text-white border-0" placeholder="Ex: Falha na rede 4G nos distritos do norte" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="smaller fw-bold mb-1">PLANO DE MITIGAÇÃO</label>
+                    <input type="text" name="plano_mitigacao" class="form-control rounded-pill bg-secondary text-white border-0" placeholder="Ex: Ativação de rádio VHF" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="smaller fw-bold mb-1">PROBABILIDADE</label>
+                    <select name="nivel_probabilidade" class="form-select rounded-pill bg-secondary text-white border-0">
+                        <option value="1">Baixa</option>
+                        <option value="2">Média</option>
+                        <option value="3">Alta</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="smaller fw-bold mb-1">IMPACTO</label>
+                    <select name="nivel_impacto" class="form-select rounded-pill bg-secondary text-white border-0">
+                        <option value="1">Baixo</option>
+                        <option value="2">Moderado</option>
+                        <option value="3">Crítico</option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold shadow-lg py-2">
+                        <i class="fas fa-shield-alt me-1"></i> CATALOGAR RISCO IMEDIATO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Previsão e Mitigação de Incidentes</h5>
+            <div class="badge bg-danger rounded-pill shadow-sm">{{ riscos.count }} Riscos Ativos</div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">ÁREA / INCIDÊNCIA</th>
+                            <th class="text-center">PROBABILIDADE</th>
+                            <th class="text-center">IMPACTO</th>
+                            <th class="text-center">ESTADO</th>
+                            <th class="text-end pe-4">MITIGAÇÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in riscos %}
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ r.area }}</td>
+                            <td class="text-center">{{ r.get_nivel_probabilidade_display }}</td>
+                            <td class="text-center">{{ r.get_nivel_impacto_display }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if r.estado == 'critico' %}bg-danger{% elif r.estado == 'mitigado' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {{ r.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4 text-muted smaller italic">{{ r.plano_mitigacao }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center p-5 text-muted italic">Sem riscos críticos registados para este plano.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

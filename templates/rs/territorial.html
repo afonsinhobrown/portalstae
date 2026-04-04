@@ -1,0 +1,54 @@
+{% extends 'base_apps.html' %}
+{% block title %}Planeamento Territorial Eleitoral | STAE{% endblock %}
+{% block module_name %}PLANEAMENTO TERRITORIAL{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'rs:planeamento_hub' %}" class="text-decoration-none smaller text-muted">
+            <i class="fas fa-arrow-left me-1"></i> Voltar ao Hub
+        </a>
+        <h2 class="fw-bold text-dark mt-2">2. Planeamento e Redistribuição Territorial</h2>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="fw-bold mb-0">Monitoria de Locais de Votação e Simulados</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">ZONA / DISTRITO</th>
+                            <th class="text-center">ELEITORES ESTIMADOS</th>
+                            <th class="text-center">MESAS PLANEADAS</th>
+                            <th class="text-end pe-4">RISCO DE ACESSO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in territorio %}
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ t.nome_localizacao }}</td>
+                            <td class="text-center">{{ t.total_eleitores_estimado }}</td>
+                            <td class="text-center">{{ t.mesas_voto_planeadas }}</td>
+                            <td class="text-end pe-4">
+                                {% if t.risco_acesso_chuva %}
+                                <span class="badge bg-danger rounded-pill">CRÍTICO (CHUVA)</span>
+                                {% else %}
+                                <span class="badge bg-success rounded-pill">ESTÁVEL</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center p-5 text-muted italic">Nenhuma simulação territorial registada para este plano.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

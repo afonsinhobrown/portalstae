@@ -1,0 +1,58 @@
+{% extends 'base_apps.html' %}
+
+{% block icon %}fas fa-truck-ramp-box{% endblock %}
+{% block module_name %}LOGÍSTICA E PLANEAMENTO{% endblock %}
+{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+
+{% block menu_items %}
+<div class="px-3 mb-2 text-white-50 smaller fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 1px;">Gestão de Base</div>
+<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item {% if request.resolver_match.url_name == 'lista_eleicoes' %}active{% endif %}">
+    <i class="fas fa-vote-yea text-warning"></i> <span>Ciclos Eleitorais</span>
+</a>
+<a href="{% url 'rs:lista_planos' %}" class="menu-item {% if request.resolver_match.url_name == 'lista_planos' %}active{% endif %}">
+    <i class="fas fa-truck-loading text-success"></i> <span>Gestão de Planos Logísticos</span>
+</a>
+
+<div class="px-3 mt-3 mb-2 text-white-50 smaller fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 1px;">Centros de Comando</div>
+<a href="{% url 'rs:dashboard' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <i class="fas fa-tower-observation text-info"></i> <span>Cockpit de Soberania (360°)</span>
+</a>
+<a href="{% url 'rs:planeamento_hub' %}" class="menu-item {% if request.resolver_match.url_name == 'planeamento_hub' %}active{% endif %}">
+    <i class="fas fa-th-large"></i> <span>Hub de 11 Pontos</span>
+</a>
+
+<div class="px-3 mt-4 mb-2 text-white-50 smaller fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 1px;">Áreas de Suporte</div>
+<a href="{% url 'rs:divisao_eleicao_index' %}" class="menu-item {% if request.resolver_match.url_name == 'divisao_eleicao_index' %}active{% endif %}">
+    <i class="fas fa-sitemap"></i> <span>Divisão Eleição</span>
+</a>
+<a href="{% url 'rs:documentos' %}" class="menu-item {% if request.resolver_match.url_name == 'documentos' %}active{% endif %}">
+    <i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span>
+</a>
+<a href="{% url 'rs:gestao_categorias' %}" class="menu-item {% if request.resolver_match.url_name == 'gestao_categorias' %}active{% endif %}">
+    <i class="fas fa-tags"></i> <span>Catálogo de Materiais</span>
+</a>
+<a href="{% url 'rs:controlo_editais' %}" class="menu-item {% if request.resolver_match.url_name == 'controlo_editais' %}active{% endif %}">
+    <i class="fas fa-check-double"></i> <span>Gestão de Editais</span>
+</a>
+
+<div class="px-3 mt-4 mb-2 text-white-50 smaller fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 1px;">11 Pontos de Planeamento</div>
+<a href="{% url 'rs:calendario_eleitoral' %}" class="menu-item {% if request.resolver_match.url_name == 'calendario_eleitoral' %}active{% endif %}">
+    <i class="fas fa-calendar-check text-warning"></i> <span>1. Calendário (Gantt)</span>
+</a>
+<a href="{% url 'rs:planeamento_territorial' %}" class="menu-item {% if request.resolver_match.url_name == 'planeamento_territorial' %}active{% endif %}">
+    <i class="fas fa-map-marked-alt text-success"></i> <span>2. Território</span>
+</a>
+<a href="{% url 'rs:gestao_rh_plano' %}" class="menu-item {% if request.resolver_match.url_name == 'gestao_rh_plano' %}active{% endif %}">
+    <i class="fas fa-users-cog text-info"></i> <span>3. Recursos Humanos</span>
+</a>
+<a href="{% url 'rs:planeamento_financeiro' %}" class="menu-item {% if request.resolver_match.url_name == 'planeamento_financeiro' %}active{% endif %}">
+    <i class="fas fa-wallet text-white"></i> <span>5. Orçamento e Custos</span>
+</a>
+<a href="{% url 'rs:matriz_riscos' %}" class="menu-item {% if request.resolver_match.url_name == 'matriz_riscos' %}active{% endif %}">
+    <i class="fas fa-shield-virus text-danger"></i> <span>7. Matriz de Riscos</span>
+</a>
+{% endblock %}
+
+{% block content %}
+    {% block rs_content %}{% endblock %}
+{% endblock %}

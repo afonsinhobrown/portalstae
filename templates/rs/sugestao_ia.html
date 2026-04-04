@@ -1,0 +1,115 @@
+{% extends 'base_apps.html' %}
+{% load static %}
+
+{% block title %}Sugestão IA - {{ plano.nome }}{% endblock %}
+{% block module_name %}CÉREBRO LOGÍSTICO IA{% endblock %}
+{% block icon %}fas fa-brain{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="d-flex align-items-center bg-white p-4 rounded-4 shadow-sm border-start border-primary border-5">
+                <div class="icon-shape bg-primary-soft text-primary rounded-circle me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-robot fa-2x"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Motor IA de Planeamento</h2>
+                    <p class="text-muted mb-0">Pesquisa Web Ativa: <span class="badge bg-light text-dark font-monospace border">{{ ia_search_term }}</span></p>
+                </div>
+                <div class="ms-auto text-end">
+                    <span class="badge bg-dark rounded-pill px-3">{{ plano.get_tipo_operacao_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="col-12">
+            {% csrf_token %}
+            
+            <div class="row g-4">
+                <!-- SUGERIR MATERIAIS -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header bg-white border-0 p-4">
+                            <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-box-open me-2"></i>Materiais Sugeridos</h5>
+                        </div>
+                        <div class="card-body p-4 pt-0">
+                            {% if sugestoes_materiais %}
+                                <p class="small text-muted mb-4">A IA identificou materiais ausentes essenciais para esta fase:</p>
+                                <div class="list-group list-group-flush border-top">
+                                    {% for mat in sugestoes_materiais %}
+                                    <label class="list-group-item d-flex align-items-center py-3 border-bottom cursor-pointer">
+                                        <div class="me-3">
+                                            <input class="form-check-input flex-shrink-0" type="checkbox" name="materiais_selecionados" value="{{ mat.item }}" style="width: 24px; height: 24px;">
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <span class="d-block fw-bold">{{ mat.item }}</span>
+                                            <small class="text-muted">{{ mat.desc }}</small>
+                                        </div>
+                                        <span class="badge bg-light text-dark border">{{ mat.tipo }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <p class="fw-bold">Todos os materiais padrão já estão no plano!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUGERIR ATIVIDADES -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header bg-white border-0 p-4">
+                            <h5 class="fw-bold mb-0 text-info"><i class="fas fa-calendar-check me-2"></i>Atividades Críticas</h5>
+                        </div>
+                        <div class="card-body p-4 pt-0">
+                            {% if sugestoes_atividades %}
+                                <p class="small text-muted mb-4">Ações recomendadas para garantir a prontidão operacional:</p>
+                                <div class="list-group list-group-flush border-top">
+                                    {% for at in sugestoes_atividades %}
+                                    <label class="list-group-item d-flex align-items-center py-3 border-bottom cursor-pointer">
+                                        <div class="me-3">
+                                            <input class="form-check-input flex-shrink-0" type="checkbox" name="atividades_selecionadas" value="{{ at.nome }}" style="width: 24px; height: 24px;">
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <span class="d-block fw-bold">{{ at.nome }}</span>
+                                            <small class="text-muted">{{ at.desc }}</small>
+                                        </div>
+                                        <span class="badge bg-info-soft text-info border border-info">{{ at.tipo|capfirst }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <p class="fw-bold">Nenhuma atividade adicional sugerida no momento.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-5 bg-white p-4 rounded-4 shadow-sm">
+                <a href="{% url 'rs:detalhes_plano' plano.id %}" class="btn btn-light rounded-pill px-4">Voltar ao Plano</a>
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow animate-up">
+                    <i class="fas fa-magic me-2"></i>Incorporar Sugestões ao Plano
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .bg-primary-soft { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-info-soft { background-color: rgba(13, 202, 240, 0.1); }
+    .cursor-pointer { cursor: pointer; transition: background 0.2s ease; }
+    .cursor-pointer:hover { background-color: #f8f9fa; }
+    .animate-up { transition: transform 0.2s; }
+    .animate-up:hover { transform: translateY(-3px); }
+</style>
+{% endblock %}

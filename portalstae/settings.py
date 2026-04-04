@@ -87,7 +87,11 @@ DATABASES = {
     'default': dj_database_url.config(
         default="postgresql://neondb_owner:npg_xP2dwTc1kLqn@ep-long-king-agnipa9p-pooler.c-2.eu-central-1.aws.neon.tech/portalstae?sslmode=require&channel_binding=require",
         conn_max_age=600,
+        conn_health_checks=True,
     )
+}
+DATABASES['default']['OPTIONS'] = {
+    'connect_timeout': 30,
 }
 
 AUTH_PASSWORD_VALIDATORS = [

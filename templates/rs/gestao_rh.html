@@ -1,0 +1,54 @@
+{% extends 'base_apps.html' %}
+{% block title %}Gestão de RH Eleitoral | STAE{% endblock %}
+{% block module_name %}PLANEAMENTO RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{% url 'rs:planeamento_hub' %}" class="text-decoration-none smaller text-muted">
+            <i class="fas fa-arrow-left me-1"></i> Voltar ao Hub
+        </a>
+        <h2 class="fw-bold text-dark mt-2">3. Recursos Humanos por Mesa</h2>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="fw-bold mb-0">Necessidades de Pessoal Planeadas</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">PERFIL DE ATUAÇÃO</th>
+                            <th class="text-center">QTD POR MESA</th>
+                            <th class="text-center">FORMAÇÃO</th>
+                            <th class="text-end pe-4">CUSTO UNIT. (MT)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for n in necessidades %}
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ n.perfil }}</td>
+                            <td class="text-center">{{ n.quantidade_por_mesa }}</td>
+                            <td class="text-center">
+                                {% if n.formacao_obrigatoria %}
+                                <span class="badge bg-info">OBRIGATÓRIA</span>
+                                {% else %}
+                                <span class="badge bg-light text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">{{ n.custo_estimado_diario }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center p-5 text-muted italic">Nenhuma necessidade de pessoal registada no plano.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

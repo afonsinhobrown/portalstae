@@ -1,0 +1,84 @@
+{% extends 'rs/base_rs.html' %}
+
+{% block title %}Planeamento Financeiro Eleitoral | STAE{% endblock %}
+
+{% block rs_content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mt-2">5. Orçamento e Custos do Ciclo Eleitoral</h2>
+    </div>
+
+    <!-- PAINEL DE GESTÃO FINANCEIRA (VISÍVEL E DIRETO) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5 border-start border-5 border-dark bg-light">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="fw-bold mb-0 text-dark">Alocar Novo Recurso Orçamental</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_financeiro">
+                <div class="col-md-3">
+                    <label class="smaller fw-bold text-muted mb-1">CATEGORIA EXECUTIVA</label>
+                    <select name="categoria" class="form-select rounded-pill">
+                        <option value="logistica">Logística</option>
+                        <option value="rh">Recursos Humanos</option>
+                        <option value="tecnologia">Tecnologia</option>
+                        <option value="comunicacao">Comunicação</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="smaller fw-bold text-muted mb-1">VALOR PREVISTO (MT)</label>
+                    <input type="number" step="0.01" name="valor_previsto" class="form-control rounded-pill" placeholder="0.00" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="smaller fw-bold text-muted mb-1">VALOR EXECUTADO (MT)</label>
+                    <input type="number" step="0.01" name="valor_executado" class="form-control rounded-pill" value="0.00">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill fw-bold shadow-sm py-2">
+                        <i class="fas fa-coins me-1"></i> REGISTAR ORÇAMENTO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="fw-bold mb-0">Custos Integrados (Previsto vs Realizado)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">CATEGORIA EXECUTIVA</th>
+                            <th class="text-center">VALOR PREVISTO (MT)</th>
+                            <th class="text-center">VALOR EXECUTADO (MT)</th>
+                            <th class="text-end pe-4">PROGRESSO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in orcamentos %}
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ o.get_categoria_display }}</td>
+                            <td class="text-center">{{ o.valor_previsto }}</td>
+                            <td class="text-center text-primary">{{ o.valor_executado }}</td>
+                            <td class="text-end pe-4">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: 15%;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center p-5 text-muted italic">Nenhuma alocação orçamental registada no sistema.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

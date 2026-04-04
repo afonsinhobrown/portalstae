@@ -13,9 +13,11 @@ urlpatterns = [
     path('planos/', views.lista_planos, name='lista_planos'),
     path('novo/', views.criar_plano, name='criar_plano'),
     path('plano/<int:plano_id>/', views.detalhes_plano, name='detalhes_plano'),
+    path('plano/<int:plano_id>/importar-modelo/', views.importar_distribuicao_plano, name='importar_modelo_plano'),
     path('plano/<int:pk>/editar/', views.editar_plano, name='editar_plano'),
     path('plano/<int:plano_id>/add-material/', views.adicionar_material_plano, name='adicionar_material'),
     path('plano/<int:plano_id>/add-atividade/', views.adicionar_atividade_plano, name='adicionar_atividade'),
+    path('plano/<int:plano_id>/sugerir-ia/', views.sugerir_ia_logistica, name='sugerir_ia'),
     path('material/<int:material_id>/distribuir/', views.distribuir_material, name='distribuir_material'),
     
     # Documentos
@@ -42,6 +44,17 @@ urlpatterns = [
     path('material/tipos/', views.gestao_tipos_materiais, name='gestao_tipos'),
     path('material/tipo/eliminar/<int:pk>/', views.eliminar_tipo_material, name='eliminar_tipo'),
     
+    # Documentos — Galeria e Construtor
+    path('documentos/tipo/<int:tipo_id>/templates/', views.galeria_templates, name='galeria_templates'),
+    path('documentos/construtor/<int:tipo_id>/', views.construtor_documento, name='construtor_documento'),
+    path('documentos/guardar/', views.guardar_documento_ajax, name='guardar_documento'),
+    path('documentos/exportar-pdf/', views.exportar_pdf_documento, name='exportar_pdf_doc'),
+    path('documentos/exportar-pdf/<int:doc_id>/', views.exportar_pdf_documento, name='exportar_pdf_doc_id'),
+    path('documentos/inicializar-templates/', views.inicializar_templates_padrao, name='inicializar_templates'),
+
+    # API Eleição (para sincronização no construtor)
+    path('api/dados-eleicao/<int:eleicao_id>/', views.api_dados_eleicao, name='api_dados_eleicao'),
+
     # Gestão de Atividades
     path('atividade/editar/<int:atividade_id>/', views.editar_atividade, name='editar_atividade'),
     path('atividade/eliminar/<int:atividade_id>/', views.eliminar_atividade, name='eliminar_atividade'),
@@ -50,4 +63,12 @@ urlpatterns = [
     path('plano/<int:plano_id>/report-selector/', views.selecao_relatorio_material, name='selecao_relatorio'),
     path('plano/<int:plano_id>/gerar-pdf/', views.gerar_pdf_plano, name='gerar_pdf'),
     path('material/inicializar-catalogo/', views.inicializar_catalogo_stae, name='inicializar_catalogo'),
+
+    # --- NOVO HUB DE PLANEAMENTO (11 PONTOS) ---
+    path('planeamento/', views.planeamento_hub, name='planeamento_hub'),
+    path('planeamento/calendario/', views.calendario_eleitoral, name='calendario_eleitoral'),
+    path('planeamento/rh/', views.gestao_rh_plano, name='gestao_rh_plano'),
+    path('planeamento/riscos/', views.matriz_riscos, name='matriz_riscos'),
+    path('planeamento/financeiro/', views.planeamento_financeiro, name='planeamento_financeiro'),
+    path('planeamento/territorial/', views.planeamento_territorial, name='planeamento_territorial'),
 ]

@@ -27,12 +27,105 @@ class PlanoLogistico(models.Model):
         return f"{self.get_tipo_operacao_display()}: {self.nome}"
 
 class TipoDocumento(models.Model):
-    nome = models.CharField(max_length=100) # Cartão Eleitor, Boletim Voto
+    nome = models.CharField(max_length=100)
     codigo = models.CharField(max_length=20, unique=True)
-    template_html = models.TextField(help_text="Caminho do template HTML ou conteúdo")
-    
+    template_html = models.TextField(help_text="Template HTML padrão", blank=True)
+    icone = models.CharField(max_length=50, default='fas fa-file-alt')
+    categoria = models.CharField(max_length=30, choices=[
+        ('votacao', 'Documentos de Votação'),
+        ('recenseamento', 'Documentos de Recenseamento'),
+        ('credencial', 'Credenciais'),
+        ('logistica', 'Logística'),
+    ], default='votacao')
+
     def __str__(self):
         return self.nome
+
+class TemplateDocumento(models.Model):
+    """10+ templates visuais pré-desenhados por tipo de documento"""
+    CATEGORIAS = [
+        ('classico', 'Clássico Oficial'),
+        ('moderno', 'Moderno Premium'),
+        ('minimalista', 'Minimalista'),
+        ('colorido', 'Colorido Institucional'),
+        ('compacto', 'Compacto'),
+    ]
+    tipo = models.ForeignKey(TipoDocumento, on_delete=models.CASCADE, related_name='templates')
+    nome = models.CharField(max_length=100)
+    descricao = models.CharField(max_length=200, blank=True)
+    categoria_visual = models.CharField(max_length=20, choices=CATEGORIAS, default='classico')
+    cores_principal = models.CharField(max_length=7, default='#003399', help_text="Cor principal em hex")
+    cores_secundaria = models.CharField(max_length=7, default='#ffffff')
+    html_base = models.TextField(help_text="HTML do template completo com variáveis Django")
+    thumbnail_css = models.TextField(blank=True, help_text="CSS de miniatura para pré-visualização")
+    ordem = models.IntegerField(default=0)
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['ordem', 'nome']
+        verbose_name = "Template de Documento"
+        verbose_name_plural = "Templates de Documentos"
+
+    def __str__(self):
+        return f"{self.tipo.nome} – {self.nome}"
+
+class ComponenteDocumento(models.Model):
+    """Biblioteca de componentes arrastáveis para o construtor"""
+    TIPOS = [
+        ('cabecalho', 'Cabeçalho Institucional'),
+        ('rodape', 'Rodapé com Assinaturas'),
+        ('tabela_candidatos', 'Tabela de Candidatos'),
+        ('quadricula_voto', 'Quadrícula de Votação'),
+        ('qrcode', 'QR Code de Autenticidade'),
+        ('logo_stae', 'Logo STAE'),
+        ('dados_eleicao', 'Dados da Eleição'),
+        ('circulo_eleitoral', 'Informação do Círculo'),
+        ('lista_partidos', 'Lista de Partidos'),
+        ('campo_assinatura', 'Campos de Assinatura'),
+        ('tabela_resultados', 'Tabela de Resultados'),
+        ('numero_mesa', 'Número da Mesa'),
+        ('separador', 'Separador Visual'),
+        ('texto_livre', 'Texto Livre Editável'),
+        ('imagem', 'Imagem / Emblema'),
+    ]
+    nome = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=30, choices=TIPOS)
+    icone = models.CharField(max_length=50, default='fas fa-puzzle-piece')
+    html_snippet = models.TextField(help_text="HTML do componente com variáveis")
+    descricao = models.CharField(max_length=200, blank=True)
+    compativel_com = models.JSONField(default=list, help_text="Lista de codigos TipoDocumento compatíveis")
+    ordem = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['ordem', 'nome']
+        verbose_name = "Componente de Documento"
+        verbose_name_plural = "Componentes de Documentos"
+
+    def __str__(self):
+        return self.nome
+
+class DocumentoPersonalizado(models.Model):
+    """Documento construído pelo utilizador com template + componentes"""
+    tipo = models.ForeignKey(TipoDocumento, on_delete=models.CASCADE)
+    template_base = models.ForeignKey(TemplateDocumento, on_delete=models.SET_NULL, null=True, blank=True)
+    eleicao = models.ForeignKey('eleicao.Eleicao', on_delete=models.SET_NULL, null=True, blank=True)
+    circulo = models.ForeignKey('circuloseleitorais.CirculoEleitoral', on_delete=models.SET_NULL, null=True, blank=True)
+    nome_documento = models.CharField(max_length=200)
+    componentes_json = models.JSONField(default=list, help_text="Lista ordenada de componentes e suas configurações")
+    dados_contexto = models.JSONField(default=dict, help_text="Dados sincronizados da eleição")
+    html_final = models.TextField(blank=True, help_text="HTML montado final")
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+    criado_por = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        verbose_name = "Documento Personalizado"
+        verbose_name_plural = "Documentos Personalizados"
+        ordering = ['-atualizado_em']
+
+    def __str__(self):
+        return f"{self.tipo.nome} – {self.nome_documento}"
 
 class DocumentoGerado(models.Model):
     tipo = models.ForeignKey(TipoDocumento, on_delete=models.CASCADE)
@@ -40,9 +133,79 @@ class DocumentoGerado(models.Model):
     arquivo_pdf = models.FileField(upload_to='rs/documentos/')
     gerado_em = models.DateTimeField(auto_now_add=True)
     dados_json = models.JSONField(default=dict, help_text="Dados usados na geração")
-    
+
     def __str__(self):
         return f"{self.tipo.nome} - {self.titulo}"
+
+class FaseEleitoral(models.Model):
+    """PONTO 1: Define as fases da linha temporal (Recenseamento, Votação, etc.)"""
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='fases')
+    nome = models.CharField(max_length=100)
+    data_inicio = models.DateField()
+    data_fim = models.DateField()
+    cor_identificacao = models.CharField(max_length=7, default='#003399')
+    ordem = models.IntegerField(default=0)
+    depende_de = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    completada = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['ordem', 'data_inicio']
+        verbose_name = "Fase do Calendário"
+
+    def __str__(self):
+        return f"{self.nome} ({self.plano.nome})"
+
+class MarcoCritico(models.Model):
+    """PONTO 1: Alertas e prazos críticos de soberania"""
+    fase = models.ForeignKey(FaseEleitoral, on_delete=models.CASCADE, related_name='marcos')
+    titulo = models.CharField(max_length=200)
+    data_limite = models.DateField()
+    alerta_enviado = models.BooleanField(default=False)
+    nivel_prioridade = models.CharField(max_length=20, choices=[('alta', 'Alta'), ('media', 'Média'), ('baixa', 'Baixa')], default='alta')
+
+    def __str__(self):
+        return self.titulo
+
+class NecessidadePessoal(models.Model):
+    """PONTO 3: Planeamento de RH - Quantos perfis por mesa/localização"""
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='rh_necessidades')
+    perfil = models.CharField(max_length=100, help_text="Ex: Mesário, Técnico de Informática, MMVs")
+    quantidade_por_mesa = models.IntegerField(default=0)
+    custo_estimado_diario = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    formacao_obrigatoria = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Necessidade de Pessoal"
+
+class RiscoPlaneamento(models.Model):
+    """PONTO 7: Antecipação de problemas e classificação de risco"""
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='riscos')
+    area = models.CharField(max_length=100, help_text="Ex: Logística, Segurança, Acesso")
+    descricao = models.TextField()
+    nivel_probabilidade = models.IntegerField(choices=[(1, 'Baixa'), (2, 'Média'), (3, 'Alta')], default=1)
+    nivel_impacto = models.IntegerField(choices=[(1, 'Baixo'), (2, 'Médio'), (3, 'Crítico')], default=1)
+    plano_mitigacao = models.TextField()
+    estado = models.CharField(max_length=30, choices=[('monitorizado', 'Monitorizado'), ('critico', 'Crítico'), ('mitigado', 'Mitigado')], default='monitorizado')
+
+    @property
+    def severidade(self):
+        res = self.nivel_probabilidade * self.nivel_impacto
+        if res >= 6: return 'ALTA'
+        if res >= 3: return 'MÉDIA'
+        return 'BAIXA'
+
+class DetalheTerritorial(models.Model):
+    """PONTO 2: Planeamento Territorial Avançado (Simulações)"""
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='territorio')
+    localizacao_id = models.UUIDField(help_text="ID da Província ou Distrito")
+    nome_localizacao = models.CharField(max_length=200)
+    total_eleitores_estimado = models.IntegerField(default=0)
+    mesas_voto_planeadas = models.IntegerField(default=0)
+    zonas_criticas_geograficas = models.TextField(blank=True)
+    risco_acesso_chuva = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Planeamento Territorial"
 
 class CategoriaMaterial(models.Model):
     """Categorias para organização de materiais (ex: Logística, Tecnologia, Papelaria)"""
@@ -173,6 +336,7 @@ class AlocacaoLogistica(models.Model):
 class AtividadePlano(models.Model):
     """Registo de atividades programadas para um plano logístico"""
     TIPO_ATIVIDADE = [
+        ('recenseamento', 'Operação de Recenseamento'),
         ('formacao', 'Formação'),
         ('distribuicao', 'Distribuição/Logística'),
         ('fiscalizacao', 'Fiscalização'),
@@ -183,7 +347,9 @@ class AtividadePlano(models.Model):
     plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='atividades')
     nome = models.CharField(max_length=200)
     descricao = models.TextField(blank=True)
-    responsaveis = models.CharField(max_length=255, blank=True, help_text="Quem gere a atividade")
+    
+    sector_responsavel = models.ForeignKey('recursoshumanos.Sector', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Departamento/Área Responsável")
+    funcionario_responsavel = models.ForeignKey('recursoshumanos.Funcionario', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Funcionário Responsável")
     envolvidos = models.TextField(blank=True, help_text="Pessoal envolvido")
     custo_estimado = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     material_necessario = models.TextField(blank=True, help_text="Lista de material de suporte")
@@ -287,5 +453,26 @@ class ModeloVisualArtefacto(models.Model):
             imagem=nova_imagem,
             descricao_tecnica=nova_descricao
         )
+
+class OrcamentoPlaneamento(models.Model):
+    """PONTO 5: Gestão Financeira por Fase e Categoria"""
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='orcamento_detalhes')
+    categoria = models.CharField(max_length=50, choices=[('logistica', 'Logística'), ('rh', 'Recursos Humanos'), ('tecnologia', 'Tecnologia'), ('comunicacao', 'Comunicação')])
+    valor_previsto = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    valor_executado = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.categoria} - {self.plano.nome}"
+
+class IndicadorPlaneamento(models.Model):
+    """PONTO 9: KPIs para medir a solidez do planeamento"""
+    plano = models.ForeignKey(PlanoLogistico, on_delete=models.CASCADE, related_name='kpis')
+    nome = models.CharField(max_length=100)
+    valor_meta = models.FloatField(default=0)
+    valor_atual = models.FloatField(default=0)
+    unidade = models.CharField(max_length=20, default='%')
+
+    def __str__(self):
+        return self.nome
 
 from .models_apuramento import ControleEdital, ResultadoEdital, VotoPartidoEdital

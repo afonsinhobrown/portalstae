@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% block title %}Galeria de Templates — {{ tipo.nome }}{% endblock %}
+{% block content %}
+<style>
+:root {
+  --stae-blue: #003399;
+  --stae-gold: #f5a623;
+  --stae-dark: #0a0f1e;
+  --glass: rgba(255,255,255,0.06);
+}
+body { background: #0d1117; color: #e6edf3; }
+
+.gallery-hero {
+  background: linear-gradient(135deg, #003399 0%, #001166 50%, #0d1117 100%);
+  padding: 48px 0 32px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.gallery-hero h1 { font-size: 2rem; font-weight: 800; color: #fff; margin: 0; }
+.gallery-hero p { color: rgba(255,255,255,0.6); margin-top: 8px; font-size: 1rem; }
+
+.filter-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px;
+}
+.filter-btn {
+  padding: 8px 20px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15);
+  background: transparent; color: rgba(255,255,255,0.6); cursor: pointer;
+  font-size: 0.85rem; transition: all 0.2s;
+}
+.filter-btn.active, .filter-btn:hover {
+  background: #003399; border-color: #003399; color: #fff;
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.tpl-card {
+  background: #161b27;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+.tpl-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,51,153,0.3);
+  border-color: #003399;
+}
+.tpl-card.selected {
+  border-color: #f5a623;
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.3);
+}
+
+.tpl-preview {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  font-size: 0.6rem;
+}
+
+/* Template visuals gerados via CSS */
+.tpl-preview.classico-1 {
+  background: #fff;
+  color: #000;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 12px;
+}
+.tpl-preview.classico-1 .header-strip {
+  width: 100%; height: 24px; background: #003399;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: bold; font-size: 0.55rem; letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.tpl-preview.classico-1 .body { width: 100%; flex: 1; }
+.tpl-preview.classico-1 .row { display: flex; gap: 4px; margin-bottom: 5px; }
+.tpl-preview.classico-1 .cell { height: 18px; border: 1px solid #003399; flex: 1; display: flex; align-items: center; padding: 0 4px; font-size: 0.5rem; }
+.tpl-preview.classico-1 .box { width: 20px; height: 20px; border: 2px solid #003399; margin-left: 4px; }
+
+.tpl-preview.moderno {
+  background: linear-gradient(135deg, #003399 0%, #001a66 100%);
+  color: #fff; flex-direction: column; padding: 16px; align-items: flex-start;
+}
+.tpl-preview.moderno .badge { background: #f5a623; color: #000; font-size: 0.5rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }
+.tpl-preview.moderno .title-line { width: 80%; height: 6px; background: rgba(255,255,255,0.8); border-radius: 3px; margin-bottom: 6px; }
+.tpl-preview.moderno .sub-line { width: 50%; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; margin-bottom: 16px; }
+.tpl-preview.moderno .cards { display: flex; gap: 6px; width: 100%; }
+.tpl-preview.moderno .mini-card { flex: 1; height: 60px; background: rgba(255,255,255,0.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.45rem; }
+
+.tpl-preview.minimalista {
+  background: #fafafa; flex-direction: column; padding: 20px; align-items: center; justify-content: center;
+}
+.tpl-preview.minimalista .big-number { font-size: 3rem; font-weight: 900; color: #111; line-height: 1; }
+.tpl-preview.minimalista .label { font-size: 0.5rem; color: #666; margin-top: 4px; text-transform: uppercase; letter-spacing: 2px; }
+.tpl-preview.minimalista .divider { width: 40px; height: 3px; background: #003399; margin: 8px 0; }
+.tpl-preview.minimalista .boxes { display: flex; gap: 8px; margin-top: 12px; }
+.tpl-preview.minimalista .vbox { width: 30px; height: 30px; border: 2px solid #111; }
+
+.tpl-preview.colorido {
+  background: #fff; flex-direction: column; padding: 10px;
+}
+.tpl-preview.colorido .bar { width: 100%; height: 8px; display: flex; }
+.tpl-preview.colorido .bar-seg { flex: 1; }
+.tpl-preview.colorido .content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.tpl-preview.colorido .circle { width: 50px; height: 50px; border-radius: 50%; background: #003399; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.6rem; font-weight: bold; margin-bottom: 8px; }
+
+.tpl-preview.bicolor {
+  background: #fff; flex-direction: row;
+}
+.tpl-preview.bicolor .left-panel { width: 35%; background: #003399; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 8px; }
+.tpl-preview.bicolor .right-panel { flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 6px; }
+.tpl-preview.bicolor .rline { height: 6px; background: #eee; border-radius: 3px; }
+.tpl-preview.bicolor .rbox { height: 30px; border: 2px solid #003399; margin-top: auto; }
+
+.tpl-preview.tabular {
+  background: #fff; flex-direction: column; padding: 8px;
+}
+.tpl-preview.tabular table { width: 100%; border-collapse: collapse; font-size: 0.45rem; }
+.tpl-preview.tabular th { background: #003399; color: #fff; padding: 4px; }
+.tpl-preview.tabular td { border: 1px solid #ddd; padding: 3px; }
+.tpl-preview.tabular .box { width: 16px; height: 16px; border: 2px solid #003399; display: inline-block; }
+
+.tpl-preview.selos {
+  background: #f9f5ec; flex-direction: column; align-items: center; padding: 10px;
+  border: 4px double #8B6914;
+}
+.tpl-preview.selos .title { font-size: 0.6rem; font-weight: 800; color: #003399; text-transform: uppercase; letter-spacing: 2px; text-align: center; border-bottom: 2px solid #8B6914; width: 100%; padding-bottom: 4px; margin-bottom: 8px; }
+.tpl-preview.selos .content { display: flex; gap: 8px; align-items: center; }
+.tpl-preview.selos .emblem { width: 40px; height: 48px; border: 2px solid #8B6914; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: bold; color: #8B6914; }
+.tpl-preview.selos .fields { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.tpl-preview.selos .field { height: 8px; background: #ddd; border-radius: 2px; }
+
+.tpl-preview.grade {
+  background: #fff; flex-direction: column; padding: 8px; gap: 4px;
+}
+.tpl-preview.grade .row { display: flex; gap: 4px; flex: 1; }
+.tpl-preview.grade .cell { flex: 1; border: 1.5px solid #003399; display: flex; align-items: center; justify-content: center; }
+.tpl-preview.grade .cell-header { background: #003399; color: #fff; font-size: 0.45rem; }
+
+.tpl-preview.diagonal {
+  background: linear-gradient(125deg, #fff 55%, #003399 55%);
+  flex-direction: column; padding: 14px;
+}
+.tpl-preview.diagonal .white-section { flex: none; }
+.tpl-preview.diagonal .d-title { font-size: 0.7rem; font-weight: 900; color: #003399; }
+.tpl-preview.diagonal .d-sub { font-size: 0.45rem; color: #666; margin-top: 2px; }
+.tpl-preview.diagonal .d-lines { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+.tpl-preview.diagonal .d-line { height: 5px; background: rgba(255,255,255,0.3); border-radius: 2px; }
+.tpl-preview.diagonal .d-box { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border: 2px solid #fff; position: absolute; bottom: 16px; right: 16px; }
+
+.tpl-preview.stamp {
+  background: #fff; align-items: center; justify-content: center; flex-direction: column;
+  padding: 16px;
+}
+.tpl-preview.stamp .big-stamp { width: 80px; height: 80px; border: 6px double #003399; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
+.tpl-preview.stamp .stamp-text { font-size: 0.5rem; font-weight: 900; color: #003399; text-align: center; line-height: 1.2; }
+.tpl-preview.stamp .stamp-label { font-size: 0.45rem; margin-top: 8px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Badge selected */
+.selected-badge {
+  display: none; position: absolute; top: 10px; right: 10px;
+  background: #f5a623; color: #000; font-size: 0.7rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px;
+}
+.tpl-card.selected .selected-badge { display: block; }
+
+.tpl-info {
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.tpl-name { font-size: 0.95rem; font-weight: 700; color: #e6edf3; margin-bottom: 4px; }
+.tpl-desc { font-size: 0.78rem; color: rgba(255,255,255,0.45); }
+.tpl-cat { display: inline-block; margin-top: 8px; font-size: 0.7rem; padding: 2px 10px; border-radius: 999px; background: rgba(0,51,153,0.3); color: #6891ff; }
+
+.action-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(13,17,23,0.95); backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 16px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+}
+.action-bar .selected-info { font-size: 0.9rem; color: rgba(255,255,255,0.6); }
+.action-bar .selected-name { color: #f5a623; font-weight: 700; }
+.btn-construir {
+  background: linear-gradient(135deg, #003399, #0055ff);
+  color: #fff; border: none; padding: 14px 36px;
+  border-radius: 12px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+}
+.btn-construir:hover { transform: scale(1.04); box-shadow: 0 8px 24px rgba(0,85,255,0.4); }
+.btn-construir:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+</style>
+
+<div class="gallery-hero">
+  <div class="container">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <a href="{% url 'rs:documentos' %}" style="color:rgba(255,255,255,0.4); text-decoration:none; font-size:0.85rem;">‹ Documentos</a>
+      <span style="color:rgba(255,255,255,0.2);">/</span>
+      <span style="color:rgba(255,255,255,0.6); font-size:0.85rem;">{{ tipo.nome }}</span>
+    </div>
+    <h1><i class="{{ tipo.icone|default:'fas fa-file-alt' }}" style="color:#f5a623; margin-right:12px;"></i> Escolha um Template</h1>
+    <p>Selecione o design base — pode editar e adicionar componentes no passo seguinte</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom: 100px;">
+  <div class="filter-bar">
+    <button class="filter-btn active" data-cat="todos">Todos ({{ templates|length }})</button>
+    <button class="filter-btn" data-cat="classico">Clássico Oficial</button>
+    <button class="filter-btn" data-cat="moderno">Moderno Premium</button>
+    <button class="filter-btn" data-cat="minimalista">Minimalista</button>
+    <button class="filter-btn" data-cat="colorido">Colorido Institucional</button>
+    <button class="filter-btn" data-cat="compacto">Compacto</button>
+  </div>
+
+  <div class="templates-grid" id="templatesGrid">
+    {% for t in templates %}
+    <div class="tpl-card" data-id="{{ t.id }}" data-cat="{{ t.categoria_visual }}" data-nome="{{ t.nome }}" onclick="selectTemplate(this)">
+      <span class="selected-badge">✓ Selecionado</span>
+      <div class="tpl-preview {{ t.categoria_visual }}-{{ forloop.counter }}">
+        {% if t.thumbnail_css %}
+          <style>{{ t.thumbnail_css }}</style>
+        {% endif %}
+        <div style="transform: scale(0.4); transform-origin: top center; width: 600px; position: absolute; top: 10px;">
+          {{ t.html_base|safe }}
+        </div>
+      </div>
+      <div class="tpl-info">
+        <div class="tpl-name">{{ t.nome }}</div>
+        <div class="tpl-desc">{{ t.descricao }}</div>
+        <span class="tpl-cat">{{ t.get_categoria_visual_display }}</span>
+      </div>
+    </div>
+    {% empty %}
+    {% comment %} Renderiza templates de demonstração mesmo sem BD {% endcomment %}
+    {% for demo in demo_templates %}
+    <div class="tpl-card" data-id="demo-{{ forloop.counter }}" data-cat="{{ demo.cat }}" data-nome="{{ demo.nome }}" onclick="selectTemplate(this)">
+      <span class="selected-badge">✓ Selecionado</span>
+      <div class="tpl-preview {{ demo.cls }}">{{ demo.preview|safe }}</div>
+      <div class="tpl-info">
+        <div class="tpl-name">{{ demo.nome }}</div>
+        <div class="tpl-desc">{{ demo.desc }}</div>
+        <span class="tpl-cat">{{ demo.cat_label }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="action-bar">
+  <div class="selected-info" id="actionInfo">
+    <span style="color:rgba(255,255,255,0.3);">Selecione um template para continuar</span>
+  </div>
+  <button class="btn-construir" id="btnConstruir" disabled onclick="irParaConstrutor()">
+    <i class="fas fa-tools"></i> Construir Documento
+  </button>
+</div>
+
+<script>
+let selectedId = null;
+let selectedNome = '';
+
+function selectTemplate(el) {
+  document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedId = el.dataset.id;
+  selectedNome = el.dataset.nome;
+  document.getElementById('actionInfo').innerHTML =
+    `Template selecionado: <span class="selected-name">${selectedNome}</span>`;
+  document.getElementById('btnConstruir').disabled = false;
+}
+
+function irParaConstrutor() {
+  if (!selectedId) return;
+  const url = `/rs/documentos/construtor/{{ tipo.id }}/?template_id=${selectedId}`;
+  window.location.href = url;
+}
+
+// Filtros
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const cat = this.dataset.cat;
+    document.querySelectorAll('.tpl-card').forEach(card => {
+      card.style.display = (cat === 'todos' || card.dataset.cat === cat) ? '' : 'none';
+    });
+  });
+});
+</script>
+{% endblock %}

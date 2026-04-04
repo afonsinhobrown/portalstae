@@ -1,0 +1,116 @@
+{% extends 'rs/base_rs.html' %}
+{% load static %}
+
+{% block title %}Calendário de Soberania Eleitoral | STAE{% endblock %}
+
+{% block rs_content %}
+<div class="container-fluid py-4">
+    <!-- PAINEL DE INTRODUÇÃO DE DADOS (VISÍVEL E DIRETO) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5 border-start border-5 border-primary">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="fw-bold mb-0 text-primary"><i class="fas fa-edit me-2"></i> Adicionar Nova Fase ao Plano Logístico</h5>
+        </div>
+        <div class="card-body bg-light">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_fase">
+                <div class="col-md-3">
+                    <label class="smaller fw-bold text-muted mb-1">NOME DA FASE</label>
+                    <input type="text" name="nome" class="form-control rounded-pill" placeholder="Ex: Recenseamento 2024" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="smaller fw-bold text-muted mb-1">DATA INÍCIO</label>
+                    <input type="date" name="data_inicio" class="form-control rounded-pill" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="smaller fw-bold text-muted mb-1">DATA FIM</label>
+                    <input type="date" name="data_fim" class="form-control rounded-pill" required>
+                </div>
+                <div class="col-md-1">
+                    <label class="smaller fw-bold text-muted mb-1">ORDEM</label>
+                    <input type="number" name="ordem" class="form-control rounded-pill" value="1">
+                </div>
+                <div class="col-md-1">
+                    <label class="smaller fw-bold text-muted mb-1">COR</label>
+                    <input type="color" name="cor_identificacao" class="form-control form-control-color w-100 rounded-pill" value="#0d6efd">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm py-2">
+                        <i class="fas fa-save me-1"></i> REGISTAR NA SOBERANIA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VISUAL GANTT CHART -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-dark text-white py-3">
+            <h5 class="fw-bold mb-0">Cronograma de Operações (Gantt)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="gantt-container p-4 overflow-auto">
+                <div class="gantt-roles d-flex flex-column gap-3">
+                    {% for f in fases %}
+                    <div class="gantt-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold smaller text-uppercase">{{ f.nome }}</span>
+                            <span class="smaller text-muted">{{ f.data_inicio }} - {{ f.data_fim }}</span>
+                        </div>
+                        <div class="progress rounded-pill shadow-sm" style="height: 25px; background: rgba(0,0,0,0.05);">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" 
+                                 style="background-color: {{ f.cor_identificacao }}; width: {% if f.completada %}100%{% else %}30%{% endif %};" 
+                                 aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                 {% if f.completada %}CONCLUÍDO{% else %}EM CURSO{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center p-5">
+                        <i class="fas fa-calendar-times fa-4x text-muted opacity-20 mb-3"></i>
+                        <p class="text-muted">Nenhuma fase definida na base de dados para o plano atual.</p>
+                        <a href="/admin/rs/faseeleitoral/add/" class="btn btn-outline-primary btn-sm rounded-pill">Adicionar Primeira Fase</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MARCOS CRÍTICOS -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i> Prazos de Soberania (Marcos)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for f in fases %}
+                            {% for m in f.marcos.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ m.titulo }}</h6>
+                                    <small class="text-muted">Fase: {{ f.nome }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="badge bg-soft-danger text-danger rounded-pill">{{ m.data_limite }}</div>
+                                    <div class="smaller text-uppercase fw-bold text-muted mt-1">{{ m.nivel_prioridade }}</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1); }
+    .gantt-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 15px; }
+    .gantt-item:last-child { border-bottom: none; }
+</style>
+{% endblock %}

@@ -1,140 +1,220 @@
-{% extends 'base_apps.html' %}
+{% extends 'rs/base_rs.html' %}
 {% load static %}
 
-{% block title %}Logística Eleitoral: Painel Estratégico{% endblock %}
-{% block module_name %}LOGÍSTICA ELEITORAL{% endblock %}
-{% block icon %}fas fa-truck-ramp-box{% endblock %}
-{% block dashboard_url %}{% url 'rs:dashboard' %}{% endblock %}
+{% block title %}Dashboard de Soberania: Moçambique{% endblock %}
 
-{% block menu_items %}
-<a href="{% url 'rs:dashboard' %}" class="menu-item active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard Logística</span></a>
-<a href="{% url 'rs:lista_eleicoes' %}" class="menu-item"><i class="fas fa-vote-yea"></i> <span>Ciclos Eleitorais</span></a>
-<a href="{% url 'rs:divisao_eleicao_index' %}" class="menu-item"><i class="fas fa-sitemap"></i> <span>Divisão Eleição</span></a>
-<a href="{% url 'rs:lista_planos' %}" class="menu-item"><i class="fas fa-truck-loading"></i> <span>Planos Logísticos</span></a>
-<a href="{% url 'rs:documentos' %}" class="menu-item"><i class="fas fa-file-invoice"></i> <span>Formulários Oficiais</span></a>
-<a href="{% url 'rs:gestao_categorias' %}" class="menu-item"><i class="fas fa-tags"></i> <span>Categorias de Material</span></a>
-<a href="{% url 'rs:gestao_tipos' %}" class="menu-item"><i class="fas fa-box-open"></i> <span>Tipos de Material</span></a>
-{% endblock %}
-
-{% block content %}
-<!-- 1. PAINEL DE SOBERANIA LOGÍSTICA -->
-<div class="row g-4 mb-5">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-dark text-white">
-            <small class="text-uppercase opacity-50 fw-bold smaller">Ciclo Ativo</small>
-            <h4 class="fw-bold mb-3 mt-1">{{ eleicao_ativa.nome|default:"Nenhum Ciclo" }}</h4>
-            <div class="badge bg-warning text-dark mb-0">{{ eleicao_ativa.ano }}</div>
-        </div>
+{% block rs_content %}
+<!-- HEADER E SELETOR DE SOBERANIA -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Cockpit de Soberania</h2>
+        <p class="text-muted mb-0 small">
+            {% if plano_ativo %}
+                Operação: <span class="badge bg-primary px-3 rounded-pill">{{ plano_ativo.nome }}</span>
+                | Ciclo: <span class="fw-bold">{{ plano_ativo.eleicao.nome|default:"Global" }}</span>
+            {% else %}
+                Nenhum plano ativo. Utilize o seletor para restaurar o histórico.
+            {% endif %}
+        </p>
     </div>
+    <div class="dropdown">
+        <button class="btn btn-white shadow-sm border-0 rounded-4 px-4 py-2 dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-layer-group me-2 text-primary"></i> Trocar de Plano
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2" style="min-width: 300px;">
+            <li class="dropdown-header text-uppercase smaller fw-bold opacity-50">Ciclos Logísticos (1000 Utilizadores)</li>
+            {% for p in planos_todos %}
+            <li>
+                <a class="dropdown-item py-2 {% if p.id == plano_ativo.id %}active{% endif %}" href="?plano_id={{ p.id }}">
+                    <div class="fw-bold">{{ p.nome }}</div>
+                    <small class="opacity-75">{{ p.eleicao.nome }} ({{ p.eleicao.ano }})</small>
+                </a>
+            </li>
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-primary fw-bold" href="{% url 'rs:lista_planos' %}"><i class="fas fa-list me-2"></i>Gerir Todos os Planos</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- 1. MÉTRICAS UNIFICADAS -->
+<div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-primary text-white">
-            <small class="text-uppercase opacity-75 fw-bold smaller">Previsões Nacionais</small>
-            <h2 class="fw-bold mb-0 mt-1">{{ materiais|length }}</h2>
-            <small>Itens de Material Estratégico</small>
+            <small class="text-uppercase opacity-75 fw-bold smaller">Execução Financeira</small>
+            <h3 class="fw-bold mb-0 mt-1">MZN {{ custo_total_estimado|floatformat:2 }}</h3>
+            <div class="progress mt-2 mb-1" style="height: 6px; background: rgba(255,255,255,0.2)">
+                <div class="progress-bar bg-white" style="width: {{ percent_orcamento }}%"></div>
+            </div>
+            <small class="smaller">Teto: MZN {{ orcamento_total|floatformat:2 }}</small>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-success text-white">
-            <small class="text-uppercase opacity-75 fw-bold smaller">Planos Provinciais</small>
-            <h2 class="fw-bold mb-0 mt-1">{{ total_planos }}</h2>
-            <small>Operações Territoriais</small>
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-dark text-white">
+            <small class="text-uppercase opacity-75 fw-bold smaller">Prontidão de RH</small>
+            <h3 class="fw-bold mb-0 mt-1">{{ rh_total }}</h3>
+            <small>Alocados via Planeamento</small>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-danger text-white">
-            <small class="text-uppercase opacity-75 fw-bold smaller">Execução Global</small>
-            <h2 class="fw-bold mb-0 mt-1">N/D</h2>
-            <small>Logística Integrada</small>
+            <small class="text-uppercase opacity-75 fw-bold smaller">Incidentes de Risco</small>
+            <h3 class="fw-bold mb-0 mt-1">{{ riscos_criticos }}</h3>
+            <small>Nível de Alerta Crítico</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white border-start border-4 border-warning shadow">
+            <small class="text-uppercase text-muted fw-bold smaller">Marco Cronológico</small>
+            {% if proximo_marco %}
+            <h5 class="fw-bold mb-0 text-dark">{{ proximo_marco.titulo }}</h5>
+            <small class="text-danger fw-bold">{{ proximo_marco.data_limite }}</small>
+            {% else %}
+            <h5 class="fw-bold mb-0 text-muted">Operação Estável</h5>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- 2. GESTÃO DO PLANO LOGÍSTICO (PRAM) -->
-<div class="card border-0 shadow-sm rounded-4 mb-5">
-    <div class="card-header bg-white py-4 d-flex justify-content-between align-items-center">
-        <div>
-            <h4 class="fw-bold mb-1">Stock Estratégico Nacional</h4>
-            <div class="smaller text-muted mb-0">Visão consolidada de Recenseamento e Votação.</div>
-        </div>
-        <div class="d-flex gap-2">
-            {% if eleicao_ativa %}
-            <div class="d-grid gap-2">
-                <a href="{% url 'candidaturas:relatorios_eleicao' eleicao_ativa.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver Central de BI</a>
-                <a href="{% url 'rs:inicializar_catalogo' %}" class="btn btn-sm btn-primary rounded-pill shadow-sm">
-                    <i class="fas fa-sync-alt me-1"></i> SINCRONIZAR CATÁLOGO NACIONAL
-                </a>
+<!-- 2. NÚCLEO OPERACIONAL (O TRABALHO DAS EQUIPAS) -->
+<div class="row g-4 mb-4">
+    <!-- TABELA DE MATERIAIS (ANTIGO + NOVO EM CONJUNTO) -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white py-4 d-flex justify-content-between align-items-center">
+                <h4 class="fw-bold mb-0 text-dark"><i class="fas fa-boxes-stacked me-2 text-success"></i>Gestão de Materiais e Equipamentos</h4>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'rs:lista_planos' %}" class="btn btn-sm btn-outline-dark rounded-pill">Ver Todos os Planos</a>
+                    <a href="{% url 'rs:novo_material' %}" class="btn btn-sm btn-primary rounded-pill shadow-sm">+ Novo Material</a>
+                </div>
             </div>
-            {% endif %}
-            <a href="{% url 'rs:novo_material' %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm"><i class="fas fa-plus me-1 small"></i> NOVO REQUISITO</a>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted fw-bold small">
+                            <tr>
+                                <th class="ps-4">MATERIAL ESTRATÉGICO</th>
+                                <th>FASE / OPERAÇÃO</th>
+                                <th class="text-center">QTD PLANEADA</th>
+                                <th class="text-center">DISTRIBUÍDO</th>
+                                <th class="text-end pe-4">ESTADO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in materiais %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ m.item }}</div>
+                                    <div class="smaller text-muted">{{ m.tipo_dinamico.nome|default:"Catálogo STAE" }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border px-3 rounded-pill smaller fw-bold">
+                                        {{ m.get_tipo_operacao_display }}
+                                    </span>
+                                </td>
+                                <td class="text-center fw-bold">{{ m.quantidade_planeada }}</td>
+                                <td class="text-center">{{ m.total_distribuido|default:0 }}</td>
+                                <td class="text-end pe-4">
+                                    {% if m.saldo_a_distribuir > 0 %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning px-3">PENDENTE</span>
+                                    {% else %}
+                                    <span class="badge bg-success-subtle text-success border border-success px-3">COMPLETO</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center p-5 text-muted small">Nenhum material registado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <!-- Filtro de Operação -->
-    <div class="bg-white border-bottom py-3 px-4 d-flex flex-wrap gap-2 align-items-center">
-        <div class="small text-muted fw-bold text-uppercase me-2"><i class="fas fa-filter me-1"></i> Filtrar por Fase:</div>
-        <a href="?operacao=" class="btn btn-sm {% if not tipo_operacao_atual %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-4 shadow-sm">
-            <i class="fas fa-globe me-1"></i> TODO O CICLO
-        </a>
-        <a href="?operacao=RECENSEAMENTO" class="btn btn-sm {% if tipo_operacao_atual == 'RECENSEAMENTO' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-4 shadow-sm">
-            <i class="fas fa-id-card me-1"></i> RECENSEAMENTO
-        </a>
-        <a href="?operacao=VOTACAO" class="btn btn-sm {% if tipo_operacao_atual == 'VOTACAO' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-4 shadow-sm">
-            <i class="fas fa-box-archive me-1"></i> VOTAÇÃO
-        </a>
+
+        <!-- CRONOGRAMA DE ATIVIDADES (ANTIGO INTEGRADO) -->
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-tasks me-2 text-primary"></i>Cronograma de Atividades Operativas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for a in atividades %}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-4 bg-light bg-opacity-50 h-100">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold text-dark">{{ a.nome }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ a.data_prevista|date:"d/m/Y" }}</span>
+                            </div>
+                            <p class="smaller text-muted mb-0">{{ a.descricao|truncatewords:15 }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-4 text-muted small">Sem atividades para exibir.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light text-muted fw-bold small">
-                    <tr>
-                        <th class="ps-4">MATERIAL ESTRATÉGICO</th>
-                        <th>FASE / OPERAÇÃO</th>
-                        <th>DESTINO</th>
-                        <th class="text-center">NECESSIDADE NACIONAL</th>
-                        <th class="text-end pe-4">ESTADO</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in materiais %}
-                    <tr>
-                        <td class="ps-4">
-                            <div class="fw-bold text-dark">{{ m.item }}</div>
-                            <div class="smaller text-muted text-uppercase">Cálculo de Previsão STAE</div>
-                        </td>
-                        <td>
-                            <span class="badge {% if m.tipo_operacao == 'RECENSEAMENTO' %}bg-info-subtle text-info border-info{% else %}bg-primary-subtle text-primary border-primary{% endif %} border px-3 rounded-pill text-uppercase smaller fw-bold">
-                                {{ m.get_tipo_operacao_display }}
-                            </span>
-                        </td>
-                        <td>
-                             <span class="badge bg-dark text-white"><i class="fas fa-warehouse me-1"></i> NACIONAL</span>
-                        </td>
-                        <td class="text-center fw-bold fs-5 text-primary">{{ m.quantidade_planeada }}</td>
-                        <td class="text-end pe-4">
-                            <span class="badge bg-success-subtle text-success border border-success px-3">CONSOLIDADO</span>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center p-5">
-                            <i class="fas fa-box-open fa-3x text-muted opacity-25 mb-3"></i>
-                            <h5 class="text-muted">Nenhum requisito estratégico encontrado para este ciclo.</h5>
-                            <a href="{% url 'rs:novo_material' %}" class="btn btn-primary rounded-pill mt-3 px-4">Adicionar Primeiro Requisito</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- PAINEL LATERAL DE INTELIGÊNCIA (NOVO) -->
+    <div class="col-lg-4">
+        <!-- MATRIZ DE RISCO -->
+        <div class="card border-0 shadow-sm rounded-4 bg-dark text-white mb-4">
+            <div class="card-header bg-transparent py-3 border-0">
+                <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-shield-alt me-2"></i>Riscos em Monitoria</h5>
+            </div>
+            <div class="card-body pt-0">
+                {% for r in riscos %}
+                <div class="p-3 mb-2 rounded-4" style="background: rgba(255,255,255,0.05); border-left: 4px solid {% if r.severidade == 'ALTA' %}#dc3545{% else %}#ffc107{% endif %};">
+                    <div class="fw-bold smaller">{{ r.area }}</div>
+                    <p class="smaller text-white-50 mb-0">{{ r.descricao|truncatechars:60 }}</p>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted smaller">Sem riscos críticos.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- DIVISÃO TERRITORIAL (ANTECIPAÇÃO) -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-map-marked-alt me-2 text-success"></i>Divisão Eleição & Território</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="bg-light smaller fw-bold">
+                            <tr>
+                                <th class="ps-3">DISTRITO</th>
+                                <th class="text-center">MESAS</th>
+                                <th class="text-end pe-3">ESTADO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in territorio %}
+                            <tr class="smaller">
+                                <td class="ps-3">{{ t.nome_localizacao }}</td>
+                                <td class="text-center">{{ t.mesas_voto_planeadas }}</td>
+                                <td class="text-end pe-3">
+                                    {% if t.risco_acesso_chuva %}<i class="fas fa-cloud-rain text-danger"></i>{% else %}<i class="fas fa-check text-success"></i>{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center py-3 text-muted smaller">Sem dados geográficos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 py-3">
+                <a href="{% url 'rs:divisao_eleicao_index' %}" class="btn btn-sm btn-outline-dark w-100 rounded-pill">Abrir Divisão Completa</a>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
     .smaller { font-size: 0.75rem; }
-    .hover-elevate { transition: all 0.2s ease; }
-    .hover-elevate:hover { transform: translateY(-3px); }
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1); }
 </style>
-
 {% endblock %}
