@@ -1,0 +1,14 @@
+--- VARREDURA GLOBAL DE MODELOS 'ELEICAO' (2026-04-04 12:46:52.768458) ---
+APP: pagina_stae | MODELO: Eleicao | TOTAL: 0
+APP: dfec | MODELO: Eleicao | TOTAL: 0
+APP: dfec | MODELO: DadosEleicao | TOTAL: 0
+APP: circuloseleitorais | MODELO: DivisaoEleicao | TOTAL: 79
+  > ID: 931 | INFO: DISTRITO URBANO  N 1
+  > ID: 932 | INFO: DISTRITO URBANO N  2
+  > ID: 933 | INFO: DISTRITO URBANO N  3
+  > ID: 934 | INFO: DISTRITO URBANO N  4
+  > ID: 935 | INFO: DISTRITO URBANO N  5
+APP: eleicao | MODELO: Eleicao | TOTAL: 2
+  > ID: 2 | INFO: AUTARQUIAS 2028
+  > ID: 3 | INFO: AUTARQUIAS 2023
+APP: candidaturas | MODELO: InscricaoPartidoEleicao | TOTAL: 0

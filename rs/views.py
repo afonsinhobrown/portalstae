@@ -33,6 +33,11 @@ def dashboard(request):
     else:
         # Padrão: O mais recente (Evita o ecrã vazio se nenhum estiver 'esta_ativo=True')
         plano_ativo = planos_disponiveis.first()
+    
+    # 2.1 Sincronização de Emergência (Garante que materiais novos apareçam no Cockpit)
+    if plano_ativo and plano_ativo.eleicao:
+        from .logic import sync_plano_logistico
+        sync_plano_logistico(plano_ativo)
 
     context = {
         'plano_ativo': plano_ativo,
@@ -320,7 +325,26 @@ def exportar_pdf_documento(request, doc_id=None): return HttpResponse("PDF")
 
 @login_required
 def api_dados_eleicao(request, eleicao_id=None):
-    return JsonResponse({'eleicao': {'nome': 'Eleições 2024'}, 'circulos': []})
+    """API Real de Soberania: Recupera qualquer eleição ativa ou histórica"""
+    from eleicao.models import Eleicao
+    if eleicao_id:
+        eleicao = get_object_or_404(Eleicao, id=eleicao_id)
+    else:
+        eleicao = Eleicao.objects.filter(ativo=True).order_by('-ano').first()
+    
+    if not eleicao:
+        return JsonResponse({'status': 'erro', 'message': 'Nenhuma eleição configurada no sistema.'}, status=404)
+
+    return JsonResponse({
+        'eleicao': {
+            'id': eleicao.id,
+            'nome': eleicao.nome,
+            'ano': eleicao.ano,
+            'tipo': eleicao.tipo,
+            'data': eleicao.data_votacao.isoformat() if eleicao.data_votacao else None
+        },
+        'circulos': list(eleicao.circulos.values('id', 'nome', 'num_eleitores', 'num_mesas'))
+    })
 
 @login_required
 def inicializar_templates_padrao(request): return redirect('rs:documentos')
