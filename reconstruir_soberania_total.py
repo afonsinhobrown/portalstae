@@ -39,6 +39,13 @@ ASSOC_ELEICAO = [
 
 def reconstruir_tudo():
     print("--- RECONSTRUÇÃO DE SOBERANIA NACIONAL (STAE) ---")
+    
+    # 0. REPARAÇÃO ESTRUTURAL (BANCO NEON)
+    print("Reparando tabelas lógicas (Materiais e Atividades)...")
+    with connection.cursor() as cursor:
+        cursor.execute("ALTER TABLE rs_materialeleitoral ADD COLUMN IF NOT EXISTS localizacao_destino VARCHAR(100);")
+        cursor.execute("ALTER TABLE rs_atividadeplano ADD COLUMN IF NOT EXISTS responsaveis TEXT;")
+    
     eleicao, _ = Eleicao.objects.get_or_create(id=3, defaults={'nome': 'Ciclo Eleitoral Atual', 'ano': 2024, 'tipo': 'geral'})
 
     with transaction.atomic():

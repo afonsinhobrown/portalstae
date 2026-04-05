@@ -260,9 +260,9 @@ class MaterialEleitoral(models.Model):
     preco_unitario = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Preço Unit. Estimado")
     descricao = models.TextField(blank=True, null=True, verbose_name="Notas")
     
-    # Automatização Geográfica
+    # Automatização Geográfica e Distribuição Provincial
     por_distrito = models.BooleanField(default=False, verbose_name="É calculado por Distrito?")
-
+    localizacao_destino = models.CharField(max_length=100, blank=True, null=True, verbose_name="Província/Círculo Eleitoral de Destino")
     
     class Meta:
         verbose_name = "Previsão de Material"
@@ -350,7 +350,8 @@ class AtividadePlano(models.Model):
     
     sector_responsavel = models.ForeignKey('recursoshumanos.Sector', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Departamento/Área Responsável")
     funcionario_responsavel = models.ForeignKey('recursoshumanos.Funcionario', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Funcionário Responsável")
-    envolvidos = models.TextField(blank=True, help_text="Pessoal envolvido")
+    responsaveis = models.TextField(blank=True, verbose_name="Responsáveis Pela Atividade", help_text="Equipa ou Pessoal envolvido diretamente")
+    envolvidos = models.TextField(blank=True, help_text="Pessoal de apoio extra")
     custo_estimado = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     material_necessario = models.TextField(blank=True, help_text="Lista de material de suporte")
     tipo_atividade = models.CharField(max_length=50, choices=TIPO_ATIVIDADE, default='outros')

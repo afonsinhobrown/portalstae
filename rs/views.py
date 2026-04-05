@@ -3,6 +3,7 @@ import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
@@ -10,9 +11,68 @@ from .models import (
     TipoDocumento, TemplateDocumento, ComponenteDocumento, 
     DocumentoPersonalizado, PlanoLogistico, FaseEleitoral,
     MarcoCritico, NecessidadePessoal, RiscoPlaneamento,
-    OrcamentoPlaneamento, MaterialEleitoral, AtividadePlano
+    OrcamentoPlaneamento, MaterialEleitoral, AtividadePlano,
+    AlocacaoLogistica
 )
-from .forms import FaseEleitoralForm, RiscoPlaneamentoForm, OrcamentoPlaneamentoForm
+from .forms import (
+    FaseEleitoralForm, RiscoPlaneamentoForm, OrcamentoPlaneamentoForm,
+    MaterialEleitoralForm, AtividadePlanoForm, PlanoLogisticoForm
+)
+from circuloseleitorais.models import CirculoEleitoral, DivisaoEleicao
+from eleicao.models import Eleicao
+from django.db.models import Count, Sum
+
+def normalizar_provincia_stae(nome):
+    """Utilitário de Soberania: Mapeia nomes modernos para o banco legado de 2023"""
+    if not nome: return ""
+    nome = nome.upper().strip()
+    
+    # Mapeamento de nomes STAE para nomes no banco de dados
+    mapping = {
+        # STAE direction names to database province names
+        'MAPUTO CIDADE': 'CIDADE DE MAPUTO',
+        'MAPUTO_C': 'CIDADE DE MAPUTO',
+        'DPP MAPUTO CIDADE': 'CIDADE DE MAPUTO',
+        
+        'MAPUTO PROVÍNCIA': 'MAPUTO',
+        'MAPUTO PROVINCIA': 'MAPUTO',
+        'MAPUTO_P': 'MAPUTO',
+        'DPP MAPUTO PROVÍNCIA': 'MAPUTO',
+        'DPP MAPUTO PROVINCIA': 'MAPUTO',
+        
+        'GAZA': 'GAZA',
+        'INHAMBANE': 'INHAMBANE',
+        'SOFALA': 'SOFALA',
+        'MANICA': 'MANICA',
+        'TETE': 'TETE',
+        
+        'ZAMBÉZIA': 'ZAMB ZIA',
+        'ZAMBEZIA': 'ZAMB ZIA',
+        'ZAMB ZIA': 'ZAMB ZIA',
+        
+        'NAMPULA': 'NAMPULA',
+        
+        'CABO DELGADO': 'C.DELGADO',
+        'CABO_D': 'C.DELGADO',
+        'C.DELGADO': 'C.DELGADO',
+        
+        'NIASSA': 'NIASSA',
+        
+        # Reverse mappings (database names to themselves)
+        'CIDADE DE MAPUTO': 'CIDADE DE MAPUTO',
+        'MAPUTO': 'MAPUTO',
+    }
+    
+    # Primeiro tenta mapeamento exato
+    if nome in mapping:
+        return mapping[nome]
+    
+    # Se não encontrar, tenta mapeamento parcial
+    for key, value in mapping.items():
+        if key in nome or nome in key:
+            return value
+    
+    return nome
 
 # ------------------------------------------------------------------------------
 # 1. VISÕES DE COCKPIT E HUB ESTRATÉGICO
@@ -199,7 +259,20 @@ def lista_planos(request):
     return render(request, 'rs/lista_planos.html', {'planos': planos})
 
 @login_required
-def criar_plano(request): return redirect('rs:lista_planos')
+def criar_plano(request):
+    """Criação de Novo Plano Logístico (Recuperado)"""
+    if request.method == 'POST':
+        form = PlanoLogisticoForm(request.POST)
+        if form.is_valid():
+            plano = form.save()
+            messages.success(request, f"O plano '{plano.nome}' foi criado com sucesso.")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = PlanoLogisticoForm()
+    return render(request, 'rs/form_plano.html', {
+        'form': form, 
+        'titulo': 'Criar Novo Plano Logístico'
+    })
 
 @login_required
 def detalhes_plano(request, plano_id):
@@ -229,7 +302,22 @@ def detalhes_plano(request, plano_id):
     })
 
 @login_required
-def editar_plano(request, pk): return redirect('rs:lista_planos')
+def editar_plano(request, pk):
+    """Edição de Plano Logístico (Recuperado)"""
+    plano = get_object_or_404(PlanoLogistico, pk=pk)
+    if request.method == 'POST':
+        form = PlanoLogisticoForm(request.POST, instance=plano)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Definições do plano '{plano.nome}' atualizadas.")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = PlanoLogisticoForm(instance=plano)
+    return render(request, 'rs/form_plano.html', {
+        'form': form, 
+        'plano': plano, 
+        'titulo': f'Editar: {plano.nome}'
+    })
 
 @login_required
 def importar_distribuicao_plano(request, plano_id): return redirect('rs:detalhes_plano', plano_id=plano_id)
@@ -237,12 +325,104 @@ def importar_distribuicao_plano(request, plano_id): return redirect('rs:detalhes
 @login_required
 def adicionar_material_plano(request, plano_id):
     plano = get_object_or_404(PlanoLogistico, id=plano_id)
-    return render(request, 'rs/form_material.html', {'plano': plano})
+    if request.method == 'POST':
+        form = MaterialEleitoralForm(request.POST)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.plano = plano
+            material.eleicao = plano.eleicao
+            material.tipo_operacao = plano.tipo_operacao
+            material.save()
+            messages.success(request, f"Material '{material.item}' adicionado ao plano.")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = MaterialEleitoralForm(initial={'eleicao': plano.eleicao})
+    # Mapa Geográfico Inteligente (Por Província) - Usando dados reais
+    distritos_map = {}
+    from django.db.models import Count, Sum
+    from circuloseleitorais.models import DivisaoEleicao
+    
+    # Buscar unidades oficiais para chaves consistentes no mapa JS
+    unid_choices = [c[0] for c in AlocacaoLogistica.DIRECOES_STAE if c[0] != 'CENTRAL']
+    
+    for e in Eleicao.objects.all():
+        distritos_map[e.id] = {}
+        
+        # Tentar primeiro com DivisaoEleicao (dados administrativos)
+        divisoes_distritos = DivisaoEleicao.objects.filter(eleicao=e, nivel='distrito')
+        divisoes_provincias = DivisaoEleicao.objects.filter(eleicao=e, nivel='provincia')
+        
+        # Contagem total (fallback)
+        total_distritos = divisoes_distritos.count()
+        # Para mesas, tentar obter de CirculoEleitoral ou usar estimativa
+        total_mesas = 0
+        if e.circulos.exists():
+            total_mesas = e.circulos.aggregate(t=Sum('num_mesas'))['t'] or 0
+        else:
+            # Estimativa: 1 mesa por 500 eleitores ou padrão
+            total_mesas = total_distritos * 10  # Estimativa conservadora
+        
+        distritos_map[e.id]['TOTAL'] = {'distritos': total_distritos, 'mesas': total_mesas}
+        
+        # Contagem por província para cada unidade do STAE
+        for code in unid_choices:
+            # Traduzir label STAE para nome da província
+            label_stae = dict(AlocacaoLogistica.DIRECOES_STAE).get(code, "")
+            prov_nome_busca = normalizar_provincia_stae(label_stae.replace('DPP ', ''))
+            
+            # Tentar encontrar a província correspondente
+            provincia_div = divisoes_provincias.filter(nome__iexact=prov_nome_busca).first()
+            if provincia_div:
+                # Contar distritos desta província
+                distritos_prov = divisoes_distritos.filter(parent=provincia_div).count()
+                # Para mesas, tentar obter de CirculoEleitoral
+                mesas_prov = 0
+                if e.circulos.exists():
+                    circulos_prov = e.circulos.filter(provincia__iexact=prov_nome_busca)
+                    mesas_prov = circulos_prov.aggregate(t=Sum('num_mesas'))['t'] or 0
+                else:
+                    # Estimativa
+                    mesas_prov = distritos_prov * 10
+                
+                distritos_map[e.id][code] = {
+                    'distritos': distritos_prov,
+                    'mesas': mesas_prov
+                }
+            else:
+                # Fallback para o método antigo (circulos)
+                circulos_prov = e.circulos.filter(provincia__iexact=prov_nome_busca)
+                distritos_map[e.id][code] = {
+                    'distritos': circulos_prov.count(),
+                    'mesas': circulos_prov.aggregate(t=Sum('num_mesas'))['t'] or 0
+                }
+    
+    context = {
+        'form': form,
+        'plano': plano,
+        'eleicao': plano.eleicao,
+        'tipo': 'Material',
+        'distritos_map': json.dumps(distritos_map)
+    }
+    return render(request, 'rs/form_componente.html', context)
 
 @login_required
 def adicionar_atividade_plano(request, plano_id):
     plano = get_object_or_404(PlanoLogistico, id=plano_id)
-    return render(request, 'rs/form_plano.html', {'plano': plano})
+    if request.method == 'POST':
+        form = AtividadePlanoForm(request.POST)
+        if form.is_valid():
+            atividade = form.save(commit=False)
+            atividade.plano = plano
+            atividade.save()
+            messages.success(request, f"Atividade '{atividade.nome}' registada.")
+            return redirect('rs:detalhes_plano', plano_id=plano.id)
+    else:
+        form = AtividadePlanoForm()
+    return render(request, 'rs/form_componente.html', {
+        'form': form, 
+        'plano': plano,
+        'tipo': 'Atividade'
+    })
 
 # ------------------------------------------------------------------------------
 # 3. OS 11 PONTOS OPERACIONAIS (CRONOGRAMA, RISCO, FINANCEIRO)
@@ -353,7 +533,80 @@ def inicializar_templates_padrao(request): return redirect('rs:documentos')
 def sugerir_ia_logistica(request, plano_id): return JsonResponse({'status': 'ok'})
 
 @login_required
-def distribuir_material(request, material_id): return redirect('rs:dashboard')
+def distribuir_material(request, material_id):
+    """PONTO 2 e 4: Distribuição Geográfica e Provincial de Soberania"""
+    from django.db import connection
+    try:
+        material = get_object_or_404(MaterialEleitoral, id=material_id)
+    except Exception as e:
+        if "localizacao_destino" in str(e) or "column" in str(e):
+            # AUTO-REPARO DE EMERGÊNCIA
+            with connection.cursor() as cursor:
+                cursor.execute("ALTER TABLE rs_materialeleitoral ADD COLUMN IF NOT EXISTS localizacao_destino VARCHAR(100);")
+                cursor.execute("ALTER TABLE rs_atividadeplano ADD COLUMN IF NOT EXISTS responsaveis TEXT;")
+            material = get_object_or_404(MaterialEleitoral, id=material_id)
+        else:
+            raise e
+    # Importar AlocacaoLogistica diretamente para evitar circular imports se necessário
+    from .models import AlocacaoLogistica
+    from eleicao.models import Eleicao
+    from circuloseleitorais.models import CirculoEleitoral
+    from django.db.models import Sum
+    
+    unidades = AlocacaoLogistica.DIRECOES_STAE
+    eleicao_ref_id = request.GET.get('eleicao_ref_id')
+    stats = {}
+    
+    if eleicao_ref_id:
+        e_ref = get_object_or_404(Eleicao, id=eleicao_ref_id)
+        # Tentar obter estatísticas do legado de Moçambique
+        for code, name in unidades:
+            if code == 'CENTRAL': continue
+            # Normalização de Soberania (Tratar abreviaturas do banco legado como C.DELGADO)
+            prov_nome = normalizar_provincia_stae(name.replace('DPP ', ''))
+            circulos = CirculoEleitoral.objects.filter(eleicao=e_ref, provincia__iexact=prov_nome)
+            stats[code] = {
+                'distritos': circulos.count(),
+                'mesas': circulos.aggregate(t=Sum('num_mesas'))['t'] or 0
+            }
+
+    if request.method == 'POST':
+        for code, name in unidades:
+            val_nec = request.POST.get(f'qtd_nec_{code}')
+            val_ext = request.POST.get(f'qtd_ext_{code}')
+            val_dist = request.POST.get(f'n_dist_{code}')
+            val_mesas = request.POST.get(f'n_mesas_{code}')
+            
+            if val_nec is not None and val_ext is not None:
+                qtd_nec = int(val_nec or 0)
+                qtd_ext = int(val_ext or 0)
+                n_dist = int(val_dist or 0)
+                n_mesas = int(val_mesas or 0)
+                
+                if qtd_nec > 0 or qtd_ext > 0:
+                    AlocacaoLogistica.objects.update_or_create(
+                        material_nacional=material, unidade=code,
+                        defaults={
+                            'quantidade_necessaria': qtd_nec,
+                            'quantidade_existente': qtd_ext,
+                            'num_distritos': n_dist,
+                            'num_mesas': n_mesas
+                        }
+                    )
+        messages.success(request, f"Distribuição de '{material.item}' guardada com sucesso.")
+        return redirect('rs:detalhes_plano', plano_id=material.plano.id)
+
+    alocacoes = {aloc.unidade: aloc for aloc in material.alocacoes.all()}
+    eleicoes = Eleicao.objects.all().order_by('-ano')
+    
+    return render(request, 'rs/distribuir_material.html', {
+        'material': material,
+        'unidades': unidades,
+        'alocacoes': alocacoes,
+        'eleicoes': eleicoes,
+        'eleicao_ref_id': int(eleicao_ref_id) if eleicao_ref_id else None,
+        'stats': stats
+    })
 
 @login_required
 def criar_tipo_documento(request): return redirect('rs:documentos')
@@ -383,10 +636,44 @@ def gerar_plano_logistico_auto(request, eleicao_id): return redirect('rs:dashboa
 def decidir_modelo_visual(request, modelo_id, decisao): return redirect('rs:dashboard')
 
 @login_required
-def editar_material(request, material_id): return redirect('rs:dashboard')
+def editar_material(request, material_id):
+    material = get_object_or_404(MaterialEleitoral, id=material_id)
+    if request.method == 'POST':
+        form = MaterialEleitoralForm(request.POST, instance=material)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Material '{material.item}' atualizado.")
+            return redirect('rs:detalhes_plano', plano_id=material.plano.id)
+    else:
+        form = MaterialEleitoralForm(instance=material)
+        
+    # Mapa Geográfico Inteligente (Por Província) para Edição
+    distritos_map = {}
+    unid_choices = [c[0] for c in AlocacaoLogistica.DIRECOES_STAE if c[0] != 'CENTRAL']
+    for e in Eleicao.objects.all():
+        distritos_map[e.id] = {'TOTAL': e.circulos.count()}
+        for code in unid_choices:
+            label_stae = dict(AlocacaoLogistica.DIRECOES_STAE)[code]
+            prov_nome_busca = normalizar_provincia_stae(label_stae.replace('DPP ', ''))
+            distritos_map[e.id][code] = e.circulos.filter(provincia__iexact=prov_nome_busca).count()
+
+    return render(request, 'rs/form_componente.html', {
+        'form': form,
+        'plano': material.plano,
+        'material': material,
+        'tipo': 'Material',
+        'edit': True,
+        'distritos_map': json.dumps(distritos_map)
+    })
 
 @login_required
-def eliminar_material(request, material_id): return redirect('rs:dashboard')
+def eliminar_material(request, material_id):
+    material = get_object_or_404(MaterialEleitoral, id=material_id)
+    plano_id = material.plano.id
+    nome = material.item
+    material.delete()
+    messages.warning(request, f"O material '{nome}' foi removido do plano.")
+    return redirect('rs:detalhes_plano', plano_id=plano_id)
 
 @login_required
 def criar_requisito_material(request): return redirect('rs:dashboard')
@@ -401,10 +688,32 @@ def gestao_tipos_materiais(request): return render(request, 'rs/dashboard.html')
 def eliminar_tipo_material(request, pk): return redirect('rs:dashboard')
 
 @login_required
-def editar_atividade(request, atividade_id): return redirect('rs:dashboard')
+def editar_atividade(request, atividade_id):
+    atividade = get_object_or_404(AtividadePlano, id=atividade_id)
+    if request.method == 'POST':
+        form = AtividadePlanoForm(request.POST, instance=atividade)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Atividade '{atividade.nome}' atualizada.")
+            return redirect('rs:detalhes_plano', plano_id=atividade.plano.id)
+    else:
+        form = AtividadePlanoForm(instance=atividade)
+    return render(request, 'rs/form_componente.html', {
+        'form': form, 
+        'atividade': atividade, 
+        'plano': atividade.plano,
+        'tipo': 'Atividade',
+        'edit': True
+    })
 
 @login_required
-def eliminar_atividade(request, atividade_id): return redirect('rs:dashboard')
+def eliminar_atividade(request, atividade_id):
+    atividade = get_object_or_404(AtividadePlano, id=atividade_id)
+    plano_id = atividade.plano.id
+    nome = atividade.nome
+    atividade.delete()
+    messages.warning(request, f"A atividade '{nome}' foi eliminada.")
+    return redirect('rs:detalhes_plano', plano_id=plano_id)
 
 @login_required
 def selecao_relatorio_material(request, plano_id): return render(request, 'rs/dashboard.html')

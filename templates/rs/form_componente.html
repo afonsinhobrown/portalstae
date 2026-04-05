@@ -48,6 +48,19 @@
                                     {{ form.eleicao_referencia }}
                                 </div>
                                 <div class="col-md-4">
+                                    <label class="form-label fw-bold text-muted small">Círculo / Província Alvo</label>
+                                    {{ form.localizacao_destino }}
+                                    <div id="info-geografica" class="mt-2 border rounded p-2 bg-info bg-opacity-10 border-info">
+                                        <div class="d-flex justify-content-between fw-semibold">
+                                            <span class="text-dark"><i class="fas fa-map-marker-alt me-1 text-primary"></i> Distritos: <strong id="distritos-count" class="text-primary">0</strong></span>
+                                            <span class="text-dark"><i class="fas fa-table me-1 text-success"></i> Mesas: <strong id="mesas-count" class="text-success">0</strong></span>
+                                        </div>
+                                        <div class="mt-1 text-dark" id="info-geografica-detalhe">
+                                            <small><i class="fas fa-info-circle me-1"></i>Selecione uma eleição e província</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label fw-bold text-muted small">Qtd. Adquirida Ref.</label>
                                     {{ form.quantidade_adquirida_referencia }}
                                 </div>
@@ -101,38 +114,125 @@
 
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function() {
-                                        const inputAdquirido = document.getElementById('id_quantidade_adquirida_referencia');
-                                        const inputPrecoRef = document.getElementById('id_preco_unitario_referencia');
+                                         const inputAdquirido = document.getElementById('id_quantidade_adquirida_referencia');
+                                         const inputPrecoRef = document.getElementById('id_preco_unitario_referencia');
+                                         const inputStock = document.getElementById('id_qtd_ext');
                                         
-                                        const inputPrevisaoQtd = document.getElementById('id_quantidade_planeada');
-                                        const inputPrevisaoPreco = document.getElementById('id_preco_unitario');
+                                         const inputPrevisaoQtd = document.getElementById('id_qtd_planeada');
+                                         const inputPrevisaoPreco = document.getElementById('id_preco_unitario');
 
-                                        const selectTipo = document.getElementById('id_tipo_dinamico');
-                                        const inputItem = document.getElementById('id_item');
+                                         const selectTipo = document.getElementById('id_tipo_dinamico');
+                                         const inputItem = document.getElementById('id_item');
 
                                         const checkPorDistrito = document.getElementById('id_por_distrito');
-                                        const selectEleicaoRef = document.getElementById('id_eleicao_referencia');
+                                         const selectEleicaoRef = document.getElementById('id_eleicao_ref');
+                                        const selectLocalizacao = document.getElementById('id_localizacao_destino');
                                         const distritosMap = {{ distritos_map|safe|default:"{}" }};
+                                        
+                                        // Elementos de informação geográfica
+                                        const infoGeografica = document.getElementById('info-geografica');
+                                        const distritosCount = document.getElementById('distritos-count');
+                                        const mesasCount = document.getElementById('mesas-count');
+                                        const infoDetalhe = document.getElementById('info-geografica-detalhe');
 
-                                        // Função de Cálculo por Distrito
+
+                                        // Função para atualizar informação geográfica (distritos e mesas)
+                                        function atualizarInfoGeografica() {
+                                            const eleicaoId = selectEleicaoRef ? selectEleicaoRef.value : null;
+                                            const localizacaoCode = selectLocalizacao ? selectLocalizacao.value : null;
+                                            
+                                            // Debug: log available data
+                                            console.log('Election ID:', eleicaoId, 'Province code:', localizacaoCode);
+                                            if (eleicaoId && distritosMap[eleicaoId]) {
+                                                console.log('Available province codes for election', eleicaoId, ':', Object.keys(distritosMap[eleicaoId]));
+                                            }
+                                            
+                                            if (!eleicaoId || !distritosMap[eleicaoId]) {
+                                                distritosCount.textContent = '0';
+                                                mesasCount.textContent = '0';
+                                                infoDetalhe.innerHTML = '<small>Selecione uma eleição</small>';
+                                                return;
+                                            }
+                                            
+                                            let data = {distritos: 0, mesas: 0};
+                                            let detalhe = '';
+                                            let encontrouDados = false;
+                                            
+                                            if (localizacaoCode && distritosMap[eleicaoId][localizacaoCode]) {
+                                                data = distritosMap[eleicaoId][localizacaoCode];
+                                                const labelStae = selectLocalizacao.options[selectLocalizacao.selectedIndex].text;
+                                                detalhe = `Província: ${labelStae}`;
+                                                encontrouDados = true;
+                                                console.log('Found province-specific data:', data);
+                                            }
+                                            
+                                            // Se não encontrou dados específicos da província, tentar TOTAL
+                                            if (!encontrouDados && distritosMap[eleicaoId]['TOTAL']) {
+                                                data = distritosMap[eleicaoId]['TOTAL'];
+                                                detalhe = 'Total Nacional';
+                                                encontrouDados = true;
+                                                console.log('Using total data:', data);
+                                            }
+                                            
+                                            if (!encontrouDados) {
+                                                detalhe = 'Dados não disponíveis para esta província';
+                                                console.warn('No data found for election', eleicaoId, 'province', localizacaoCode);
+                                            }
+                                            
+                                            distritosCount.textContent = data.distritos || 0;
+                                            mesasCount.textContent = data.mesas || 0;
+                                            infoDetalhe.innerHTML = `<small>${detalhe}</small>`;
+                                        }
+
+                                        // Função de Cálculo Geográfico de Soberania
                                         function calcularPorDistrito() {
                                             if (checkPorDistrito && checkPorDistrito.checked) {
                                                 const eleicaoId = selectEleicaoRef.value;
-                                                const nDistritos = distritosMap[eleicaoId] || 0;
+                                                const localizacaoCode = selectLocalizacao ? selectLocalizacao.value : null;
                                                 
-                                                if (nDistritos > 0) {
-                                                    inputPrevisaoQtd.value = nDistritos;
-                                                    // Opcional: Bloquear input se for por distrito? Melhor deixar editável
+                                                let data = {distritos: 0, mesas: 0};
+                                                if (distritosMap[eleicaoId]) {
+                                                    if (localizacaoCode && distritosMap[eleicaoId][localizacaoCode]) {
+                                                        data = distritosMap[eleicaoId][localizacaoCode];
+                                                    } else if (distritosMap[eleicaoId]['TOTAL']) {
+                                                        data = distritosMap[eleicaoId]['TOTAL'];
+                                                    }
+                                                }
+                                                
+                                                let valToUse = 0;
+                                                const itemName = (inputItem.value || "").toLowerCase();
+                                                
+                                                // Inteligência STAE: Decidir se usamos distritos ou mesas
+                                                if (itemName.includes('boletim') || itemName.includes('urna') || itemName.includes('caderno') || itemName.includes('mesa') || itemName.includes('voto')) {
+                                                    valToUse = data.mesas || 0;
+                                                } else {
+                                                    valToUse = data.distritos || 0;
+                                                }
+                                                
+                                                if (valToUse > 0) {
+                                                    inputPrevisaoQtd.value = valToUse;
+                                                    calcular();
                                                 }
                                             }
                                         }
 
-                                        if (checkPorDistrito) {
-                                            checkPorDistrito.addEventListener('change', calcularPorDistrito);
-                                        }
+                                        // Event listeners para atualização automática
                                         if (selectEleicaoRef) {
-                                            selectEleicaoRef.addEventListener('change', calcularPorDistrito);
+                                            selectEleicaoRef.addEventListener('change', function() {
+                                                atualizarInfoGeografica();
+                                                calcularPorDistrito();
+                                            });
                                         }
+                                        if (selectLocalizacao) {
+                                            selectLocalizacao.addEventListener('change', function() {
+                                                atualizarInfoGeografica();
+                                                calcularPorDistrito();
+                                            });
+                                        }
+                                        if (checkPorDistrito) checkPorDistrito.addEventListener('change', calcularPorDistrito);
+                                        
+                                        // Atualizar informação geográfica ao carregar a página
+                                        atualizarInfoGeografica();
 
                                         // Função de Preenchimento Automático do Nome
                                         if (selectTipo && inputItem) {
@@ -212,7 +312,11 @@
                                     {{ form.data_prevista }}
                                 </div>
                                 <div class="col-md-12">
-                                    <label class="form-label fw-bold text-muted small">Pessoal Envolvido</label>
+                                    <label class="form-label fw-bold text-muted small">Responsáveis / Equipa de Missão</label>
+                                    {{ form.responsaveis }}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-muted small">Outro Pessoal Envolvido (Apoio)</label>
                                     {{ form.envolvidos }}
                                 </div>
                                 <div class="col-md-6">
